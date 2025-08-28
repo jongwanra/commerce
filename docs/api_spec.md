@@ -1,7 +1,7 @@
 # Commerce API Specification
 
 ## 공유 사항
-- 인증/인가는 Session 기반으로 관리합니다.
+- Database + Cookie 기반으로 인증을 처리합니다.
 - 일시는 전부 UTC를 기준으로 제공합니다.
 
 ### Common Response Format
@@ -13,7 +13,7 @@
   - errorCode: string (nullable)
   - errorMessage: string (nullable)
   - data: T (nullable)
-ㄱ
+
 ### Common Cursor Pagination Format
 
 - CursorPagination\<E>
@@ -22,6 +22,35 @@
     - items: E[] (not null) - 항목 목록
 
 ---
+
+## User
+
+### 회원 가입
+- Method: POST
+- Path: /api/v1/users
+- Request Body: object
+  - email: string(not null)
+  - password: string(not null)
+- Response Body: CommerceResponse\<void>
+
+## Auth
+
+### 로그인
+- Method: POST
+- Path: /api/v1/auth/login
+- Request Body: object
+  - email: string(not null)
+  - password: string(not null)
+- Response Body: CommerceResponse\<void>
+- Response Header:
+  - Set-Cookie: COMMERCE_SESSIONID={sessionId}; Path=/; HttpOnly; SameSite=Lax; Secure=true; Max-Age=86400
+
+### 로그아웃
+- Method: POST
+- Path: /api/v1/auth/logout
+- Response Body: CommerceResponse\<void>
+- Response Header:
+  - Set-Cookie: COMMERCE_SESSIONID=; Path=/; HttpOnly; SameSite=Lax; Secure=true; Max-Age=0
 
 ## UserCash
 
