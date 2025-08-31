@@ -1,4 +1,4 @@
-## 프로젝트
+# Commerce
 
 ## Getting Started
 
@@ -11,3 +11,13 @@
 ```bash
 docker-compose up -d
 ```
+
+
+### System Architecture
+- [상세 보기](docs/system_architecture.md)
+
+### API Specification
+- [상세 보기](docs/api_spec.md)
+
+### Entity Relational Diagram
+- [상세 보기](docs/erd.md)
