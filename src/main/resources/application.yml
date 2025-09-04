@@ -29,3 +29,11 @@ spring:
     url: jdbc:mysql://localhost:3306/hhplus?characterEncoding=UTF-8&serverTimezone=UTC
     username: application
     password: application
+
+springdoc:
+  swagger-ui:
+    url: /docs/open-api-3.0.1.json
+    path: /docs/swagger
+  # 기본 Media Type 설정
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

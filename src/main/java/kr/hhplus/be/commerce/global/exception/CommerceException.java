@@ -4,10 +4,15 @@ import lombok.Getter;
 
 @Getter
 public class CommerceException extends RuntimeException {
-	private final ErrorCode errorCode;
+	private final CommerceCode commerceCode;
 
-	public CommerceException(ErrorCode errorCode) {
-		super(errorCode.getMessage());
-		this.errorCode = errorCode;
+	public CommerceException(CommerceCode commerceCode) {
+		super(commerceCode.getMessage());
+		this.commerceCode = commerceCode;
+	}
+
+	public CommerceException(CommerceCode commerceCode, Object... args) {
+		super(String.format(commerceCode.getMessage(), args));
+		this.commerceCode = commerceCode;
 	}
 }

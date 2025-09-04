@@ -1,5 +1,7 @@
 package kr.hhplus.be.commerce.global.response;
 
+import static java.util.Objects.*;
+
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -17,6 +19,9 @@ public class CommerceResponseHandler implements ResponseBodyAdvice<Object> {
 	@Override
 	public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
 		ResponseStatus responseStatus = returnType.getMethodAnnotation(ResponseStatus.class);
+		if (isNull(responseStatus)) {
+			return false;
+		}
 		return responseStatus.value().is2xxSuccessful();
 	}
 

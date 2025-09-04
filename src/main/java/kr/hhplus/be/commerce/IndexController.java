@@ -10,6 +10,7 @@ import kr.hhplus.be.commerce.global.response.EmptyResponse;
 @RestController
 public class IndexController {
 
+	// 헬스체크용 엔드포인트
 	@GetMapping("/")
 	@ResponseStatus(HttpStatus.OK)
 	public EmptyResponse index() {
