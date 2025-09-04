@@ -14,10 +14,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import kr.hhplus.be.commerce.AbstractUnitTestSupport;
-import kr.hhplus.be.commerce.cash.persistence.CashEntity;
-import kr.hhplus.be.commerce.cash.persistence.CashHistoryEntity;
 import kr.hhplus.be.commerce.cash.persistence.CashHistoryJpaRepository;
 import kr.hhplus.be.commerce.cash.persistence.CashJpaRepository;
+import kr.hhplus.be.commerce.cash.persistence.entity.CashEntity;
+import kr.hhplus.be.commerce.cash.persistence.entity.CashHistoryEntity;
 import kr.hhplus.be.commerce.global.exception.CommerceException;
 
 @ExtendWith(MockitoExtension.class)

@@ -16,5 +16,7 @@ public interface CashReadMyBalanceApi {
 		@ApiResponseErrorCode(CommerceCode.UNAUTHENTICATED_USER),
 		@ApiResponseErrorCode(CommerceCode.NOT_FOUND_CASH),
 	})
-	CashDetailResponse readMyBalance(@Parameter(hidden = true) Long userId);
+	CashDetailResponse readMyBalance(
+		@Parameter(hidden = true) Long userId
+	);
 }

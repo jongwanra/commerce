@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.cash.persistence;
+package kr.hhplus.be.commerce.cash.persistence.entity;
 
 import static kr.hhplus.be.commerce.global.exception.CommerceCode.*;
 

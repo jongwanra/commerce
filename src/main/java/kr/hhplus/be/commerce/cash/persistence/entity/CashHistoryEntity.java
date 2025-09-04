@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.cash.persistence;
+package kr.hhplus.be.commerce.cash.persistence.entity;
 
 import java.math.BigDecimal;
 
@@ -9,7 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import kr.hhplus.be.commerce.cash.persistence.enums.CashHistoryAction;
+import kr.hhplus.be.commerce.cash.persistence.entity.enums.CashHistoryAction;
 import kr.hhplus.be.commerce.global.entity.BaseTimeEntity;
 import lombok.AccessLevel;
 import lombok.Getter;
