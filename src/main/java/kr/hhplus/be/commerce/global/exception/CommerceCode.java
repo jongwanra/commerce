@@ -19,7 +19,14 @@ public enum CommerceCode {
 	// Cash(CH-0001 ~)
 	NOT_FOUND_CASH(400, "CH-0001", "사용자의 잔액 정보가 존재하지 않습니다."),
 	CHARGE_AMOUNT_MUST_BE_POSITIVE(400, "CH-0002", "충전 금액은 0원보다 커야 합니다."),
-	CHARGE_AMOUNT_PER_ONCE_EXCEEDS_LIMIT(400, "CH-0003", "한 번에 %s원을 초과하여 충전할 수 없습니다.");
+	CHARGE_AMOUNT_PER_ONCE_EXCEEDS_LIMIT(400, "CH-0003", "한 번에 %s원을 초과하여 충전할 수 없습니다."),
+
+	// Coupon(CP-0001 ~)
+	NOT_FOUND_COUPON(400, "CP-0001", "존재하지 않는 쿠폰입니다."),
+	EXPIRED_COUPON(400, "CP-0002", "만료된 쿠폰입니다."),
+	OUT_OF_STOCK_COUPON(400, "CP-0003", "재고가 소진된 쿠폰입니다."),
+	ALREADY_ISSUED_COUPON(400, "CP-0004", "이미 발급 받은 쿠폰입니다."),
+	;
 
 	private final int status;
 	private final String code;
