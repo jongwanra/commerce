@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class CashReadMyBalanceQueryManager {
+public class CashReadBalanceQueryManager {
 	private final CashJpaRepository cashJpaRepository;
 
 	@Transactional(readOnly = true)

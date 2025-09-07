@@ -56,7 +56,7 @@
 - Response Header:
     - Set-Cookie: COMMERCE_SESSIONID=; Path=/; HttpOnly; SameSite=Lax; Secure=true; Max-Age=0
 
-## UserCash
+## Cash
 
 ### 잔액 조회
 
