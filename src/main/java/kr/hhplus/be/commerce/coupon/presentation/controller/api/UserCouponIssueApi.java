@@ -7,10 +7,10 @@ import kr.hhplus.be.commerce.global.open_api.annotation.ApiResponseErrorCode;
 import kr.hhplus.be.commerce.global.open_api.annotation.ApiResponseErrorCodes;
 import kr.hhplus.be.commerce.global.response.EmptyResponse;
 
-public interface CouponIssueApi {
+public interface UserCouponIssueApi {
 
 	@Operation(
-		tags = "Coupon",
+		tags = "UserCoupon",
 		summary = "쿠폰 발급"
 	)
 	@ApiResponseErrorCodes({
