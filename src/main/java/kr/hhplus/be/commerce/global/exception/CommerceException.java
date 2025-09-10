@@ -15,4 +15,9 @@ public class CommerceException extends RuntimeException {
 		super(String.format(commerceCode.getMessage(), args));
 		this.commerceCode = commerceCode;
 	}
+
+	public CommerceException(String message) {
+		super(message);
+		this.commerceCode = CommerceCode.BAD_REQUEST;
+	}
 }

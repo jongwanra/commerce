@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.hhplus.be.commerce.coupon.persistence.CouponJpaRepository;
-import kr.hhplus.be.commerce.coupon.persistence.UserCouponJpaRepository;
+import kr.hhplus.be.commerce.coupon.persistence.UserCouponRepository;
 import kr.hhplus.be.commerce.coupon.persistence.entity.CouponEntity;
 import kr.hhplus.be.commerce.coupon.persistence.entity.UserCouponEntity;
 import kr.hhplus.be.commerce.global.exception.CommerceCode;
@@ -18,9 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CouponIssueProcessor {
+public class UserCouponIssueProcessor {
 	private final CouponJpaRepository couponJpaRepository;
-	private final UserCouponJpaRepository userCouponJpaRepository;
+	private final UserCouponRepository userCouponRepository;
 
 	@Transactional
 	public Output execute(Command command) {
@@ -29,13 +29,19 @@ public class CouponIssueProcessor {
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_COUPON));
 		coupon.issue(command.now);
 
+		if (userCouponRepository.existsByUserIdAndCouponId(command.userId, command.couponId)) {
+			throw new CommerceException(CommerceCode.ALREADY_ISSUED_COUPON);
+		}
+
 		try {
-			UserCouponEntity savedUserCoupon = userCouponJpaRepository.save(
+			UserCouponEntity savedUserCoupon = userCouponRepository.save(
 				UserCouponEntity.of(command.userId, coupon, command.now));
 			return new Output(coupon, savedUserCoupon);
 		} catch (DataIntegrityViolationException e) {
-			log.warn("이미 발급된 쿠폰입니다. userId: {}, couponId: {}", command.userId, command.couponId);
-			// userId, couponId에 unique 제약조건이 걸려있으므로, 중복 발급 시도 시 예외가 발생합니다.
+			// userId와 couponId의 unique 제약 조건 위반 시 중복 발급으로 간주합니다.
+			// 위에서 coupon에 대한 Pessimistic Lock을 획득했기 때문에, 동시성 이슈로 인한 중복 발급은 발생하지 않습니다.
+			// 발생하지 않더라도 혹시 모를 상황에 대비한 방어 코드입니다.
+			log.warn("Failed to issue coupon due to DataIntegrityViolationException, message={}", e.getMessage());
 			throw new CommerceException(CommerceCode.ALREADY_ISSUED_COUPON);
 		}
 

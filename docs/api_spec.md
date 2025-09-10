@@ -119,9 +119,9 @@
 - Method: GET
 - Path: /api/v1/me/coupons
     - Query Parameters:
-        - lastId: number (nullable, default: 0) - items 중 마지막 항목의 고유 식별자, 첫 페이지: 0
-        - size: number (nullable, default: 10, min: 5, max: 50) - 한 번 조회시 페이지 크기
-- Response Body: CommerceResponse<CursorPagination<UserCouponSummaryResponse[]>>
+        - lastId: number (not null) - items 중 마지막 항목의 고유 식별자, 첫 페이지: 0
+        - size: number (not null, min: 1, max: 50) - 한 번 조회시 페이지 크기
+- Response Body: CommerceResponse<CursorPagination<CouponSummaryResponse[]>>
     - id: number (not null) - 사용자 쿠폰 고유 식별자
     - couponId: number (not null) - 쿠폰 고유 식별자
     - name: string (not null) - 쿠폰명

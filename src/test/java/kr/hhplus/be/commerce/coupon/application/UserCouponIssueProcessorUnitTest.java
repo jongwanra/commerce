@@ -1,6 +1,6 @@
 package kr.hhplus.be.commerce.coupon.application;
 
-import static kr.hhplus.be.commerce.coupon.application.CouponIssueProcessor.*;
+import static kr.hhplus.be.commerce.coupon.application.UserCouponIssueProcessor.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
@@ -25,9 +25,9 @@ import kr.hhplus.be.commerce.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.global.exception.CommerceException;
 
 @ExtendWith(MockitoExtension.class)
-class CouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
+class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 	@InjectMocks
-	private CouponIssueProcessor couponIssueProcessor;
+	private UserCouponIssueProcessor userCouponIssueProcessor;
 	@Mock
 	private CouponJpaRepository couponJpaRepository;
 	@Mock
@@ -48,7 +48,7 @@ class CouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 
 		// when & then
 		assertThatThrownBy(() -> {
-			couponIssueProcessor.execute(command);
+			userCouponIssueProcessor.execute(command);
 		})
 			.isInstanceOf(CommerceException.class)
 			.hasMessage("존재하지 않는 쿠폰입니다.");
@@ -80,7 +80,7 @@ class CouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 
 		// when & then
 		assertThatThrownBy(() -> {
-			couponIssueProcessor.execute(command);
+			userCouponIssueProcessor.execute(command);
 		})
 			.isInstanceOf(CommerceException.class)
 			.hasMessage("만료된 쿠폰입니다.");
@@ -112,7 +112,7 @@ class CouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 
 		// when & then
 		assertThatThrownBy(() -> {
-			couponIssueProcessor.execute(command);
+			userCouponIssueProcessor.execute(command);
 		})
 			.isInstanceOf(CommerceException.class)
 			.hasMessage("재고가 소진된 쿠폰입니다.");
@@ -147,7 +147,7 @@ class CouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 
 		// when & then
 		assertThatThrownBy(() -> {
-			couponIssueProcessor.execute(command);
+			userCouponIssueProcessor.execute(command);
 		})
 			.isInstanceOf(CommerceException.class)
 			.hasMessage("이미 발급 받은 쿠폰입니다.");
@@ -185,7 +185,7 @@ class CouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 			.willReturn(assignedUserCoupon);
 
 		// when
-		Output output = couponIssueProcessor.execute(command);
+		Output output = userCouponIssueProcessor.execute(command);
 
 		// then
 		UserCouponEntity userCouponOutput = output.userCoupon();

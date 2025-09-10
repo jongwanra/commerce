@@ -9,6 +9,7 @@ public enum CommerceCode {
 	SUCCESS(200, "CM-0000", "정상 처리되었습니다."),
 	CREATED(201, "CM-0001", "정상 생성되었습니다."),
 	UNKNOWN_ERROR(500, "CM-0002", "알 수 없는 오류가 발생했습니다. 관리자에게 문의하세요."),
+	BAD_REQUEST(400, "CM-0003", "%s"),
 
 	// Auth(AU-0001 ~)
 	UNAUTHENTICATED_USER(401, "AU-0001", "인증되지 않은 사용자입니다."),
