@@ -13,11 +13,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import kr.hhplus.be.commerce.AbstractUnitTestSupport;
 import kr.hhplus.be.commerce.coupon.persistence.CouponJpaRepository;
-import kr.hhplus.be.commerce.coupon.persistence.UserCouponJpaRepository;
+import kr.hhplus.be.commerce.coupon.persistence.UserCouponRepository;
 import kr.hhplus.be.commerce.coupon.persistence.entity.CouponEntity;
 import kr.hhplus.be.commerce.coupon.persistence.entity.UserCouponEntity;
 import kr.hhplus.be.commerce.coupon.persistence.entity.enums.CouponDiscountType;
@@ -31,7 +30,7 @@ class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 	@Mock
 	private CouponJpaRepository couponJpaRepository;
 	@Mock
-	private UserCouponJpaRepository userCouponJpaRepository;
+	private UserCouponRepository userCouponRepository;
 
 	// 작성 이유: 발급한 쿠폰이 없는 경우 예외를 발생시키는지 확인하기 위해 작성했습니다.
 	@Test
@@ -142,8 +141,8 @@ class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 		given(couponJpaRepository.findByIdWithLock(couponId))
 			.willReturn(Optional.of(alreadyIssuedCoupon));
 
-		given(userCouponJpaRepository.save(userCoupon))
-			.willThrow(new DataIntegrityViolationException("unique constraint violation"));
+		given(userCouponRepository.existsByUserIdAndCouponId(userId, couponId))
+			.willReturn(true);
 
 		// when & then
 		assertThatThrownBy(() -> {
@@ -181,7 +180,7 @@ class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 		given(couponJpaRepository.findByIdWithLock(couponId))
 			.willReturn(Optional.of(coupon));
 
-		given(userCouponJpaRepository.save(userCoupon))
+		given(userCouponRepository.save(userCoupon))
 			.willReturn(assignedUserCoupon);
 
 		// when
