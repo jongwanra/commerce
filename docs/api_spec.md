@@ -155,7 +155,7 @@
 - Request Body: object
     - orderId: number (not null) - 주문 고유 식별자
     - couponId: number (nullable) - 쿠폰을 사용 안하고 결제할 경우 null
-    - expectedPaymentAmount: number (not null) - 결제 시, 클라이언트/서버 간 금액 일치 여부 확인
+    - expectedAmount: number (not null) - 결제 시, 클라이언트/서버 간 금액 일치 여부 확인
 - Response Body: CommerceResponse\<void>
 
 
