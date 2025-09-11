@@ -27,7 +27,16 @@ public enum CommerceCode {
 	EXPIRED_COUPON(400, "CP-0002", "만료된 쿠폰입니다."),
 	OUT_OF_STOCK_COUPON(400, "CP-0003", "재고가 소진된 쿠폰입니다."),
 	ALREADY_ISSUED_COUPON(400, "CP-0004", "이미 발급 받은 쿠폰입니다."),
-	;
+
+	// Order(OR-0001 ~)
+	NOT_FOUND_ORDER(400, "OR-0001", "존재하지 않는 주문입니다."),
+	NOT_FOUND_ORDER_LINE(400, "OR-0002", "존재하지 않는 주문 상품입니다."),
+	ORDER_LINE_COMMANDS_IS_EMPTY(400, "OR-0003", "주문할 상품은 최소 1개 이상이어야 합니다."),
+	ORDER_QUANTITY_MUST_BE_POSITIVE(400, "OR-0004", "주문 수량은 1개 이상이어야 합니다."),
+
+	// Product(PT-0001 ~)
+	NOT_FOUND_PRODUCT(400, "PT-0001", "존재하지 않는 상품입니다."),
+	INSUFFICIENT_PRODUCT_STOCK(400, "PT-0002", "상품의 재고가 부족합니다.");
 
 	private final int status;
 	private final String code;
