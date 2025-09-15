@@ -35,7 +35,6 @@ public class PaymentMakeProcessor {
 	private final UserCouponRepository userCouponRepository;
 	private final CashRepository cashRepository;
 	private final CashHistoryRepository cashHistoryRepository;
-	private final PaymentAmountValidator paymentAmountValidator;
 
 	@Transactional
 	public Output execute(Command command) {
@@ -83,11 +82,21 @@ public class PaymentMakeProcessor {
 		Order order) {
 		userCouponOpt
 			.ifPresentOrElse(
-				(userCoupon) -> paymentAmountValidator.validate(paymentAmount, order, userCoupon),
-				() -> paymentAmountValidator.validate(paymentAmount, order)
+				(userCoupon) -> {
+					BigDecimal actualPaymentAmount = userCoupon.calculateDiscountAmount(order.getAmount());
+					if (paymentAmount.compareTo(actualPaymentAmount) != 0) {
+						throw new CommerceException(CommerceCode.MISMATCHED_EXPECTED_AMOUNT);
+					}
+				},
+				() -> {
+					BigDecimal actualPaymentAmount = order.getAmount();
+					if (paymentAmount.compareTo(actualPaymentAmount) != 0) {
+						throw new CommerceException(CommerceCode.MISMATCHED_EXPECTED_AMOUNT);
+					}
+				}
 			);
 	}
-
+	
 	public record Command(
 		Long userId,
 		Long orderId,

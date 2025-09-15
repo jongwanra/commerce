@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import kr.hhplus.be.commerce.cash.persistence.CashHistoryRepository;
@@ -49,10 +48,7 @@ class PaymentMakeProcessorUnitTest {
 
 	@Mock
 	private CashHistoryRepository cashHistoryRepository;
-
-	@Spy // 실제 객체를 주입합니다.
-	private PaymentAmountValidator paymentAmountValidator;
-
+	
 	// 작성 이유: 주문한 사용자만 결제가 가능한지 검증하기 위해서 작성했습니다.
 	@Test
 	void 주문한_사용자와_결제_사용자가_다를_경우_예외를_발생시킨다() {
