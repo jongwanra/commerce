@@ -133,11 +133,11 @@ class UserCouponEntityTest {
 		UserCouponEntity userCoupon = UserCouponEntity.of(userId, coupon, issuedAt);
 
 		// when & then
-		assertThat(userCoupon.calculateDiscountAmount(BigDecimal.valueOf(10_000))).isEqualByComparingTo(
+		assertThat(userCoupon.calculateFinalAmount(BigDecimal.valueOf(10_000))).isEqualByComparingTo(
 			BigDecimal.valueOf(9_000));
-		assertThat(userCoupon.calculateDiscountAmount(BigDecimal.valueOf(50_000))).isEqualByComparingTo(
+		assertThat(userCoupon.calculateFinalAmount(BigDecimal.valueOf(50_000))).isEqualByComparingTo(
 			BigDecimal.valueOf(45_000));
-		assertThat(userCoupon.calculateDiscountAmount(BigDecimal.valueOf(123_450))).isEqualByComparingTo(
+		assertThat(userCoupon.calculateFinalAmount(BigDecimal.valueOf(123_450))).isEqualByComparingTo(
 			BigDecimal.valueOf(111_105));
 	}
 

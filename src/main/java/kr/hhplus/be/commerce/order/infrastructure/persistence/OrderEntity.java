@@ -1,6 +1,7 @@
 package kr.hhplus.be.commerce.order.infrastructure.persistence;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import jakarta.persistence.Entity;
@@ -35,6 +36,12 @@ public class OrderEntity extends BaseTimeEntity {
 
 	// 주문가, 주문 라인의 상품 가격 * 주문 수량을 전부 더한 가격
 	private BigDecimal amount;
+	// 할인 가격(쿠폰 등)
+	private BigDecimal discountAmount;
+	// 최종 결제 가격(= amount - discountAmount)
+	private BigDecimal finalAmount;
+
+	private LocalDateTime confirmedAt;
 
 	public static OrderEntity fromDomain(Order order) {
 		OrderEntity entity = new OrderEntity();
@@ -42,6 +49,9 @@ public class OrderEntity extends BaseTimeEntity {
 		entity.userId = order.getUserId();
 		entity.status = order.getStatus();
 		entity.amount = order.getAmount();
+		entity.discountAmount = order.getDiscountAmount();
+		entity.finalAmount = order.getFinalAmount();
+		entity.confirmedAt = order.getConfirmedAt();
 		return entity;
 	}
 
@@ -53,7 +63,10 @@ public class OrderEntity extends BaseTimeEntity {
 			.userId(this.userId)
 			.status(this.status)
 			.amount(this.amount)
+			.discountAmount(this.discountAmount)
+			.finalAmount(this.finalAmount)
 			.orderLines(orderLines)
+			.confirmedAt(this.confirmedAt)
 			.build();
 	}
 }

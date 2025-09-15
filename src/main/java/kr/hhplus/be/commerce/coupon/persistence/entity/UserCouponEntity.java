@@ -84,13 +84,22 @@ public class UserCouponEntity extends BaseTimeEntity {
 		}
 	}
 
-	public BigDecimal calculateDiscountAmount(BigDecimal amount) {
+	public BigDecimal calculateFinalAmount(BigDecimal originalAmount) {
 		if (this.originDiscountType.equals(CouponDiscountType.FIXED)) {
-			return amount.subtract(originDiscountAmount);
+			return originalAmount.subtract(originDiscountAmount);
 		}
 
 		BigDecimal discountRateAsDecimal = originDiscountAmount.multiply(BigDecimal.valueOf(0.01)); // 할인율
-		BigDecimal discountAmount = amount.multiply(discountRateAsDecimal); // 할인 금액
-		return amount.subtract(discountAmount);
+		BigDecimal discountAmount = originalAmount.multiply(discountRateAsDecimal); // 할인 금액
+		return originalAmount.subtract(discountAmount);
+	}
+
+	public BigDecimal calculateDiscountAmount(BigDecimal originalAmount) {
+		if (this.originDiscountType.equals(CouponDiscountType.FIXED)) {
+			return originDiscountAmount;
+		}
+
+		BigDecimal discountRateAsDecimal = originDiscountAmount.multiply(BigDecimal.valueOf(0.01)); // 할인율
+		return originalAmount.multiply(discountRateAsDecimal); // 할인 금액
 	}
 }

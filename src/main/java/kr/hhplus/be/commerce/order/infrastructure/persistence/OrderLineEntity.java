@@ -30,8 +30,10 @@ public class OrderLineEntity extends BaseTimeEntity {
 	private Integer orderQuantity;
 
 	@Builder
-	private OrderLineEntity(Long orderId, Long productId, String originProductName, BigDecimal originProductAmount,
+	private OrderLineEntity(Long id, Long orderId, Long productId, String originProductName,
+		BigDecimal originProductAmount,
 		Integer orderQuantity) {
+		this.id = id;
 		this.orderId = orderId;
 		this.productId = productId;
 		this.originProductName = originProductName;
@@ -52,6 +54,7 @@ public class OrderLineEntity extends BaseTimeEntity {
 
 	public static OrderLineEntity fromDomain(OrderLine orderLine) {
 		return OrderLineEntity.builder()
+			.id(orderLine.getId())
 			.orderId(orderLine.getOrderId())
 			.productId(orderLine.getProductId())
 			.originProductName(orderLine.getProductName())

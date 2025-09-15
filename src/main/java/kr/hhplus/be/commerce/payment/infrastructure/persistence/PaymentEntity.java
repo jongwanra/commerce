@@ -43,17 +43,26 @@ public class PaymentEntity extends BaseTimeEntity {
 	LocalDateTime paidAt;
 
 	@Builder
-	private PaymentEntity(Long targetId, PaymentTargetType targetType, BigDecimal amount) {
+	private PaymentEntity(Long id, Long userId, Long targetId, PaymentTargetType targetType, BigDecimal amount,
+		PaymentStatus status, LocalDateTime paidAt) {
+		this.id = id;
+		this.userId = userId;
 		this.targetId = targetId;
 		this.targetType = targetType;
 		this.amount = amount;
+		this.status = status;
+		this.paidAt = paidAt;
 	}
 
 	public static PaymentEntity fromDomain(Payment payment) {
 		return PaymentEntity.builder()
+			.id(payment.getId())
 			.amount(payment.getAmount())
 			.targetId(payment.getTargetId())
 			.targetType(payment.getTargetType())
+			.userId(payment.getUserId())
+			.status(payment.getStatus())
+			.paidAt(payment.getPaidAt())
 			.build();
 	}
 

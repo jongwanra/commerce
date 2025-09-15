@@ -40,6 +40,7 @@ public class PaymentMakeProcessor {
 	public Output execute(Command command) {
 		Order order = orderRepository.findByIdWithLock(command.orderId)
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_ORDER));
+
 		order.authorize(command.userId);
 
 		CashEntity cash = cashRepository.findByUserId(command.userId)
@@ -50,19 +51,20 @@ public class PaymentMakeProcessor {
 				Optional.of(userCouponRepository.findById(command.userCouponId)
 					.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER_COUPON)));
 
-		// UserCoupon
-		validatePaymentAmountIsMatching(command.paymentAmount, userCouponOpt, order);
-		userCouponOpt.ifPresent((userCoupon) -> userCoupon.use(command.userId, command.now, order.getId()));
+		return userCouponOpt.map(userCoupon -> executeWithCoupon(command, order, cash, userCoupon))
+			.orElseGet(() -> executeWithoutCoupon(command, order, cash));
 
-		// Cash
+	}
+
+	private Output executeWithoutCoupon(Command command, Order order, CashEntity cash) {
+		validatePaymentAmountIsMatched(command.paymentAmount, order);
+
 		BigDecimal originalBalance = cash.getBalance();
 		cash.use(command.paymentAmount);
+		
+		Payment payment = Payment.fromOrder(command.userId, command.orderId, command.paymentAmount)
+			.succeed(command.now);
 
-		// Payment
-		Payment payment = Payment.fromOrder(command.userId, command.orderId, command.paymentAmount);
-		payment.succeed(command.now);
-
-		// Order
 		order.confirm(command.now);
 
 		cashHistoryRepository.save(
@@ -70,33 +72,50 @@ public class PaymentMakeProcessor {
 
 		return new Output(
 			cashRepository.save(cash),
-			userCouponOpt
-				.map(userCouponRepository::save)
-				.orElse(null),
+			null,
 			paymentRepository.save(payment),
 			orderRepository.save(order)
 		);
 	}
 
-	private void validatePaymentAmountIsMatching(BigDecimal paymentAmount, Optional<UserCouponEntity> userCouponOpt,
-		Order order) {
-		userCouponOpt
-			.ifPresentOrElse(
-				(userCoupon) -> {
-					BigDecimal actualPaymentAmount = userCoupon.calculateDiscountAmount(order.getAmount());
-					if (paymentAmount.compareTo(actualPaymentAmount) != 0) {
-						throw new CommerceException(CommerceCode.MISMATCHED_EXPECTED_AMOUNT);
-					}
-				},
-				() -> {
-					BigDecimal actualPaymentAmount = order.getAmount();
-					if (paymentAmount.compareTo(actualPaymentAmount) != 0) {
-						throw new CommerceException(CommerceCode.MISMATCHED_EXPECTED_AMOUNT);
-					}
-				}
-			);
+	private Output executeWithCoupon(Command command, Order order, CashEntity cash, UserCouponEntity userCoupon) {
+		validatePaymentAmountIsMatched(command.paymentAmount, userCoupon, order);
+		userCoupon.use(command.userId, command.now, order.getId());
+
+		BigDecimal originalBalance = cash.getBalance();
+		cash.use(command.paymentAmount);
+
+		Payment payment = Payment.fromOrder(command.userId, command.orderId, command.paymentAmount)
+			.succeed(command.now);
+
+		order.confirm(command.now, userCoupon);
+
+		cashHistoryRepository.save(
+			CashHistoryEntity.recordOfPurchase(command.userId, cash.getBalance(), originalBalance));
+
+		return new Output(
+			cashRepository.save(cash),
+			userCouponRepository.save(userCoupon),
+			paymentRepository.save(payment),
+			orderRepository.save(order)
+		);
 	}
-	
+
+	private void validatePaymentAmountIsMatched(BigDecimal paymentAmount, UserCouponEntity userCoupon,
+		Order order) {
+		BigDecimal actualPaymentAmount = userCoupon.calculateFinalAmount(order.getAmount());
+		if (paymentAmount.compareTo(actualPaymentAmount) != 0) {
+			throw new CommerceException(CommerceCode.MISMATCHED_EXPECTED_AMOUNT);
+		}
+	}
+
+	private void validatePaymentAmountIsMatched(BigDecimal paymentAmount, Order order) {
+		BigDecimal actualPaymentAmount = order.getAmount();
+		if (paymentAmount.compareTo(actualPaymentAmount) != 0) {
+			throw new CommerceException(CommerceCode.MISMATCHED_EXPECTED_AMOUNT);
+		}
+	}
+
 	public record Command(
 		Long userId,
 		Long orderId,

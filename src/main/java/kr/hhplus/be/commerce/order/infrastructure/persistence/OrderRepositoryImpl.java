@@ -21,6 +21,7 @@ public class OrderRepositoryImpl implements OrderRepository {
 	public Order save(Order order) {
 		OrderEntity orderEntity = orderJpaRepository.save(OrderEntity.fromDomain(order));
 		Long orderId = orderEntity.getId();
+		
 		List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.saveAll(
 			order.getOrderLines()
 				.stream()
