@@ -45,4 +45,17 @@ public class CashHistoryEntity extends BaseTimeEntity {
 		entity.amount = amount;
 		return entity;
 	}
+
+	public static CashHistoryEntity recordOfPurchase(
+		Long userId,
+		BigDecimal balanceAfter,
+		BigDecimal amount
+	) {
+		CashHistoryEntity entity = new CashHistoryEntity();
+		entity.userId = userId;
+		entity.action = CashHistoryAction.PURCHASE;
+		entity.balanceAfter = balanceAfter;
+		entity.amount = amount;
+		return entity;
+	}
 }

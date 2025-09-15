@@ -1,9 +1,12 @@
 package kr.hhplus.be.commerce.order.domain.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import kr.hhplus.be.commerce.global.exception.CommerceCode;
+import kr.hhplus.be.commerce.global.exception.CommerceException;
 import kr.hhplus.be.commerce.order.domain.model.enums.OrderStatus;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,6 +19,7 @@ public class Order {
 	// 주문가, 주문 라인의 상품 가격 * 주문 수량을 전부 더한 가격
 	private BigDecimal amount;
 	private List<OrderLine> orderLines = new ArrayList<>();
+	private LocalDateTime confirmedAt;
 
 	protected Order() {
 	}
@@ -42,5 +46,20 @@ public class Order {
 		this.status = status;
 		this.amount = amount;
 		this.orderLines = orderLines;
+	}
+
+	public void authorize(Long userId) {
+		if (this.userId.equals(userId)) {
+			return;
+		}
+		throw new CommerceException(CommerceCode.UNAUTHORIZED_USER);
+	}
+
+	public void confirm(LocalDateTime now) {
+		if (status.isConfirmed()) {
+			throw new CommerceException(CommerceCode.ALREADY_CONFIRMED_ORDER);
+		}
+		this.status = OrderStatus.CONFIRMED;
+		this.confirmedAt = now;
 	}
 }

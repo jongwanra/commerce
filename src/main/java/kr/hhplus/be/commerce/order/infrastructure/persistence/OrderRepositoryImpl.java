@@ -1,6 +1,9 @@
 package kr.hhplus.be.commerce.order.infrastructure.persistence;
 
+import static java.util.Objects.*;
+
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
@@ -30,5 +33,17 @@ public class OrderRepositoryImpl implements OrderRepository {
 				.toList());
 
 		return orderEntity.toDomain(orderLineEntities);
+	}
+
+	@Override
+	public Optional<Order> findByIdWithLock(Long orderId) {
+		if (isNull(orderId)) {
+			return Optional.empty();
+		}
+		return orderJpaRepository.findByIdWithLock(orderId)
+			.map((orderEntity) -> {
+				List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.findAllByOrderId(orderEntity.getId());
+				return orderEntity.toDomain(orderLineEntities);
+			});
 	}
 }

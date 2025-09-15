@@ -10,4 +10,8 @@ public enum UserCouponStatus {
 	USED("사용됨");
 
 	private final String description;
+
+	public boolean isUsed() {
+		return this.equals(USED);
+	}
 }

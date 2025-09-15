@@ -11,4 +11,8 @@ public enum OrderStatus {
 	CANCELLED("주문 취소됨"),
 	;
 	private final String description;
+
+	public boolean isConfirmed() {
+		return this == CONFIRMED;
+	}
 }

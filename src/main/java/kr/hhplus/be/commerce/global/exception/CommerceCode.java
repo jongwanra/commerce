@@ -13,7 +13,7 @@ public enum CommerceCode {
 
 	// Auth(AU-0001 ~)
 	UNAUTHENTICATED_USER(401, "AU-0001", "인증되지 않은 사용자입니다."),
-	UNAUTHORIZED_USER(403, "AU-0002", "권한이 없는 사용자입니다."),
+	UNAUTHORIZED_USER(403, "AU-0002", "접근 권한이 없는 사용자입니다."),
 
 	// User(UR-0001 ~)
 	NOT_FOUND_USER(400, "UR-0001", "존재하지 않는 사용자입니다."),
@@ -23,6 +23,7 @@ public enum CommerceCode {
 	CHARGE_AMOUNT_MUST_BE_POSITIVE(400, "CH-0002", "충전 금액은 0원보다 커야 합니다."),
 	CHARGE_AMOUNT_PER_ONCE_EXCEEDS_LIMIT(400, "CH-0003", "한 번에 %s원을 초과하여 충전할 수 없습니다."),
 	INSUFFICIENT_CASH(400, "CH-0004", "잔액이 부족합니다. 잔액을 충전해주세요."),
+	AMOUNT_MUST_BE_POSITIVE(400, "CH-0005", "사용할 금액은 0원보다 커야 합니다."),
 
 	// Coupon(CP-0001 ~)
 	NOT_FOUND_COUPON(400, "CP-0001", "존재하지 않는 쿠폰입니다."),
@@ -30,11 +31,16 @@ public enum CommerceCode {
 	OUT_OF_STOCK_COUPON(400, "CP-0003", "재고가 소진된 쿠폰입니다."),
 	ALREADY_ISSUED_COUPON(400, "CP-0004", "이미 발급 받은 쿠폰입니다."),
 
+	// UserCoupon(UC-0001 ~)
+	UNAVAILABLE_USER_COUPON(400, "UC-0001", "이용 불가능한 쿠폰입니다."),
+	NOT_FOUND_USER_COUPON(400, "UC-0002", "존재하지 않는 사용자 쿠폰입니다."),
+
 	// Order(OR-0001 ~)
 	NOT_FOUND_ORDER(400, "OR-0001", "존재하지 않는 주문입니다."),
 	NOT_FOUND_ORDER_LINE(400, "OR-0002", "존재하지 않는 주문 상품입니다."),
 	ORDER_LINE_COMMANDS_IS_EMPTY(400, "OR-0003", "주문할 상품은 최소 1개 이상이어야 합니다."),
 	ORDER_QUANTITY_MUST_BE_POSITIVE(400, "OR-0004", "주문 수량은 1개 이상이어야 합니다."),
+	ALREADY_CONFIRMED_ORDER(400, "OR-0005", "이미 확정된 주문입니다."),
 
 	// Product(PT-0001 ~)
 	NOT_FOUND_PRODUCT(400, "PT-0001", "존재하지 않는 상품입니다."),

@@ -1,5 +1,7 @@
 package kr.hhplus.be.commerce.coupon.persistence;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -14,4 +16,6 @@ public interface UserCouponRepository {
 	UserCouponEntity save(UserCouponEntity userCoupon);
 
 	Page<UserCouponEntity> findPageByUserId(Long userId, Long lastId, Pageable pageable);
+
+	Optional<UserCouponEntity> findById(Long userCouponId);
 }

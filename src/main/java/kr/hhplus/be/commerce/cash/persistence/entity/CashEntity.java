@@ -42,6 +42,19 @@ public class CashEntity extends BaseTimeEntity {
 		this.balance = this.balance.add(amount);
 	}
 
+	public void use(BigDecimal amount) {
+		validateAmountIsPositive(amount);
+		validateSufficientBalance(amount);
+
+		this.balance = this.balance.subtract(amount);
+	}
+
+	private void validateSufficientBalance(BigDecimal amount) {
+		if (this.balance.compareTo(amount) < 0) {
+			throw new CommerceException(INSUFFICIENT_CASH);
+		}
+	}
+
 	private void validateAmountExceedsMaxOnceChargeLimit(BigDecimal amount) {
 		if (MAX_ONCE_CHARGE_AMOUNT.compareTo(amount) < 0) {
 			final String formattedMaxOnceChargeAmount = String.format("%,d", MAX_ONCE_CHARGE_AMOUNT.longValue());
@@ -51,7 +64,8 @@ public class CashEntity extends BaseTimeEntity {
 
 	private void validateAmountIsPositive(BigDecimal amount) {
 		if (amount.compareTo(BigDecimal.ZERO) < 1) {
-			throw new CommerceException(CHARGE_AMOUNT_MUST_BE_POSITIVE);
+			throw new CommerceException(AMOUNT_MUST_BE_POSITIVE);
 		}
 	}
+	
 }

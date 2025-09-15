@@ -4,6 +4,7 @@ import static kr.hhplus.be.commerce.coupon.persistence.entity.QUserCouponEntity.
 import static kr.hhplus.be.commerce.global.utils.Validator.*;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -69,6 +70,11 @@ public class UserCouponRepositoryImpl implements UserCouponRepository {
 			.fetchFirst();
 
 		return new PageImpl<>(userCoupons, pageable, totalCount);
+	}
+
+	@Override
+	public Optional<UserCouponEntity> findById(Long userCouponId) {
+		return userCouponJpaRepository.findById(userCouponId);
 	}
 
 }

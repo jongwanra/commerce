@@ -23,6 +23,7 @@ public interface PaymentMakeApi {
 		@ApiResponseErrorCode(CommerceCode.INSUFFICIENT_CASH),
 		@ApiResponseErrorCode(CommerceCode.MISMATCHED_EXPECTED_AMOUNT),
 		@ApiResponseErrorCode(CommerceCode.NOT_FOUND_ORDER),
+		@ApiResponseErrorCode(CommerceCode.UNAVAILABLE_USER_COUPON)
 	})
 	EmptyResponse makePayment(
 		@Parameter(hidden = true) Long userId,

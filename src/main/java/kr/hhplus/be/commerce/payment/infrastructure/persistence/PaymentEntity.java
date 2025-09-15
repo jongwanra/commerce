@@ -1,0 +1,71 @@
+package kr.hhplus.be.commerce.payment.infrastructure.persistence;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import kr.hhplus.be.commerce.global.entity.BaseTimeEntity;
+import kr.hhplus.be.commerce.payment.domain.model.Payment;
+import kr.hhplus.be.commerce.payment.domain.model.enums.PaymentStatus;
+import kr.hhplus.be.commerce.payment.domain.model.enums.PaymentTargetType;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "payment")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class PaymentEntity extends BaseTimeEntity {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+
+	private Long userId;
+
+	private Long targetId;
+
+	@Enumerated(EnumType.STRING)
+	private PaymentTargetType targetType;
+
+	BigDecimal amount;
+
+	@Enumerated(EnumType.STRING)
+	private PaymentStatus status;
+
+	LocalDateTime paidAt;
+
+	@Builder
+	private PaymentEntity(Long targetId, PaymentTargetType targetType, BigDecimal amount) {
+		this.targetId = targetId;
+		this.targetType = targetType;
+		this.amount = amount;
+	}
+
+	public static PaymentEntity fromDomain(Payment payment) {
+		return PaymentEntity.builder()
+			.amount(payment.getAmount())
+			.targetId(payment.getTargetId())
+			.targetType(payment.getTargetType())
+			.build();
+	}
+
+	public Payment toDomain() {
+		return Payment.builder()
+			.id(this.id)
+			.userId(this.userId)
+			.targetId(this.targetId)
+			.targetType(this.targetType)
+			.amount(this.amount)
+			.status(this.status)
+			.paidAt(this.paidAt)
+			.build();
+	}
+}

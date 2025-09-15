@@ -1,5 +1,7 @@
 package kr.hhplus.be.commerce.coupon.persistence.entity;
 
+import static java.util.Objects.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -12,6 +14,8 @@ import jakarta.persistence.Id;
 import kr.hhplus.be.commerce.coupon.persistence.entity.enums.CouponDiscountType;
 import kr.hhplus.be.commerce.coupon.persistence.entity.enums.UserCouponStatus;
 import kr.hhplus.be.commerce.global.entity.BaseTimeEntity;
+import kr.hhplus.be.commerce.global.exception.CommerceCode;
+import kr.hhplus.be.commerce.global.exception.CommerceException;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -59,4 +63,34 @@ public class UserCouponEntity extends BaseTimeEntity {
 		return userCoupon;
 	}
 
+	public void use(Long userId, LocalDateTime now, Long orderId) {
+		authorize(userId);
+		if (this.status.isUsed()) {
+			throw new CommerceException(CommerceCode.UNAVAILABLE_USER_COUPON);
+		}
+
+		if (nonNull(this.originExpiredAt) && (originExpiredAt.isEqual(now) || originExpiredAt.isBefore(now))) {
+			throw new CommerceException(CommerceCode.EXPIRED_COUPON);
+		}
+
+		this.status = UserCouponStatus.USED;
+		this.lastUsedAt = now;
+		this.orderId = orderId;
+	}
+
+	private void authorize(Long userId) {
+		if (!this.userId.equals(userId)) {
+			throw new CommerceException(CommerceCode.UNAUTHORIZED_USER);
+		}
+	}
+
+	public BigDecimal calculateDiscountAmount(BigDecimal amount) {
+		if (this.originDiscountType.equals(CouponDiscountType.FIXED)) {
+			return amount.subtract(originDiscountAmount);
+		}
+
+		BigDecimal discountRateAsDecimal = originDiscountAmount.multiply(BigDecimal.valueOf(0.01)); // 할인율
+		BigDecimal discountAmount = amount.multiply(discountRateAsDecimal); // 할인 금액
+		return amount.subtract(discountAmount);
+	}
 }
