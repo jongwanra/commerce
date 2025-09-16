@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.product.persistence;
+package kr.hhplus.be.commerce.product.infrastructure;
 
 import java.util.List;
 
@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import kr.hhplus.be.commerce.product.domain.model.Product;
 import kr.hhplus.be.commerce.product.domain.repositorty.ProductRepository;
+import kr.hhplus.be.commerce.product.infrastructure.entity.ProductEntity;
 import lombok.RequiredArgsConstructor;
 
 @Repository
@@ -26,10 +27,11 @@ public class ProductRepositoryImpl implements ProductRepository {
 		List<ProductEntity> entities = products.stream()
 			.map(ProductEntity::fromDomain)
 			.toList();
-		
+
 		return productJpaRepository.saveAll(entities)
 			.stream()
 			.map(ProductEntity::toDomain)
 			.toList();
 	}
+
 }

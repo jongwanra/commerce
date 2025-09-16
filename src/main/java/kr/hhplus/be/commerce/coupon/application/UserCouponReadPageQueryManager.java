@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import kr.hhplus.be.commerce.coupon.persistence.UserCouponRepository;
 import kr.hhplus.be.commerce.coupon.persistence.entity.UserCouponEntity;
 import kr.hhplus.be.commerce.coupon.presentation.response.UserCouponSummaryResponse;
-import kr.hhplus.be.commerce.global.response.CursorPagination;
+import kr.hhplus.be.commerce.global.response.CursorPage;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -18,7 +18,7 @@ public class UserCouponReadPageQueryManager {
 	private final UserCouponRepository userCouponRepository;
 
 	@Transactional(readOnly = true)
-	public CursorPagination<UserCouponSummaryResponse> read(Query query) {
+	public CursorPage<UserCouponSummaryResponse> read(Query query) {
 		Pageable pageable = PageRequest.ofSize(query.size);
 		Page<UserCouponEntity> pageOfUserCoupon = userCouponRepository.findPageByUserId(
 			query.userId(),
@@ -26,7 +26,7 @@ public class UserCouponReadPageQueryManager {
 			pageable
 		);
 
-		return new CursorPagination<>(
+		return new CursorPage<>(
 			pageOfUserCoupon.getTotalElements(),
 			pageOfUserCoupon.hasNext(),
 			pageOfUserCoupon

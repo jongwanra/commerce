@@ -13,7 +13,7 @@ import kr.hhplus.be.commerce.coupon.presentation.controller.api.UserCouponReadPa
 import kr.hhplus.be.commerce.coupon.presentation.response.UserCouponSummaryResponse;
 import kr.hhplus.be.commerce.global.annotation.LoginUserId;
 import kr.hhplus.be.commerce.global.request.CursorPaginationRequest;
-import kr.hhplus.be.commerce.global.response.CursorPagination;
+import kr.hhplus.be.commerce.global.response.CursorPage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +26,7 @@ public class UserCouponReadPageController implements UserCouponReadPageApi {
 	@Override
 	@GetMapping("/api/v1/me/coupons")
 	@ResponseStatus(HttpStatus.OK)
-	public CursorPagination<UserCouponSummaryResponse> readPage(
+	public CursorPage<UserCouponSummaryResponse> readPage(
 		@LoginUserId Long userId,
 		@Valid CursorPaginationRequest cursorPaginationRequest
 	) {

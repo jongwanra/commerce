@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.product.persistence;
+package kr.hhplus.be.commerce.product.infrastructure.entity;
 
 import java.math.BigDecimal;
 
@@ -32,6 +32,7 @@ public class ProductEntity extends BaseTimeEntity {
 			.name(name)
 			.stock(stock)
 			.price(price)
+			.createdAt(getCreatedAt())
 			.build();
 	}
 

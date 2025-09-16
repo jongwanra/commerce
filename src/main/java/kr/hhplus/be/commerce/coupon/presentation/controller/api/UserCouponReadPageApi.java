@@ -9,7 +9,7 @@ import kr.hhplus.be.commerce.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.global.open_api.annotation.ApiResponseErrorCode;
 import kr.hhplus.be.commerce.global.open_api.annotation.ApiResponseErrorCodes;
 import kr.hhplus.be.commerce.global.request.CursorPaginationRequest;
-import kr.hhplus.be.commerce.global.response.CursorPagination;
+import kr.hhplus.be.commerce.global.response.CursorPage;
 
 public interface UserCouponReadPageApi {
 
@@ -20,7 +20,7 @@ public interface UserCouponReadPageApi {
 	@ApiResponseErrorCodes({
 		@ApiResponseErrorCode(CommerceCode.UNAUTHENTICATED_USER),
 	})
-	CursorPagination<UserCouponSummaryResponse> readPage(
+	CursorPage<UserCouponSummaryResponse> readPage(
 		@Parameter(hidden = true) Long userId,
 		@ParameterObject CursorPaginationRequest cursorPaginationRequest
 	);

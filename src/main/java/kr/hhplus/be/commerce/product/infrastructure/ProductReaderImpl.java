@@ -1,0 +1,110 @@
+package kr.hhplus.be.commerce.product.infrastructure;
+
+import static kr.hhplus.be.commerce.product.persistence.entity.QProductEntity.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import com.querydsl.core.types.ConstructorExpression;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+
+import jakarta.persistence.EntityManager;
+import kr.hhplus.be.commerce.global.response.CursorPage;
+import kr.hhplus.be.commerce.product.domain.model.ProductSummaryView;
+import kr.hhplus.be.commerce.product.domain.repositorty.ProductReader;
+import kr.hhplus.be.commerce.product.domain.repositorty.input.ProductReadPageInput;
+import kr.hhplus.be.commerce.product.domain.repositorty.input.enums.ProductSortType;
+
+@Repository
+public class ProductReaderImpl implements ProductReader {
+	private JPAQueryFactory queryFactory;
+
+	public ProductReaderImpl(EntityManager entityManager) {
+		this.queryFactory = new JPAQueryFactory(entityManager);
+	}
+
+	@Override
+	public CursorPage<ProductSummaryView> readPage(ProductReadPageInput input) {
+
+		List<ProductSummaryView> products = queryFactory
+			.select(constructorOfProductSummaryView())
+			.from(productEntity)
+			.where(buildWhereCondition(input))
+			.orderBy(buildOrderBy(input))
+			.limit(input.size() + 1)
+			.fetch();
+
+		final boolean hasNext = products.size() > input.size();
+		if (hasNext) {
+			products.remove(input.size());
+		}
+
+		final long totalCount = queryFactory
+			.select(productEntity.id.count())
+			.from(productEntity)
+			.fetchFirst();
+
+		return CursorPage.of(
+			hasNext,
+			totalCount,
+			products
+		);
+	}
+
+	private BooleanExpression buildWhereCondition(ProductReadPageInput input) {
+		return switch (input.sortType()) {
+			case OLDEST -> buildWhereConditionForOldest(input);
+			case NEWEST -> buildWhereConditionForNewest(input);
+		};
+	}
+
+	private OrderSpecifier<?> buildOrderBy(ProductReadPageInput input) {
+		// oldest
+		if (input.sortType().equals(ProductSortType.OLDEST)) {
+			return productEntity.createdAt.asc();
+		}
+		// newest
+		return productEntity.createdAt.desc();
+	}
+
+	private BooleanExpression buildWhereConditionForOldest(ProductReadPageInput input) {
+		if (input.lastId() == 0) {
+			return null;
+		}
+		final LocalDateTime lastCreatedAt = queryFactory
+			.select(productEntity.createdAt)
+			.from(productEntity)
+			.where(productEntity.id.eq(input.lastId()))
+			.fetchFirst();
+
+		return productEntity.createdAt.gt(lastCreatedAt);
+	}
+
+	private BooleanExpression buildWhereConditionForNewest(ProductReadPageInput input) {
+		if (input.lastId() == 0) {
+			return null;
+		}
+		final LocalDateTime lastCreatedAt = queryFactory
+			.select(productEntity.createdAt)
+			.from(productEntity)
+			.where(productEntity.id.eq(input.lastId()))
+			.fetchFirst();
+
+		return productEntity.createdAt.lt(lastCreatedAt);
+	}
+
+	private ConstructorExpression<ProductSummaryView> constructorOfProductSummaryView() {
+		return Projections.constructor(
+			ProductSummaryView.class,
+			productEntity.id,
+			productEntity.name,
+			productEntity.price,
+			productEntity.createdAt
+		);
+	}
+}
