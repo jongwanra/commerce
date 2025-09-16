@@ -29,6 +29,19 @@ public class Order {
 	protected Order() {
 	}
 
+	@Builder
+	private Order(Long id, Long userId, OrderStatus status, BigDecimal amount, BigDecimal discountAmount,
+		BigDecimal finalAmount, List<OrderLine> orderLines, LocalDateTime confirmedAt) {
+		this.id = id;
+		this.userId = userId;
+		this.status = status;
+		this.amount = amount;
+		this.discountAmount = discountAmount;
+		this.finalAmount = finalAmount;
+		this.orderLines = orderLines;
+		this.confirmedAt = confirmedAt;
+	}
+
 	public static Order place(Long userId, List<OrderLine> orderLines) {
 		Order order = new Order();
 		order.userId = userId;
@@ -44,19 +57,6 @@ public class Order {
 		return this.orderLines.stream()
 			.map(OrderLine::getTotalAmount)
 			.reduce(BigDecimal.ZERO, BigDecimal::add);
-	}
-
-	@Builder
-	private Order(Long id, Long userId, OrderStatus status, BigDecimal amount, BigDecimal discountAmount,
-		BigDecimal finalAmount, List<OrderLine> orderLines, LocalDateTime confirmedAt) {
-		this.id = id;
-		this.userId = userId;
-		this.status = status;
-		this.amount = amount;
-		this.discountAmount = discountAmount;
-		this.finalAmount = finalAmount;
-		this.orderLines = orderLines;
-		this.confirmedAt = confirmedAt;
 	}
 
 	public void authorize(Long userId) {

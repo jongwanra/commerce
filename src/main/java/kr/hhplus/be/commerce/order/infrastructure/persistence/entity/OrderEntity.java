@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.order.infrastructure.persistence;
+package kr.hhplus.be.commerce.order.infrastructure.persistence.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

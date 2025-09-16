@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.user.persistence;
+package kr.hhplus.be.commerce.user.persistence.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -8,7 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import kr.hhplus.be.commerce.global.entity.BaseTimeEntity;
-import kr.hhplus.be.commerce.user.persistence.enums.UserStatus;
+import kr.hhplus.be.commerce.user.persistence.entity.enums.UserStatus;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

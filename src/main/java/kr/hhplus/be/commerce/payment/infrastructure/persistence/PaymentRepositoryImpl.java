@@ -4,6 +4,7 @@ import org.springframework.stereotype.Repository;
 
 import kr.hhplus.be.commerce.payment.domain.model.Payment;
 import kr.hhplus.be.commerce.payment.domain.repository.PaymentRepository;
+import kr.hhplus.be.commerce.payment.infrastructure.persistence.entity.PaymentEntity;
 import lombok.RequiredArgsConstructor;
 
 @Repository
