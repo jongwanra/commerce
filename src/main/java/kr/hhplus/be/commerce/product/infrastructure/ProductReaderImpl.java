@@ -1,9 +1,10 @@
 package kr.hhplus.be.commerce.product.infrastructure;
 
-import static kr.hhplus.be.commerce.product.persistence.entity.QProductEntity.*;
+import static kr.hhplus.be.commerce.product.infrastructure.entity.QProductEntity.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
@@ -15,6 +16,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import jakarta.persistence.EntityManager;
 import kr.hhplus.be.commerce.global.response.CursorPage;
+import kr.hhplus.be.commerce.product.domain.model.ProductDetailView;
 import kr.hhplus.be.commerce.product.domain.model.ProductSummaryView;
 import kr.hhplus.be.commerce.product.domain.repositorty.ProductReader;
 import kr.hhplus.be.commerce.product.domain.repositorty.input.ProductReadPageInput;
@@ -53,6 +55,17 @@ public class ProductReaderImpl implements ProductReader {
 			hasNext,
 			totalCount,
 			products
+		);
+	}
+
+	@Override
+	public Optional<ProductDetailView> readById(Long productId) {
+		return Optional.ofNullable(
+			queryFactory
+				.select(constructorOfProductDetailView())
+				.from(productEntity)
+				.where(productEntity.id.eq(productId))
+				.fetchFirst()
 		);
 	}
 
@@ -104,6 +117,17 @@ public class ProductReaderImpl implements ProductReader {
 			productEntity.id,
 			productEntity.name,
 			productEntity.price,
+			productEntity.createdAt
+		);
+	}
+
+	private ConstructorExpression<ProductDetailView> constructorOfProductDetailView() {
+		return Projections.constructor(
+			ProductDetailView.class,
+			productEntity.id,
+			productEntity.name,
+			productEntity.price,
+			productEntity.stock,
 			productEntity.createdAt
 		);
 	}
