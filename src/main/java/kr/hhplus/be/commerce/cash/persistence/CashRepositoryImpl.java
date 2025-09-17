@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
-import kr.hhplus.be.commerce.cash.persistence.entity.CashEntity;
 import lombok.RequiredArgsConstructor;
 
 @Repository

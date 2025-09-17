@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import jakarta.persistence.LockModeType;
-import kr.hhplus.be.commerce.coupon.persistence.entity.CouponEntity;
 
 public interface CouponJpaRepository extends JpaRepository<CouponEntity, Long> {
 	@Lock(LockModeType.PESSIMISTIC_WRITE)

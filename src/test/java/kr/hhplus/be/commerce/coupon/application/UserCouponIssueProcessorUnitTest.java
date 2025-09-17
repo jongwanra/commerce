@@ -15,11 +15,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import kr.hhplus.be.commerce.AbstractUnitTestSupport;
+import kr.hhplus.be.commerce.coupon.persistence.CouponEntity;
 import kr.hhplus.be.commerce.coupon.persistence.CouponJpaRepository;
+import kr.hhplus.be.commerce.coupon.persistence.UserCouponEntity;
 import kr.hhplus.be.commerce.coupon.persistence.UserCouponRepository;
-import kr.hhplus.be.commerce.coupon.persistence.entity.CouponEntity;
-import kr.hhplus.be.commerce.coupon.persistence.entity.UserCouponEntity;
-import kr.hhplus.be.commerce.coupon.persistence.entity.enums.CouponDiscountType;
+import kr.hhplus.be.commerce.coupon.persistence.enums.CouponDiscountType;
 import kr.hhplus.be.commerce.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.global.exception.CommerceException;
 

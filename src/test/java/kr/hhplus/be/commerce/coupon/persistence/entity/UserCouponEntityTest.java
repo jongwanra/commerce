@@ -7,8 +7,10 @@ import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 
-import kr.hhplus.be.commerce.coupon.persistence.entity.enums.CouponDiscountType;
-import kr.hhplus.be.commerce.coupon.persistence.entity.enums.UserCouponStatus;
+import kr.hhplus.be.commerce.coupon.persistence.CouponEntity;
+import kr.hhplus.be.commerce.coupon.persistence.UserCouponEntity;
+import kr.hhplus.be.commerce.coupon.persistence.enums.CouponDiscountType;
+import kr.hhplus.be.commerce.coupon.persistence.enums.UserCouponStatus;
 import kr.hhplus.be.commerce.global.exception.CommerceException;
 
 class UserCouponEntityTest {

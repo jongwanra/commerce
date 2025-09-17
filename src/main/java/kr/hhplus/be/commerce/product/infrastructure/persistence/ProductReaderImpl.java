@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.product.infrastructure;
+package kr.hhplus.be.commerce.product.infrastructure.persistence;
 
 import static kr.hhplus.be.commerce.product.infrastructure.entity.QProductEntity.*;
 

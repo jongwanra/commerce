@@ -14,7 +14,6 @@ import org.springframework.stereotype.Repository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import jakarta.persistence.EntityManager;
-import kr.hhplus.be.commerce.coupon.persistence.entity.UserCouponEntity;
 
 @Repository
 public class UserCouponRepositoryImpl implements UserCouponRepository {

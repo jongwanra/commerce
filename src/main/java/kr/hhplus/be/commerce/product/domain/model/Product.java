@@ -5,12 +5,10 @@ import java.time.LocalDateTime;
 
 import kr.hhplus.be.commerce.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.global.exception.CommerceException;
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@Builder(access = AccessLevel.PUBLIC)
 public class Product {
 	private Long id;
 	private String name;
@@ -18,10 +16,20 @@ public class Product {
 	private BigDecimal price;
 	private LocalDateTime createdAt;
 
+	@Builder
+	private Product(Long id, String name, Integer stock, BigDecimal price, LocalDateTime createdAt) {
+		this.id = id;
+		this.name = name;
+		this.stock = stock;
+		this.price = price;
+		this.createdAt = createdAt;
+	}
+
 	public void deductStock(int quantity) {
 		if (this.stock < quantity) {
 			throw new CommerceException(CommerceCode.INSUFFICIENT_PRODUCT_STOCK);
 		}
 		this.stock -= quantity;
 	}
+	
 }

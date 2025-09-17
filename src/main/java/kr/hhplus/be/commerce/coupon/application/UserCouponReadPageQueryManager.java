@@ -6,8 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.hhplus.be.commerce.coupon.persistence.UserCouponEntity;
 import kr.hhplus.be.commerce.coupon.persistence.UserCouponRepository;
-import kr.hhplus.be.commerce.coupon.persistence.entity.UserCouponEntity;
 import kr.hhplus.be.commerce.coupon.presentation.response.UserCouponSummaryResponse;
 import kr.hhplus.be.commerce.global.response.CursorPage;
 import lombok.RequiredArgsConstructor;

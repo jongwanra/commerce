@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.payment.infrastructure.persistence.entity;
+package kr.hhplus.be.commerce.payment.infrastructure.persistence;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

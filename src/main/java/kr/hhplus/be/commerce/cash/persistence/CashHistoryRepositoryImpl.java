@@ -2,7 +2,6 @@ package kr.hhplus.be.commerce.cash.persistence;
 
 import org.springframework.stereotype.Repository;
 
-import kr.hhplus.be.commerce.cash.persistence.entity.CashHistoryEntity;
 import lombok.RequiredArgsConstructor;
 
 @Repository

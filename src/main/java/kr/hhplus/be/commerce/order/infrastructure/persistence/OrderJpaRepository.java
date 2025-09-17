@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import jakarta.persistence.LockModeType;
-import kr.hhplus.be.commerce.order.infrastructure.persistence.entity.OrderEntity;
 
 public interface OrderJpaRepository extends JpaRepository<OrderEntity, Long> {
 	@Lock(LockModeType.PESSIMISTIC_WRITE)

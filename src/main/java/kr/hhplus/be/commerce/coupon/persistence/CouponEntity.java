@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.coupon.persistence.entity;
+package kr.hhplus.be.commerce.coupon.persistence;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -9,7 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import kr.hhplus.be.commerce.coupon.persistence.entity.enums.CouponDiscountType;
+import kr.hhplus.be.commerce.coupon.persistence.enums.CouponDiscountType;
 import kr.hhplus.be.commerce.global.entity.BaseTimeEntity;
 import kr.hhplus.be.commerce.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.global.exception.CommerceException;

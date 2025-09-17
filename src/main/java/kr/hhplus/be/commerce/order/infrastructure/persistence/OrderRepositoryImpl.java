@@ -9,8 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import kr.hhplus.be.commerce.order.domain.model.Order;
 import kr.hhplus.be.commerce.order.domain.repository.OrderRepository;
-import kr.hhplus.be.commerce.order.infrastructure.persistence.entity.OrderEntity;
-import kr.hhplus.be.commerce.order.infrastructure.persistence.entity.OrderLineEntity;
 import lombok.RequiredArgsConstructor;
 
 @Repository

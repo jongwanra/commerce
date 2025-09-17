@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.user.persistence.entity.enums;
+package kr.hhplus.be.commerce.user.persistence.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.coupon.persistence.entity.enums;
+package kr.hhplus.be.commerce.coupon.persistence.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

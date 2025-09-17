@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.order.infrastructure.persistence.entity;
+package kr.hhplus.be.commerce.order.infrastructure.persistence;
 
 import java.math.BigDecimal;
 

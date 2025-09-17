@@ -5,10 +5,10 @@ import java.math.BigDecimal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.hhplus.be.commerce.cash.persistence.CashEntity;
+import kr.hhplus.be.commerce.cash.persistence.CashHistoryEntity;
 import kr.hhplus.be.commerce.cash.persistence.CashHistoryJpaRepository;
 import kr.hhplus.be.commerce.cash.persistence.CashJpaRepository;
-import kr.hhplus.be.commerce.cash.persistence.entity.CashEntity;
-import kr.hhplus.be.commerce.cash.persistence.entity.CashHistoryEntity;
 import kr.hhplus.be.commerce.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.global.exception.CommerceException;
 import lombok.RequiredArgsConstructor;

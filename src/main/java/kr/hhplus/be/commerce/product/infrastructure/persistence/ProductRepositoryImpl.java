@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.product.infrastructure;
+package kr.hhplus.be.commerce.product.infrastructure.persistence;
 
 import java.util.List;
 
@@ -6,7 +6,6 @@ import org.springframework.stereotype.Repository;
 
 import kr.hhplus.be.commerce.product.domain.model.Product;
 import kr.hhplus.be.commerce.product.domain.repositorty.ProductRepository;
-import kr.hhplus.be.commerce.product.infrastructure.entity.ProductEntity;
 import lombok.RequiredArgsConstructor;
 
 @Repository

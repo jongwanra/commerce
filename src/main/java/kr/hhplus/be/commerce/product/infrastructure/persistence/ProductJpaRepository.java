@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.product.infrastructure;
+package kr.hhplus.be.commerce.product.infrastructure.persistence;
 
 import java.util.List;
 
@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import jakarta.persistence.LockModeType;
-import kr.hhplus.be.commerce.product.infrastructure.entity.ProductEntity;
 
 public interface ProductJpaRepository extends JpaRepository<ProductEntity, Long> {
 	@Lock(LockModeType.PESSIMISTIC_WRITE)

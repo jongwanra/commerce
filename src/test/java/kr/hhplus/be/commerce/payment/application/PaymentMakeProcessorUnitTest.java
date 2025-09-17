@@ -15,14 +15,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import kr.hhplus.be.commerce.cash.persistence.CashEntity;
 import kr.hhplus.be.commerce.cash.persistence.CashHistoryRepository;
 import kr.hhplus.be.commerce.cash.persistence.CashRepository;
-import kr.hhplus.be.commerce.cash.persistence.entity.CashEntity;
+import kr.hhplus.be.commerce.coupon.persistence.CouponEntity;
+import kr.hhplus.be.commerce.coupon.persistence.UserCouponEntity;
 import kr.hhplus.be.commerce.coupon.persistence.UserCouponRepository;
-import kr.hhplus.be.commerce.coupon.persistence.entity.CouponEntity;
-import kr.hhplus.be.commerce.coupon.persistence.entity.UserCouponEntity;
-import kr.hhplus.be.commerce.coupon.persistence.entity.enums.CouponDiscountType;
-import kr.hhplus.be.commerce.coupon.persistence.entity.enums.UserCouponStatus;
+import kr.hhplus.be.commerce.coupon.persistence.enums.CouponDiscountType;
+import kr.hhplus.be.commerce.coupon.persistence.enums.UserCouponStatus;
 import kr.hhplus.be.commerce.global.exception.CommerceException;
 import kr.hhplus.be.commerce.order.domain.model.Order;
 import kr.hhplus.be.commerce.order.domain.model.OrderLine;
@@ -48,7 +48,7 @@ class PaymentMakeProcessorUnitTest {
 
 	@Mock
 	private CashHistoryRepository cashHistoryRepository;
-	
+
 	// 작성 이유: 주문한 사용자만 결제가 가능한지 검증하기 위해서 작성했습니다.
 	@Test
 	void 주문한_사용자와_결제_사용자가_다를_경우_예외를_발생시킨다() {

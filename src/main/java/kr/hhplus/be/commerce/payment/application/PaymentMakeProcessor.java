@@ -9,12 +9,12 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.hhplus.be.commerce.cash.persistence.CashEntity;
+import kr.hhplus.be.commerce.cash.persistence.CashHistoryEntity;
 import kr.hhplus.be.commerce.cash.persistence.CashHistoryRepository;
 import kr.hhplus.be.commerce.cash.persistence.CashRepository;
-import kr.hhplus.be.commerce.cash.persistence.entity.CashEntity;
-import kr.hhplus.be.commerce.cash.persistence.entity.CashHistoryEntity;
+import kr.hhplus.be.commerce.coupon.persistence.UserCouponEntity;
 import kr.hhplus.be.commerce.coupon.persistence.UserCouponRepository;
-import kr.hhplus.be.commerce.coupon.persistence.entity.UserCouponEntity;
 import kr.hhplus.be.commerce.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.global.exception.CommerceException;
 import kr.hhplus.be.commerce.order.domain.model.Order;
@@ -61,7 +61,7 @@ public class PaymentMakeProcessor {
 
 		BigDecimal originalBalance = cash.getBalance();
 		cash.use(command.paymentAmount);
-		
+
 		Payment payment = Payment.fromOrder(command.userId, command.orderId, command.paymentAmount)
 			.succeed(command.now);
 

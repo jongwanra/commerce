@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import kr.hhplus.be.commerce.coupon.persistence.entity.UserCouponEntity;
+import kr.hhplus.be.commerce.coupon.persistence.UserCouponEntity;
 import kr.hhplus.be.commerce.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.global.exception.CommerceException;
 import kr.hhplus.be.commerce.order.domain.model.enums.OrderStatus;

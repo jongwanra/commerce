@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.cash.persistence.entity;
+package kr.hhplus.be.commerce.cash.persistence;
 
 import static kr.hhplus.be.commerce.global.exception.CommerceCode.*;
 
@@ -67,5 +67,5 @@ public class CashEntity extends BaseTimeEntity {
 			throw new CommerceException(AMOUNT_MUST_BE_POSITIVE);
 		}
 	}
-	
+
 }
