@@ -23,7 +23,7 @@ public enum CommerceCode {
 	CHARGE_AMOUNT_MUST_BE_POSITIVE(400, "CH-0002", "충전 금액은 0원보다 커야 합니다."),
 	CHARGE_AMOUNT_PER_ONCE_EXCEEDS_LIMIT(400, "CH-0003", "한 번에 %s원을 초과하여 충전할 수 없습니다."),
 	INSUFFICIENT_CASH(400, "CH-0004", "잔액이 부족합니다. 잔액을 충전해주세요."),
-	AMOUNT_MUST_BE_POSITIVE(400, "CH-0005", "사용할 금액은 0원보다 커야 합니다."),
+	AMOUNT_MUST_BE_POSITIVE(400, "CH-0005", "금액은 0원보다 커야 합니다."),
 
 	// Coupon(CP-0001 ~)
 	NOT_FOUND_COUPON(400, "CP-0001", "존재하지 않는 쿠폰입니다."),

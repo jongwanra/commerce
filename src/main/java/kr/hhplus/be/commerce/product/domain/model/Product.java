@@ -17,8 +17,7 @@ public class Product {
 	private LocalDateTime createdAt;
 
 	@Builder
-	private Product(Long id, String name, Integer stock, BigDecimal price, LocalDateTime createdAt) {
-		this.id = id;
+	private Product(String name, Integer stock, BigDecimal price, LocalDateTime createdAt) {
 		this.name = name;
 		this.stock = stock;
 		this.price = price;
@@ -31,5 +30,10 @@ public class Product {
 		}
 		this.stock -= quantity;
 	}
-	
+
+	// infrastructure에서만 접근이 가능합니다.
+	public void assignId(Long id) {
+		this.id = id;
+	}
+
 }

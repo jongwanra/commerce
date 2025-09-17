@@ -90,7 +90,7 @@ class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
 			));
 		})
 			.isInstanceOf(CommerceException.class)
-			.hasMessage("충전 금액은 0원보다 커야 합니다.");
+			.hasMessage("금액은 0원보다 커야 합니다.");
 
 		// then
 		verify(cashJpaRepository, times(1)).findByUserId(userId);

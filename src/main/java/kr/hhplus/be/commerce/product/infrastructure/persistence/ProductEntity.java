@@ -28,7 +28,6 @@ public class ProductEntity extends BaseTimeEntity {
 
 	public Product toDomain() {
 		return Product.builder()
-			.id(id)
 			.name(name)
 			.stock(stock)
 			.price(price)

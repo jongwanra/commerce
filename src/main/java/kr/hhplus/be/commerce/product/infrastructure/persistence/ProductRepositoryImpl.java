@@ -17,7 +17,7 @@ public class ProductRepositoryImpl implements ProductRepository {
 	public List<Product> findAllByIdInWithLock(List<Long> productIds) {
 		return productJpaRepository.findAllByIdInWithLock(productIds)
 			.stream()
-			.map(ProductEntity::toDomain)
+			.map(this::toDomain)
 			.toList();
 	}
 
@@ -29,8 +29,14 @@ public class ProductRepositoryImpl implements ProductRepository {
 
 		return productJpaRepository.saveAll(entities)
 			.stream()
-			.map(ProductEntity::toDomain)
+			.map(this::toDomain)
 			.toList();
+	}
+
+	private Product toDomain(ProductEntity productEntity) {
+		Product product = productEntity.toDomain();
+		product.assignId(productEntity.getId());
+		return product;
 	}
 
 }
