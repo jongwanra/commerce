@@ -60,8 +60,8 @@ public class PaymentMakeProcessor {
 		BigDecimal originalBalance = cash.getBalance();
 		cash.use(command.paymentAmount);
 
-		Payment payment = Payment.fromOrder(command.userId, command.orderId, command.paymentAmount)
-			.succeed(command.now);
+		Payment payment = Payment.fromOrder(command.userId, command.orderId, command.paymentAmount);
+		payment.succeed(command.now);
 
 		order.confirm(command.now);
 
@@ -83,8 +83,8 @@ public class PaymentMakeProcessor {
 		BigDecimal originalBalance = cash.getBalance();
 		cash.use(command.paymentAmount);
 
-		Payment payment = Payment.fromOrder(command.userId, command.orderId, command.paymentAmount)
-			.succeed(command.now);
+		Payment payment = Payment.fromOrder(command.userId, command.orderId, command.paymentAmount);
+		payment.succeed(command.now);
 
 		order.confirm(command.now, userCoupon);
 

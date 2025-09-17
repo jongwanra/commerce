@@ -9,19 +9,18 @@ import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-public final class Payment {
-	private final Long id;
-	private final Long userId;
-	private final Long targetId;
-	private final PaymentTargetType targetType;
-	private final BigDecimal amount;
-	private final PaymentStatus status;
-	private final LocalDateTime paidAt;
+public class Payment {
+	private Long id;
+	private Long userId;
+	private Long targetId;
+	private PaymentTargetType targetType;
+	private BigDecimal amount;
+	private PaymentStatus status;
+	private LocalDateTime paidAt;
 
 	@Builder
-	private Payment(Long id, Long userId, Long targetId, PaymentTargetType targetType, BigDecimal amount,
+	private Payment(Long userId, Long targetId, PaymentTargetType targetType, BigDecimal amount,
 		PaymentStatus status, LocalDateTime paidAt) {
-		this.id = id;
 		this.userId = userId;
 		this.targetId = targetId;
 		this.targetType = targetType;
@@ -41,16 +40,14 @@ public final class Payment {
 			.build();
 	}
 
-	public Payment succeed(LocalDateTime paidAt) {
-		return Payment.builder()
-			.id(this.id)
-			.userId(this.userId)
-			.targetId(this.targetId)
-			.targetType(this.targetType)
-			.amount(this.amount)
-			.status(PaymentStatus.PAID)
-			.paidAt(paidAt)
-			.build();
+	public void succeed(LocalDateTime paidAt) {
+		this.status = PaymentStatus.PAID;
+		this.paidAt = paidAt;
+	}
+
+	// infrastructure에서만 접근 가능합니다.
+	public void assignId(Long id) {
+		this.id = id;
 	}
 
 }

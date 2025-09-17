@@ -56,10 +56,15 @@ public class OrderEntity extends BaseTimeEntity {
 	}
 
 	public Order toDomain(List<OrderLineEntity> orderLineEntities) {
-		List<OrderLine> orderLines = orderLineEntities.stream().map(OrderLineEntity::toDomain).toList();
+		List<OrderLine> orderLines = orderLineEntities.stream().map(
+			(orderLineEntity) -> {
+				OrderLine orderLine = orderLineEntity.toDomain();
+				orderLine.assignId(orderLineEntity.getId());
+				return orderLine;
+			}
+		).toList();
 
 		return Order.builder()
-			.id(this.id)
 			.userId(this.userId)
 			.status(this.status)
 			.amount(this.amount)

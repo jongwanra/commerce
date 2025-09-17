@@ -19,18 +19,13 @@ public class OrderRepositoryImpl implements OrderRepository {
 		OrderEntity orderEntity = orderJpaRepository.save(OrderEntity.fromDomain(order));
 		Long orderId = orderEntity.getId();
 
-		List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.saveAll(
-			order.getOrderLines()
-				.stream()
-				.map(orderLine -> {
-					// TODO orderId를 생성 후에 할당하는 부분이 조금 어색하다. 다른 방법 없을까?
-					orderLine.assignOrderId(orderId);
-					return orderLine;
-				})
-				.map(OrderLineEntity::fromDomain)
-				.toList());
+		List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.saveAll(order.getOrderLines()
+			.stream()
+			.map(orderLine -> OrderLineEntity.fromDomain(orderId, orderLine))
+			.toList());
 
-		return orderEntity.toDomain(orderLineEntities);
+		return toDomain(orderEntity, orderLineEntities);
+
 	}
 
 	@Override
@@ -41,7 +36,14 @@ public class OrderRepositoryImpl implements OrderRepository {
 		return orderJpaRepository.findByIdWithLock(orderId)
 			.map((orderEntity) -> {
 				List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.findAllByOrderId(orderEntity.getId());
-				return orderEntity.toDomain(orderLineEntities);
+				return toDomain(orderEntity, orderLineEntities);
 			});
 	}
+
+	private Order toDomain(OrderEntity orderEntity, List<OrderLineEntity> orderLineEntities) {
+		Order order = orderEntity.toDomain(orderLineEntities);
+		order.assignId(orderEntity.getId());
+		return order;
+	}
+
 }

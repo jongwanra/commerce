@@ -68,7 +68,6 @@ public class PaymentEntity extends BaseTimeEntity {
 
 	public Payment toDomain() {
 		return Payment.builder()
-			.id(this.id)
 			.userId(this.userId)
 			.targetId(this.targetId)
 			.targetType(this.targetType)

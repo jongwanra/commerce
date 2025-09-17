@@ -16,9 +16,8 @@ public class OrderLine {
 	private Integer orderQuantity;
 
 	@Builder
-	private OrderLine(Long id, Long orderId, Long productId, String productName, BigDecimal productAmount,
+	private OrderLine(Long orderId, Long productId, String productName, BigDecimal productAmount,
 		Integer orderQuantity) {
-		this.id = id;
 		this.orderId = orderId;
 		this.productId = productId;
 		this.productName = productName;
@@ -30,7 +29,8 @@ public class OrderLine {
 		return productAmount.multiply(BigDecimal.valueOf(orderQuantity));
 	}
 
-	public void assignOrderId(Long orderId) {
-		this.orderId = orderId;
+	// infrastructure에서만 접근 가능합니다.
+	public void assignId(Long id) {
+		this.id = id;
 	}
 }

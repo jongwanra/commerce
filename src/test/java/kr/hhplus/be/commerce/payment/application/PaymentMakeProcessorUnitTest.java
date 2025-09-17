@@ -58,15 +58,17 @@ class PaymentMakeProcessorUnitTest {
 		final Long payerUserId = 2L;
 		final Long orderLineId = 15L;
 
+		OrderLine orderLine = OrderLine.builder()
+			.productId(1L)
+			.productAmount(BigDecimal.valueOf(6_250))
+			.productName("도브 뷰티 너리싱 바디워시")
+			.orderQuantity(2)
+			.orderId(orderId)
+			.build();
+		orderLine.assignId(orderLineId);
+
 		List<OrderLine> orderLines = List.of(
-			OrderLine.builder()
-				.id(orderLineId)
-				.productId(1L)
-				.productAmount(BigDecimal.valueOf(6_250))
-				.productName("도브 뷰티 너리싱 바디워시")
-				.orderQuantity(2)
-				.orderId(orderId)
-				.build()
+			orderLine
 		);
 
 		Order order = Order.builder()
@@ -105,15 +107,17 @@ class PaymentMakeProcessorUnitTest {
 		final BigDecimal wrongPaymentAmount = BigDecimal.valueOf(10_000);
 		final BigDecimal correctOrderAmount = BigDecimal.valueOf(12_500);
 
+		OrderLine orderLine = OrderLine.builder()
+			.productId(1L)
+			.productAmount(BigDecimal.valueOf(6_250))
+			.productName("도브 뷰티 너리싱 바디워시")
+			.orderQuantity(2)
+			.orderId(orderId)
+			.build();
+		orderLine.assignId(orderLineId);
+
 		List<OrderLine> orderLines = List.of(
-			OrderLine.builder()
-				.id(orderLineId)
-				.productId(1L)
-				.productAmount(BigDecimal.valueOf(6_250))
-				.productName("도브 뷰티 너리싱 바디워시")
-				.orderQuantity(2)
-				.orderId(orderId)
-				.build()
+			orderLine
 		);
 
 		Order order = Order.builder()
@@ -159,16 +163,16 @@ class PaymentMakeProcessorUnitTest {
 		final BigDecimal orderAmount = BigDecimal.valueOf(12_500);
 		final Long nonExistUserCouponId = 999L;
 
-		List<OrderLine> orderLines = List.of(
-			OrderLine.builder()
-				.id(orderLineId)
-				.productId(1L)
-				.productAmount(BigDecimal.valueOf(6_250))
-				.productName("도브 뷰티 너리싱 바디워시")
-				.orderQuantity(2)
-				.orderId(orderId)
-				.build()
-		);
+		OrderLine orderLine = OrderLine.builder()
+			.productId(1L)
+			.productAmount(BigDecimal.valueOf(6_250))
+			.productName("도브 뷰티 너리싱 바디워시")
+			.orderQuantity(2)
+			.orderId(orderId)
+			.build();
+		orderLine.assignId(orderLineId);
+
+		List<OrderLine> orderLines = List.of(orderLine);
 
 		Order order = Order.builder()
 			.orderLines(orderLines)
@@ -218,16 +222,16 @@ class PaymentMakeProcessorUnitTest {
 		final Long userCouponId = 999L;
 		final Long otherUserId = 2L; // 다른 사용자의 쿠폰을 가정합니다.
 
-		List<OrderLine> orderLines = List.of(
-			OrderLine.builder()
-				.id(orderLineId)
-				.productId(1L)
-				.productAmount(BigDecimal.valueOf(6_250))
-				.productName("도브 뷰티 너리싱 바디워시")
-				.orderQuantity(2)
-				.orderId(orderId)
-				.build()
-		);
+		OrderLine orderLine = OrderLine.builder()
+			.productId(1L)
+			.productAmount(BigDecimal.valueOf(6_250))
+			.productName("도브 뷰티 너리싱 바디워시")
+			.orderQuantity(2)
+			.orderId(orderId)
+			.build();
+		orderLine.assignId(orderLineId);
+
+		List<OrderLine> orderLines = List.of(orderLine);
 
 		Order order = Order.builder()
 			.orderLines(orderLines)
@@ -288,16 +292,16 @@ class PaymentMakeProcessorUnitTest {
 		final Long userCouponId = 999L;
 		final BigDecimal notEnoughBalance = BigDecimal.valueOf(10_000); // 부족한 잔액
 
-		List<OrderLine> orderLines = List.of(
-			OrderLine.builder()
-				.id(orderLineId)
-				.productId(1L)
-				.productAmount(BigDecimal.valueOf(6_250))
-				.productName("도브 뷰티 너리싱 바디워시")
-				.orderQuantity(2)
-				.orderId(orderId)
-				.build()
-		);
+		OrderLine orderLine = OrderLine.builder()
+			.productId(1L)
+			.productAmount(BigDecimal.valueOf(6_250))
+			.productName("도브 뷰티 너리싱 바디워시")
+			.orderQuantity(2)
+			.orderId(orderId)
+			.build();
+		orderLine.assignId(orderLineId);
+
+		List<OrderLine> orderLines = List.of(orderLine);
 
 		Order order = Order.builder()
 			.orderLines(orderLines)
@@ -356,24 +360,23 @@ class PaymentMakeProcessorUnitTest {
 		final Long userCouponId = 999L;
 		final BigDecimal sufficientBalance = BigDecimal.valueOf(100_000);
 
-		List<OrderLine> orderLines = List.of(
-			OrderLine.builder()
-				.id(orderLineId)
-				.productId(1L)
-				.productAmount(BigDecimal.valueOf(6_250))
-				.productName("도브 뷰티 너리싱 바디워시")
-				.orderQuantity(2)
-				.orderId(orderId)
-				.build()
-		);
+		OrderLine orderLine = OrderLine.builder()
+			.productId(1L)
+			.productAmount(BigDecimal.valueOf(6_250))
+			.productName("도브 뷰티 너리싱 바디워시")
+			.orderQuantity(2)
+			.orderId(orderId)
+			.build();
+		orderLine.assignId(orderLineId);
+		List<OrderLine> orderLines = List.of(orderLine);
 
 		Order order = Order.builder()
-			.id(orderId)
 			.orderLines(orderLines)
 			.status(OrderStatus.PENDING)
 			.userId(ordererUserId)
 			.amount(BigDecimal.valueOf(12_500))
 			.build();
+		order.assignId(orderId);
 
 		CouponEntity coupon = CouponEntity.builder()
 			.name("전품목 10% 할인")
@@ -391,8 +394,8 @@ class PaymentMakeProcessorUnitTest {
 			.userId(ordererUserId)
 			.build();
 
+		Long paymentId = 1L;
 		Payment payment = Payment.builder()
-			.id(1L)
 			.targetType(PaymentTargetType.ORDER)
 			.targetId(orderId)
 			.userId(ordererUserId)
@@ -400,6 +403,7 @@ class PaymentMakeProcessorUnitTest {
 			.status(PaymentStatus.PAID)
 			.paidAt(LocalDateTime.now())
 			.build();
+		payment.assignId(paymentId);
 
 		// mock
 		given(orderRepository.findByIdWithLock(orderId))

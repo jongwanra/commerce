@@ -87,6 +87,8 @@ class OrderPlaceProcessorUnitTest {
 		Long userId = 1L;
 		final int stock = 1;
 		final int orderQuantity = 1; // 재고와 동일한 주문 수량
+		Long orderId = 1L;
+		Long orderLineId = 1L;
 
 		Product product = Product.builder()
 			.name("product name")
@@ -106,27 +108,29 @@ class OrderPlaceProcessorUnitTest {
 			.stock(stock - orderQuantity)
 			.build();
 		savedProduct.assignId(productId);
-		
+
 		given(productRepository.saveAll(any()))
 			.willReturn(List.of(savedProduct));
 
+		OrderLine savedOrderLine = OrderLine.builder()
+			.productAmount(BigDecimal.valueOf(10_000))
+			.productId(productId)
+			.productName("product name")
+			.orderQuantity(orderQuantity)
+			.orderId(orderId)
+			.build();
+		savedOrderLine.assignId(orderLineId);
+
+		Order savedOrder = Order.builder()
+			.userId(userId)
+			.status(OrderStatus.PENDING)
+			.amount(BigDecimal.valueOf(10_000))
+			.orderLines(List.of(savedOrderLine))
+			.build();
+		savedOrder.assignId(orderId);
+		
 		given(orderRepository.save(any()))
-			.willReturn(Order.builder()
-				.id(1L)
-				.userId(userId)
-				.status(OrderStatus.PENDING)
-				.amount(BigDecimal.valueOf(10_000))
-				.orderLines(List.of(
-					OrderLine.builder()
-						.id(1L)
-						.productAmount(BigDecimal.valueOf(10_000))
-						.productId(productId)
-						.productName("product name")
-						.orderQuantity(orderQuantity)
-						.orderId(1L)
-						.build()
-				))
-				.build());
+			.willReturn(savedOrder);
 		// when
 		Output output = orderPlaceProcessor.execute(command);
 

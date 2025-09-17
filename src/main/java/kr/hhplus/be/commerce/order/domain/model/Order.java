@@ -30,9 +30,8 @@ public class Order {
 	}
 
 	@Builder
-	private Order(Long id, Long userId, OrderStatus status, BigDecimal amount, BigDecimal discountAmount,
+	private Order(Long userId, OrderStatus status, BigDecimal amount, BigDecimal discountAmount,
 		BigDecimal finalAmount, List<OrderLine> orderLines, LocalDateTime confirmedAt) {
-		this.id = id;
 		this.userId = userId;
 		this.status = status;
 		this.amount = amount;
@@ -84,5 +83,10 @@ public class Order {
 		this.discountAmount = BigDecimal.ZERO;
 		this.finalAmount = this.amount.subtract(this.discountAmount);
 		this.confirmedAt = now;
+	}
+
+	// infrastructure에서만 접근 가능합니다.
+	public void assignId(Long id) {
+		this.id = id;
 	}
 }
