@@ -5,13 +5,10 @@ import static java.util.Objects.*;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.stereotype.Repository;
-
 import kr.hhplus.be.commerce.order.domain.model.Order;
 import kr.hhplus.be.commerce.order.domain.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 
-@Repository
 @RequiredArgsConstructor
 public class OrderRepositoryImpl implements OrderRepository {
 	private final OrderJpaRepository orderJpaRepository;

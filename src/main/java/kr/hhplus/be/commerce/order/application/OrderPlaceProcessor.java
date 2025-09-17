@@ -8,7 +8,6 @@ import static kr.hhplus.be.commerce.global.utils.Validator.*;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.hhplus.be.commerce.global.exception.CommerceCode;
@@ -20,7 +19,6 @@ import kr.hhplus.be.commerce.product.domain.model.Product;
 import kr.hhplus.be.commerce.product.domain.repositorty.ProductRepository;
 import lombok.RequiredArgsConstructor;
 
-@Service
 @RequiredArgsConstructor
 public class OrderPlaceProcessor {
 	private final OrderRepository orderRepository;
@@ -31,7 +29,7 @@ public class OrderPlaceProcessor {
 		command.validate();
 		List<Long> productIds = command.toProductIds();
 		List<Product> products = productRepository.findAllByIdInWithLock(productIds);
-		
+
 		if (products.size() != productIds.size()) {
 			throw new CommerceException(CommerceCode.NOT_FOUND_PRODUCT);
 		}

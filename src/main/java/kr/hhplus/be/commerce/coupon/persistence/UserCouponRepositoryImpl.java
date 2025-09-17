@@ -1,6 +1,6 @@
 package kr.hhplus.be.commerce.coupon.persistence;
 
-import static kr.hhplus.be.commerce.coupon.persistence.entity.QUserCouponEntity.*;
+import static kr.hhplus.be.commerce.coupon.persistence.QUserCouponEntity.*;
 import static kr.hhplus.be.commerce.global.utils.Validator.*;
 
 import java.util.List;

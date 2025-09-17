@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.hhplus.be.commerce.cash.persistence.CashEntity;
@@ -27,7 +26,6 @@ import lombok.RequiredArgsConstructor;
  * expectedPaymentAmount를 클라이언트로 부터 받는 이유
  * - 사용자가 결제 페이지에서 최종적으로 확인한 금액과 다른 금액이 실제로 결제되는 것을 방지하기 위함입니다.
  */
-@Service
 @RequiredArgsConstructor
 public class PaymentMakeProcessor {
 	private final PaymentRepository paymentRepository;
