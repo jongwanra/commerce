@@ -2,6 +2,7 @@ package kr.hhplus.be.commerce.order.infrastructure.persistence;
 
 import java.math.BigDecimal;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,18 +26,22 @@ public class OrderLineEntity extends BaseTimeEntity {
 
 	private Long orderId;
 	private Long productId;
-	private String originProductName;
-	private BigDecimal originProductAmount;
+
+	@Column(name = "product_name_snapshot", updatable = false)
+	private String productName;
+	@Column(name = "product_amount_snapshot", updatable = false)
+	private BigDecimal productAmount;
+
 	private Integer orderQuantity;
 
 	@Builder
-	private OrderLineEntity(Long orderId, Long productId, String originProductName,
-		BigDecimal originProductAmount,
+	private OrderLineEntity(Long orderId, Long productId, String productName,
+		BigDecimal productAmount,
 		Integer orderQuantity) {
 		this.orderId = orderId;
 		this.productId = productId;
-		this.originProductName = originProductName;
-		this.originProductAmount = originProductAmount;
+		this.productName = productName;
+		this.productAmount = productAmount;
 		this.orderQuantity = orderQuantity;
 	}
 
@@ -44,8 +49,8 @@ public class OrderLineEntity extends BaseTimeEntity {
 		return OrderLine.builder()
 			.orderId(this.orderId)
 			.productId(this.productId)
-			.productName(this.originProductName)
-			.productAmount(this.originProductAmount)
+			.productName(this.productName)
+			.productAmount(this.productAmount)
 			.orderQuantity(this.orderQuantity)
 			.build();
 	}
@@ -54,8 +59,8 @@ public class OrderLineEntity extends BaseTimeEntity {
 		return OrderLineEntity.builder()
 			.orderId(orderId)
 			.productId(orderLine.getProductId())
-			.originProductName(orderLine.getProductName())
-			.originProductAmount(orderLine.getProductAmount())
+			.productName(orderLine.getProductName())
+			.productAmount(orderLine.getProductAmount())
 			.orderQuantity(orderLine.getOrderQuantity())
 			.build();
 	}

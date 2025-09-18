@@ -5,6 +5,7 @@ import static java.util.Objects.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -35,10 +36,13 @@ public class UserCouponEntity extends BaseTimeEntity {
 	private Long orderId;
 	private String originName;
 
+	@Column(name = "discount_type_snapshot", updatable = false)
 	@Enumerated(EnumType.STRING)
-	private CouponDiscountType originDiscountType;
-	private BigDecimal originDiscountAmount;
-	private LocalDateTime originExpiredAt;
+	private CouponDiscountType discountType;
+	@Column(name = "discount_amount_snapshot", updatable = false)
+	private BigDecimal discountAmount;
+	@Column(name = "expired_at_snapshot", updatable = false)
+	private LocalDateTime expiredAt;
 
 	@Enumerated(EnumType.STRING)
 	private UserCouponStatus status;
@@ -52,9 +56,9 @@ public class UserCouponEntity extends BaseTimeEntity {
 		userCoupon.userId = userId;
 		userCoupon.couponId = coupon.getId();
 		userCoupon.originName = coupon.getName();
-		userCoupon.originDiscountType = coupon.getDiscountType();
-		userCoupon.originDiscountAmount = coupon.getDiscountAmount();
-		userCoupon.originExpiredAt = coupon.getExpiredAt();
+		userCoupon.discountType = coupon.getDiscountType();
+		userCoupon.discountAmount = coupon.getDiscountAmount();
+		userCoupon.expiredAt = coupon.getExpiredAt();
 		userCoupon.status = UserCouponStatus.AVAILABLE;
 		userCoupon.issuedAt = now;
 		userCoupon.lastUsedAt = null;
@@ -69,7 +73,7 @@ public class UserCouponEntity extends BaseTimeEntity {
 			throw new CommerceException(CommerceCode.UNAVAILABLE_USER_COUPON);
 		}
 
-		if (nonNull(this.originExpiredAt) && (originExpiredAt.isEqual(now) || originExpiredAt.isBefore(now))) {
+		if (nonNull(this.expiredAt) && (expiredAt.isEqual(now) || expiredAt.isBefore(now))) {
 			throw new CommerceException(CommerceCode.EXPIRED_COUPON);
 		}
 
@@ -85,21 +89,21 @@ public class UserCouponEntity extends BaseTimeEntity {
 	}
 
 	public BigDecimal calculateFinalAmount(BigDecimal originalAmount) {
-		if (this.originDiscountType.equals(CouponDiscountType.FIXED)) {
-			return originalAmount.subtract(originDiscountAmount);
+		if (this.discountType.equals(CouponDiscountType.FIXED)) {
+			return originalAmount.subtract(discountAmount);
 		}
 
-		BigDecimal discountRateAsDecimal = originDiscountAmount.multiply(BigDecimal.valueOf(0.01)); // 할인율
+		BigDecimal discountRateAsDecimal = discountAmount.multiply(BigDecimal.valueOf(0.01)); // 할인율
 		BigDecimal discountAmount = originalAmount.multiply(discountRateAsDecimal); // 할인 금액
 		return originalAmount.subtract(discountAmount);
 	}
 
 	public BigDecimal calculateDiscountAmount(BigDecimal originalAmount) {
-		if (this.originDiscountType.equals(CouponDiscountType.FIXED)) {
-			return originDiscountAmount;
+		if (this.discountType.equals(CouponDiscountType.FIXED)) {
+			return discountAmount;
 		}
 
-		BigDecimal discountRateAsDecimal = originDiscountAmount.multiply(BigDecimal.valueOf(0.01)); // 할인율
+		BigDecimal discountRateAsDecimal = discountAmount.multiply(BigDecimal.valueOf(0.01)); // 할인율
 		return originalAmount.multiply(discountRateAsDecimal); // 할인 금액
 	}
 }

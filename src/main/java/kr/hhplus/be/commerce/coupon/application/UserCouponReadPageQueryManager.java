@@ -36,11 +36,11 @@ public class UserCouponReadPageQueryManager {
 					userCoupon.getId(),
 					userCoupon.getCouponId(),
 					userCoupon.getOriginName(),
-					userCoupon.getOriginDiscountType(),
-					userCoupon.getOriginDiscountAmount(),
+					userCoupon.getDiscountType(),
+					userCoupon.getDiscountAmount(),
 					userCoupon.getStatus(),
 					userCoupon.getIssuedAt(),
-					userCoupon.getOriginExpiredAt()
+					userCoupon.getExpiredAt()
 				))
 				.toList()
 		);

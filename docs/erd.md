@@ -42,15 +42,20 @@ create table hhplus.coupon
 
 create table hhplus.order_line
 (
-    id                    bigint auto_increment comment '고유 식별자' primary key,
-    order_id              bigint                                   not null comment '주문 고유 식별자',
-    product_id            bigint                                   not null comment '상품 고유 식별자',
-    origin_product_name   varchar(255)                             not null comment '주문 당시 상품명',
-    origin_product_amount decimal(12, 2) default 0.00              not null comment '주문 당시 상품 가격',
-    order_quantity        int            default 0                 not null comment '주문 수량',
-    created_at            timestamp      default CURRENT_TIMESTAMP not null comment '생성 일시',
-    modified_at           timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시'
+    id                      bigint auto_increment comment '고유 식별자' primary key,
+    order_id                bigint                                   not null comment '주문 고유 식별자',
+    product_id              bigint                                   not null comment '상품 고유 식별자',
+    product_name_snapshot   varchar(255)                             not null comment '주문 당시 상품명',
+    product_amount_snapshot decimal(12, 2) default 0.00              not null comment '주문 당시 상품 가격',
+    order_quantity          int            default 0                 not null comment '주문 수량',
+    created_at              timestamp      default CURRENT_TIMESTAMP not null comment '생성 일시',
+    modified_at             timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시'
 );
+
+create index idx_order
+    on hhplus.order_line (order_id);
+
+
 
 create index idx_order
     on hhplus.order_line (order_id);
@@ -93,7 +98,6 @@ create table hhplus.product
     modified_at timestamp    default CURRENT_TIMESTAMP null comment '수정 일시'
 );
 
-
 create index idx_created_at
     on hhplus.product (created_at desc);
 
@@ -109,28 +113,29 @@ create table hhplus.user
 
 create table hhplus.user_coupon
 (
-    id                     bigint auto_increment comment '고유 식별자' primary key,
-    user_id                bigint                                   not null comment '사용자 고유 식별자',
-    coupon_id              bigint                                   not null comment '쿠폰 고유 식별자',
-    order_id               bigint                                   null comment '쿠폰을 사용한 주문 고유 식별자',
-    origin_name            varchar(255)   default ''                not null comment '쿠폰명 스냅샷',
-    origin_discount_type   varchar(32)    default 'FIXED'           not null comment '할인 유형 스냅샷',
-    origin_discount_amount decimal(12, 2) default 0.00              not null comment '할인가 스냅샷',
-    origin_expired_at      timestamp      default CURRENT_TIMESTAMP not null comment '만료 일시 스냅샷, null일 경우 무기한',
-    status                 varchar(32)                              null comment 'AVAILABLE, USED',
-    issued_at              timestamp      default CURRENT_TIMESTAMP not null comment '발급 일시',
-    last_used_at           timestamp                                null comment '쿠폰 마지막 사용 일시',
-    last_cancelled_at      timestamp                                null comment '마지막 쿠폰 사용 취소 일시',
-    created_at             timestamp      default CURRENT_TIMESTAMP not null comment '생성 일시',
-    modified_at            timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시',
-    constraint uidx_user_coupon unique (user_id, coupon_id)
+    id                       bigint auto_increment comment '고유 식별자' primary key,
+    user_id                  bigint                                   not null comment '사용자 고유 식별자',
+    coupon_id                bigint                                   not null comment '쿠폰 고유 식별자',
+    order_id                 bigint                                   null comment '쿠폰을 사용한 주문 고유 식별자',
+    name_snapshot            varchar(255)   default ''                not null comment '쿠폰명 스냅샷',
+    discount_type_snapshot   varchar(32)    default 'FIXED'           not null comment '할인 유형 스냅샷',
+    discount_amount_snapshot decimal(12, 2) default 0.00              not null comment '할인가 스냅샷',
+    expired_at_snapshot      timestamp      default CURRENT_TIMESTAMP not null comment '만료 일시 스냅샷, null일 경우 무기한',
+    status                   varchar(32)                              null comment 'AVAILABLE, USED',
+    issued_at                timestamp      default CURRENT_TIMESTAMP not null comment '발급 일시',
+    last_used_at             timestamp                                null comment '쿠폰 마지막 사용 일시',
+    last_cancelled_at        timestamp                                null comment '마지막 쿠폰 사용 취소 일시',
+    created_at               timestamp      default CURRENT_TIMESTAMP not null comment '생성 일시',
+    modified_at              timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시',
+    constraint uidx_user_coupon
+        unique (user_id, coupon_id)
 );
+
+
 
 ```
 
 ## Naming Convention
-
-### 고민 사항
 
 #### _price vs _amount
 
@@ -140,4 +145,10 @@ create table hhplus.user_coupon
     - 상품 자체의 속성으로 가격을 나타낼 때 사용합니다. (상품 가격, 할인 가격, ...)
 - _amount
     - 주문/결제와 관련된 금액을 나타낼 때 사용합니다. (주문 금액, 결제 금액, 환불 금액...)
+
+### _snapshot
+
+- order_line, user_coupon 등의 테이블에서 `_snapshot` suffix가 붙은 컬럼들이 있습니다.
+- 이는 주문 당시 혹은 쿠폰 발급 당시의 정보를 보존하기 위한 용도로 사용됩니다.
+- 예를 들어, 상품명이 변경되더라도 주문 당시의 상품명을 유지하기 위해 order_line 테이블에 product_name_snapshot 컬럼이 존재합니다.
 
