@@ -1,8 +1,8 @@
 # Entity Relational Diagram (ERD)
 
-updatedAt: 2025.09.17
+updatedAt: 2025.09.19
 
-![erd](media/commerce_erd.png)
+![erd](media/erd_250919.png)
 
 ## Script
 
