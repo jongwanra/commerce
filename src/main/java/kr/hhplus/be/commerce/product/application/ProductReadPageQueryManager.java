@@ -11,6 +11,7 @@ import kr.hhplus.be.commerce.product.domain.repositorty.input.enums.ProductSortT
 import kr.hhplus.be.commerce.product.presentation.response.ProductSummaryResponse;
 import lombok.RequiredArgsConstructor;
 
+// TODO: Redis를 활용한 캐싱 전략을 통해서 조회 성능 개선 예정
 @Service
 @RequiredArgsConstructor
 public class ProductReadPageQueryManager {
