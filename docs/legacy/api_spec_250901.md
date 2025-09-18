@@ -1,5 +1,7 @@
 # Commerce API Specification
 
+- updatetAt: 2025.09.18
+
 ## 공유 사항
 
 - Database + Cookie 기반으로 인증을 처리합니다.
@@ -11,16 +13,21 @@
 
 - CommerceResponse\<T>
     - success: boolean (not null)
-    - commerceCode: string (nullable)
-    - errorMessage: string (nullable)
-    - data: T (nullable)
+    - code: string (not null)
+    - message: string (not null)
+    - data: T (not null)
 
 ### Common Cursor Pagination Format
 
-- CursorPagination\<E>
+- CursorPage\<E>
     - totalCount: number (not null) - 전체 항목 수
     - hasNext: boolean (not null) - 다음 페이지 존재 여부
     - items: E[] (not null) - 항목 목록
+
+### Empty Response Format
+
+- EmptyResponse
+    - {}
 
 ---
 
@@ -33,7 +40,7 @@
 - Request Body: object
     - email: string(not null)
     - password: string(not null)
-- Response Body: CommerceResponse\<void>
+- Response Body: CommerceResponse\<EmptyResponse>
 
 ## Auth
 
@@ -44,7 +51,7 @@
 - Request Body: object
     - email: string(not null)
     - password: string(not null)
-- Response Body: CommerceResponse\<void>
+- Response Body: CommerceResponse\<EmptyResponse>
 - Response Header:
     - Set-Cookie: COMMERCE_SESSIONID={sessionId}; Path=/; HttpOnly; SameSite=Lax; Secure=true; Max-Age=86400
 
@@ -52,7 +59,7 @@
 
 - Method: POST
 - Path: /api/v1/auth/logout
-- Response Body: CommerceResponse\<void>
+- Response Body: CommerceResponse\<EmptyResponse>
 - Response Header:
     - Set-Cookie: COMMERCE_SESSIONID=; Path=/; HttpOnly; SameSite=Lax; Secure=true; Max-Age=0
 
@@ -72,7 +79,7 @@
 - Path: /api/v1/me/cash/charge
 - Request Body:
     - amount: number (not null)
-- CommerceResponse\<void>
+- CommerceResponse\<EmptyResponse>
 
 ## Product
 
@@ -106,13 +113,13 @@
 
 ## UserCoupon
 
-### 쿠폰 발급
+### 내 쿠폰 발급
 
 - Method: POST
 - Path: /api/v1/me/coupons/{couponId}
     - Path Variables:
         - couponId: number (not null) - 쿠폰 고유 식별자
-- Response Body: CommerceResponse\<void>
+- Response Body: CommerceResponse\<EmptyResponse>
 
 ### 내 쿠폰 목록 조회
 
@@ -144,7 +151,7 @@
 - Request Body: object[]
     - productId: number (not null) - 상품 고유 식별자
     - orderQuantity: number (not null) - 주문 수량
-- Response Body: CommerceResponse\<void>
+- Response Body: CommerceResponse\<EmptyResponse>
 
 ## Payment
 
@@ -156,7 +163,7 @@
     - orderId: number (not null) - 주문 고유 식별자
     - couponId: number (nullable) - 쿠폰을 사용 안하고 결제할 경우 null
     - expectedAmount: number (not null) - 결제 시, 클라이언트/서버 간 금액 일치 여부 확인
-- Response Body: CommerceResponse\<void>
+- Response Body: CommerceResponse\<EmptyResponse>
 
 
 

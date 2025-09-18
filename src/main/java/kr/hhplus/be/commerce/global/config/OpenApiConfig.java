@@ -34,7 +34,15 @@ public class OpenApiConfig {
 			.addOperationCustomizer(getOperationCustomizer())
 			.pathsToMatch("/api/**")
 			.addOpenApiCustomizer(openApi -> {
-				openApi.info(new Info().title("Commerce API Sepecifiaction").version("v1"));
+				openApi.info(new Info()
+					.title("Commerce API Sepecifiaction")
+					.version("v1")
+					.description("""
+						## 공유 사항
+							1. Database + Cookie 기반으로 인증을 처리합니다. (TODO)
+							2. 일시는 전부 `UTC`로 통일합니다.
+						""")
+				);
 				openApi.servers(List.of(new Server().url("http://localhost:8080")));
 			})
 			.build();
