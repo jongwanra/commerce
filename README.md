@@ -33,3 +33,13 @@ docker-compose up -d
 ### Entity Relational Diagram
 
 - [상세 보기](docs/erd.md)
+
+### Convention
+
+#### Application Convetion
+
+- [상세 보기](docs/application_convention.md)
+
+#### Database Convention
+
+- [상세 보기](docs/db_convention.md)
