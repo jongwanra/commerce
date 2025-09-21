@@ -3,24 +3,26 @@ package kr.hhplus.be.commerce.payment.domain.model;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import kr.hhplus.be.commerce.global.annotation.InfrastructureOnly;
 import kr.hhplus.be.commerce.payment.domain.model.enums.PaymentStatus;
 import kr.hhplus.be.commerce.payment.domain.model.enums.PaymentTargetType;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-public class Payment {
-	private Long id;
-	private Long userId;
-	private Long targetId;
-	private PaymentTargetType targetType;
-	private BigDecimal amount;
-	private PaymentStatus status;
-	private LocalDateTime paidAt;
+public final class Payment {
+	private final Long id;
+	private final Long userId;
+	private final Long targetId;
+	private final PaymentTargetType targetType;
+	private final BigDecimal amount;
+	private final PaymentStatus status;
+	private final LocalDateTime paidAt;
 
 	@Builder
-	private Payment(Long userId, Long targetId, PaymentTargetType targetType, BigDecimal amount,
+	private Payment(Long id, Long userId, Long targetId, PaymentTargetType targetType, BigDecimal amount,
 		PaymentStatus status, LocalDateTime paidAt) {
+		this.id = id;
 		this.userId = userId;
 		this.targetId = targetId;
 		this.targetType = targetType;
@@ -31,6 +33,7 @@ public class Payment {
 
 	public static Payment fromOrder(Long userId, Long orderId, BigDecimal amount) {
 		return Payment.builder()
+			.id(0L)
 			.userId(userId)
 			.targetId(orderId)
 			.targetType(PaymentTargetType.ORDER)
@@ -40,14 +43,29 @@ public class Payment {
 			.build();
 	}
 
-	public void succeed(LocalDateTime paidAt) {
-		this.status = PaymentStatus.PAID;
-		this.paidAt = paidAt;
+	@InfrastructureOnly
+	public static Payment restore(Long id, Payment payment) {
+		return Payment.builder()
+			.id(id)
+			.userId(payment.getUserId())
+			.targetId(payment.getTargetId())
+			.targetType(payment.getTargetType())
+			.amount(payment.getAmount())
+			.status(payment.getStatus())
+			.paidAt(payment.getPaidAt())
+			.build();
 	}
 
-	// infrastructure에서만 접근 가능합니다.
-	public void assignId(Long id) {
-		this.id = id;
+	public Payment succeed(LocalDateTime paidAt) {
+		return Payment.builder()
+			.id(this.id)
+			.userId(this.userId)
+			.targetId(this.targetId)
+			.targetType(this.targetType)
+			.amount(this.amount)
+			.status(PaymentStatus.PAID)
+			.paidAt(paidAt)
+			.build();
 	}
 
 }

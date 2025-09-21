@@ -65,15 +65,5 @@ public class PaymentEntity extends BaseTimeEntity {
 			.paidAt(payment.getPaidAt())
 			.build();
 	}
-
-	public Payment toDomain() {
-		return Payment.builder()
-			.userId(this.userId)
-			.targetId(this.targetId)
-			.targetType(this.targetType)
-			.amount(this.amount)
-			.status(this.status)
-			.paidAt(this.paidAt)
-			.build();
-	}
+	
 }

@@ -403,7 +403,7 @@ class PaymentMakeProcessorUnitTest {
 			.status(PaymentStatus.PAID)
 			.paidAt(LocalDateTime.now())
 			.build();
-		payment.assignId(paymentId);
+		payment = Payment.restore(paymentId, payment);
 
 		// mock
 		given(orderRepository.findByIdWithLock(orderId))
