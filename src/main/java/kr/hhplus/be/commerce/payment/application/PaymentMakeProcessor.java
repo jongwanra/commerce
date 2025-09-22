@@ -85,7 +85,6 @@ public class PaymentMakeProcessor {
 
 		Payment payment = Payment.fromOrder(command.userId, command.orderId, command.paymentAmount)
 			.succeed(command.now);
-
 		order = order.confirm(command.now, userCoupon);
 
 		cashHistoryRepository.save(

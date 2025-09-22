@@ -17,6 +17,7 @@ import kr.hhplus.be.commerce.coupon.persistence.enums.UserCouponStatus;
 import kr.hhplus.be.commerce.global.entity.BaseTimeEntity;
 import kr.hhplus.be.commerce.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.global.exception.CommerceException;
+import kr.hhplus.be.commerce.order.domain.policy.DiscountAmountCalculable;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,7 +27,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(callSuper = false)
-public class UserCouponEntity extends BaseTimeEntity {
+public class UserCouponEntity extends BaseTimeEntity implements DiscountAmountCalculable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -98,6 +99,7 @@ public class UserCouponEntity extends BaseTimeEntity {
 		return originalAmount.subtract(discountAmount);
 	}
 
+	@Override
 	public BigDecimal calculateDiscountAmount(BigDecimal originalAmount) {
 		if (this.discountType.equals(CouponDiscountType.FIXED)) {
 			return discountAmount;

@@ -3,6 +3,7 @@ package kr.hhplus.be.commerce.payment.domain.model;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import kr.hhplus.be.commerce.global.annotation.ImmutableObject;
 import kr.hhplus.be.commerce.global.annotation.InfrastructureOnly;
 import kr.hhplus.be.commerce.payment.domain.model.enums.PaymentStatus;
 import kr.hhplus.be.commerce.payment.domain.model.enums.PaymentTargetType;
@@ -10,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 
+@ImmutableObject
 @Getter
 public final class Payment {
 	private final Long id;

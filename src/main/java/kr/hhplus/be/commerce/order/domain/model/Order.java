@@ -6,16 +6,18 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import kr.hhplus.be.commerce.coupon.persistence.UserCouponEntity;
+import kr.hhplus.be.commerce.global.annotation.ImmutableObject;
 import kr.hhplus.be.commerce.global.annotation.InfrastructureOnly;
 import kr.hhplus.be.commerce.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.global.exception.CommerceException;
 import kr.hhplus.be.commerce.order.domain.model.enums.OrderStatus;
+import kr.hhplus.be.commerce.order.domain.policy.DiscountAmountCalculable;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+@ImmutableObject
 @Getter
 @EqualsAndHashCode(of = "id")
 public final class Order {
@@ -82,12 +84,12 @@ public final class Order {
 		throw new CommerceException(CommerceCode.UNAUTHORIZED_USER);
 	}
 
-	public Order confirm(LocalDateTime now, UserCouponEntity userCoupon) {
+	public Order confirm(LocalDateTime now, DiscountAmountCalculable discountAmountCalculable) {
 		if (status.isConfirmed()) {
 			throw new CommerceException(CommerceCode.ALREADY_CONFIRMED_ORDER);
 		}
 
-		BigDecimal discountAmount = userCoupon.calculateDiscountAmount(this.amount);
+		BigDecimal discountAmount = discountAmountCalculable.calculateDiscountAmount(this.amount);
 		return Order.builder()
 			.id(this.id)
 			.userId(this.userId)
