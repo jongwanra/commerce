@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import kr.hhplus.be.commerce.global.annotation.InfrastructureOnly;
 import kr.hhplus.be.commerce.payment.domain.model.enums.PaymentStatus;
 import kr.hhplus.be.commerce.payment.domain.model.enums.PaymentTargetType;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -19,7 +20,7 @@ public final class Payment {
 	private final PaymentStatus status;
 	private final LocalDateTime paidAt;
 
-	@Builder
+	@Builder(access = AccessLevel.PRIVATE)
 	private Payment(Long id, Long userId, Long targetId, PaymentTargetType targetType, BigDecimal amount,
 		PaymentStatus status, LocalDateTime paidAt) {
 		this.id = id;
@@ -44,15 +45,16 @@ public final class Payment {
 	}
 
 	@InfrastructureOnly
-	public static Payment restore(Long id, Payment payment) {
+	public static Payment restore(Long id, Long userId, Long targetId, PaymentTargetType targetType, BigDecimal amount,
+		PaymentStatus status, LocalDateTime paidAt) {
 		return Payment.builder()
 			.id(id)
-			.userId(payment.getUserId())
-			.targetId(payment.getTargetId())
-			.targetType(payment.getTargetType())
-			.amount(payment.getAmount())
-			.status(payment.getStatus())
-			.paidAt(payment.getPaidAt())
+			.userId(userId)
+			.targetId(targetId)
+			.targetType(targetType)
+			.amount(amount)
+			.status(status)
+			.paidAt(paidAt)
 			.build();
 	}
 

@@ -112,23 +112,26 @@ class OrderPlaceProcessorUnitTest {
 		given(productRepository.saveAll(any()))
 			.willReturn(List.of(savedProduct));
 
-		OrderLine savedOrderLine = OrderLine.builder()
-			.productAmount(BigDecimal.valueOf(10_000))
-			.productId(productId)
-			.productName("product name")
-			.orderQuantity(orderQuantity)
-			.orderId(orderId)
-			.build();
-		savedOrderLine.assignId(orderLineId);
+		OrderLine savedOrderLine = OrderLine.restore(
+			orderLineId,
+			orderId,
+			productId,
+			"product name",
+			BigDecimal.valueOf(10_000),
+			orderQuantity
+		);
 
-		Order savedOrder = Order.builder()
-			.userId(userId)
-			.status(OrderStatus.PENDING)
-			.amount(BigDecimal.valueOf(10_000))
-			.orderLines(List.of(savedOrderLine))
-			.build();
-		savedOrder.assignId(orderId);
-		
+		Order savedOrder = Order.restore(
+			orderId,
+			userId,
+			OrderStatus.PENDING,
+			BigDecimal.valueOf(10_000),
+			BigDecimal.ZERO,
+			BigDecimal.ZERO,
+			List.of(savedOrderLine),
+			null
+		);
+
 		given(orderRepository.save(any()))
 			.willReturn(savedOrder);
 		// when

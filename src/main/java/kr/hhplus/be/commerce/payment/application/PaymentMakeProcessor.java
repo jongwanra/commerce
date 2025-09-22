@@ -63,7 +63,7 @@ public class PaymentMakeProcessor {
 		Payment payment = Payment.fromOrder(command.userId, command.orderId, command.paymentAmount)
 			.succeed(command.now);
 
-		order.confirm(command.now);
+		order = order.confirm(command.now);
 
 		cashHistoryRepository.save(
 			CashHistoryEntity.recordOfPurchase(command.userId, cash.getBalance(), originalBalance));
@@ -86,7 +86,7 @@ public class PaymentMakeProcessor {
 		Payment payment = Payment.fromOrder(command.userId, command.orderId, command.paymentAmount)
 			.succeed(command.now);
 
-		order.confirm(command.now, userCoupon);
+		order = order.confirm(command.now, userCoupon);
 
 		cashHistoryRepository.save(
 			CashHistoryEntity.recordOfPurchase(command.userId, cash.getBalance(), originalBalance));

@@ -17,14 +17,13 @@ public class OrderRepositoryImpl implements OrderRepository {
 	@Override
 	public Order save(Order order) {
 		OrderEntity orderEntity = orderJpaRepository.save(OrderEntity.fromDomain(order));
-		Long orderId = orderEntity.getId();
-
 		List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.saveAll(order.getOrderLines()
 			.stream()
-			.map(orderLine -> OrderLineEntity.fromDomain(orderId, orderLine))
-			.toList());
+			.map(orderLine -> OrderLineEntity.fromDomain(orderEntity.getId(), orderLine))
+			.toList()
+		);
 
-		return toDomain(orderEntity, orderLineEntities);
+		return orderEntity.toDomain(orderLineEntities);
 
 	}
 
@@ -36,14 +35,8 @@ public class OrderRepositoryImpl implements OrderRepository {
 		return orderJpaRepository.findByIdWithLock(orderId)
 			.map((orderEntity) -> {
 				List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.findAllByOrderId(orderEntity.getId());
-				return toDomain(orderEntity, orderLineEntities);
+				return orderEntity.toDomain(orderLineEntities);
 			});
-	}
-
-	private Order toDomain(OrderEntity orderEntity, List<OrderLineEntity> orderLineEntities) {
-		Order order = orderEntity.toDomain(orderLineEntities);
-		order.assignId(orderEntity.getId());
-		return order;
 	}
 
 }

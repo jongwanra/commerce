@@ -10,7 +10,6 @@ public class PaymentRepositoryImpl implements PaymentRepository {
 
 	@Override
 	public Payment save(Payment payment) {
-		PaymentEntity savedEntity = paymentJpaRepository.save(PaymentEntity.fromDomain(payment));
-		return Payment.restore(savedEntity.getId(), payment);
+		return paymentJpaRepository.save(PaymentEntity.fromDomain(payment)).toDomain();
 	}
 }

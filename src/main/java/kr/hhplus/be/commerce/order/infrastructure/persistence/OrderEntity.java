@@ -13,7 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import kr.hhplus.be.commerce.global.entity.BaseTimeEntity;
 import kr.hhplus.be.commerce.order.domain.model.Order;
-import kr.hhplus.be.commerce.order.domain.model.OrderLine;
 import kr.hhplus.be.commerce.order.domain.model.enums.OrderStatus;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -56,22 +55,16 @@ public class OrderEntity extends BaseTimeEntity {
 	}
 
 	public Order toDomain(List<OrderLineEntity> orderLineEntities) {
-		List<OrderLine> orderLines = orderLineEntities.stream().map(
-			(orderLineEntity) -> {
-				OrderLine orderLine = orderLineEntity.toDomain();
-				orderLine.assignId(orderLineEntity.getId());
-				return orderLine;
-			}
-		).toList();
-
-		return Order.builder()
-			.userId(this.userId)
-			.status(this.status)
-			.amount(this.amount)
-			.discountAmount(this.discountAmount)
-			.finalAmount(this.finalAmount)
-			.orderLines(orderLines)
-			.confirmedAt(this.confirmedAt)
-			.build();
+		return Order.restore(
+			id,
+			userId,
+			status,
+			amount,
+			discountAmount,
+			finalAmount,
+			orderLineEntities.stream().map(OrderLineEntity::toDomain).toList(),
+			confirmedAt
+		);
 	}
+
 }

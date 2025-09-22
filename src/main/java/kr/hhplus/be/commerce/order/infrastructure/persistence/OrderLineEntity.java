@@ -45,16 +45,6 @@ public class OrderLineEntity extends BaseTimeEntity {
 		this.orderQuantity = orderQuantity;
 	}
 
-	public OrderLine toDomain() {
-		return OrderLine.builder()
-			.orderId(this.orderId)
-			.productId(this.productId)
-			.productName(this.productName)
-			.productAmount(this.productAmount)
-			.orderQuantity(this.orderQuantity)
-			.build();
-	}
-
 	public static OrderLineEntity fromDomain(Long orderId, OrderLine orderLine) {
 		return OrderLineEntity.builder()
 			.orderId(orderId)
@@ -63,5 +53,16 @@ public class OrderLineEntity extends BaseTimeEntity {
 			.productAmount(orderLine.getProductAmount())
 			.orderQuantity(orderLine.getOrderQuantity())
 			.build();
+	}
+
+	public OrderLine toDomain() {
+		return OrderLine.restore(
+			id,
+			orderId,
+			productId,
+			productName,
+			productAmount,
+			orderQuantity
+		);
 	}
 }

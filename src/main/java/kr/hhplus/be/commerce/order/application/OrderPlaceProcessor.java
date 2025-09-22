@@ -50,12 +50,8 @@ public class OrderPlaceProcessor {
 		List<OrderLine> orderLines = command.orderLineCommands()
 			.stream().map(orderLineCommand -> {
 				Product product = productIdToProductMap.get(orderLineCommand.productId());
-				return OrderLine.builder()
-					.productId(product.getId())
-					.productName(product.getName())
-					.productAmount(product.getPrice())
-					.orderQuantity(orderLineCommand.orderQuantity())
-					.build();
+				return OrderLine.place(product.getId(), product.getName(), product.getPrice(),
+					orderLineCommand.orderQuantity());
 			}).toList();
 
 		return new Output(
