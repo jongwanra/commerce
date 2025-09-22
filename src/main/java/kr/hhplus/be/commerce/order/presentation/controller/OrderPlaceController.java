@@ -1,0 +1,31 @@
+package kr.hhplus.be.commerce.order.presentation.controller;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.validation.Valid;
+import kr.hhplus.be.commerce.global.annotation.LoginUserId;
+import kr.hhplus.be.commerce.global.response.EmptyResponse;
+import kr.hhplus.be.commerce.order.application.OrderPlaceProcessor;
+import kr.hhplus.be.commerce.order.presentation.controller.api.OrderPlaceApi;
+import kr.hhplus.be.commerce.order.presentation.request.OrderPlaceRequest;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequiredArgsConstructor
+public class OrderPlaceController implements OrderPlaceApi {
+	private final OrderPlaceProcessor orderPlaceProcessor;
+
+	@Override
+	@PostMapping("/api/v1/me/orders")
+	@ResponseStatus(HttpStatus.CREATED)
+	public EmptyResponse placeOrder(
+		@LoginUserId Long userId,
+		@Valid @RequestBody OrderPlaceRequest request) {
+		orderPlaceProcessor.execute(request.toCommand(userId));
+		return EmptyResponse.INSTANCE;
+	}
+}
