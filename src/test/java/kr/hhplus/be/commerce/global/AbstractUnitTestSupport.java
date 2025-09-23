@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce;
+package kr.hhplus.be.commerce.global;
 
 import org.springframework.test.util.ReflectionTestUtils;
 

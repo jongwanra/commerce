@@ -14,7 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import kr.hhplus.be.commerce.AbstractUnitTestSupport;
+import kr.hhplus.be.commerce.global.AbstractUnitTestSupport;
 import kr.hhplus.be.commerce.coupon.persistence.CouponEntity;
 import kr.hhplus.be.commerce.coupon.persistence.CouponJpaRepository;
 import kr.hhplus.be.commerce.coupon.persistence.UserCouponEntity;

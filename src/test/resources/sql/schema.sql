@@ -1,13 +1,4 @@
-# Entity Relational Diagram (ERD)
-
-updatedAt: 2025.09.19
-
-![erd](media/erd_250919.png)
-
-## Script
-
-```sql
-create table hhplus.cash
+create table cash
 (
     id          bigint auto_increment comment '고유 식별자' primary key,
     user_id     bigint                                   not null comment '사용자 고유 식별자',
@@ -17,7 +8,7 @@ create table hhplus.cash
     constraint unique_idx_user unique (user_id)
 );
 
-create table hhplus.cash_history
+create table cash_history
 (
     id            bigint auto_increment comment '고유 식별자' primary key,
     user_id       bigint                                   not null comment '사용자 고유 식별자',
@@ -28,7 +19,7 @@ create table hhplus.cash_history
     modified_at   timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시'
 );
 
-create table hhplus.coupon
+create table coupon
 (
     id              bigint auto_increment comment '고유 식별자' primary key,
     name            varchar(255)                             not null comment '쿠폰명',
@@ -40,7 +31,7 @@ create table hhplus.coupon
     modified_at     timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시'
 );
 
-create table hhplus.order_line
+create table order_line
 (
     id                      bigint auto_increment comment '고유 식별자' primary key,
     order_id                bigint                                   not null comment '주문 고유 식별자',
@@ -56,7 +47,7 @@ create index idx_order
     on hhplus.order_line (order_id);
 
 
-create table hhplus.orders
+create table orders
 (
     id              bigint auto_increment comment '고유 식별자' primary key,
     user_id         bigint                                   not null comment '사용자 고유 식별자',
@@ -69,7 +60,7 @@ create table hhplus.orders
     modified_at     timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시'
 );
 
-create table hhplus.payment
+create table payment
 (
     id          bigint auto_increment comment '고유 식별자' primary key,
     user_id     bigint                                   not null comment '사용자 고유 식별자',
@@ -83,7 +74,7 @@ create table hhplus.payment
 );
 
 -- 최신순 상품 목록 조회를 가장 많이 할 것으로 판단하여, created_at 컬럼의 인덱스를 내림차순으로 생성했습니다.
-create table hhplus.product
+create table product
 (
     id          bigint auto_increment comment '고유 식별자' primary key,
     name        varchar(255) default ''                not null comment '상품명',
@@ -93,10 +84,11 @@ create table hhplus.product
     modified_at timestamp    default CURRENT_TIMESTAMP null comment '수정 일시'
 );
 
+
 create index idx_created_at
     on hhplus.product (created_at desc);
 
-create table hhplus.user
+create table user
 (
     id                 bigint auto_increment comment '고유 식별자' primary key,
     email              varchar(64)                           not null comment '이메일',
@@ -106,7 +98,7 @@ create table hhplus.user
     modified_at        timestamp   default CURRENT_TIMESTAMP not null comment '수정 일시'
 );
 
-create table hhplus.user_coupon
+create table user_coupon
 (
     id                       bigint auto_increment comment '고유 식별자' primary key,
     user_id                  bigint                                   not null comment '사용자 고유 식별자',
@@ -125,8 +117,3 @@ create table hhplus.user_coupon
     constraint uidx_user_coupon
         unique (user_id, coupon_id)
 );
-
-
-
-```
-

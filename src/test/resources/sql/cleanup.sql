@@ -1,0 +1,9 @@
+TRUNCATE TABLE user;
+TRUNCATE TABLE product;
+TRUNCATE TABLE payment;
+TRUNCATE TABLE orders;
+TRUNCATE TABLE order_line;
+TRUNCATE TABLE user_coupon;
+TRUNCATE TABLE coupon;
+TRUNCATE TABLE cash;
+TRUNCATE TABLE cash_history;
