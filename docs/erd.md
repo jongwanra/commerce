@@ -14,7 +14,7 @@ create table hhplus.cash
     balance     decimal(12, 2) default 0.00              not null comment '현금 잔액',
     created_at  timestamp      default CURRENT_TIMESTAMP not null comment '생성 일시',
     modified_at timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시',
-    constraint unique_idx_user unique (user_id)
+    constraint uidx_cash_user_id unique (user_id)
 );
 
 create table hhplus.cash_history
@@ -52,7 +52,7 @@ create table hhplus.order_line
     modified_at             timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시'
 );
 
-create index idx_order
+create index idx_order_line_order_id
     on hhplus.order_line (order_id);
 
 
@@ -93,7 +93,7 @@ create table hhplus.product
     modified_at timestamp    default CURRENT_TIMESTAMP null comment '수정 일시'
 );
 
-create index idx_created_at
+create index idx_product_created_at
     on hhplus.product (created_at desc);
 
 create table hhplus.user
@@ -122,7 +122,7 @@ create table hhplus.user_coupon
     last_cancelled_at        timestamp                                null comment '마지막 쿠폰 사용 취소 일시',
     created_at               timestamp      default CURRENT_TIMESTAMP not null comment '생성 일시',
     modified_at              timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시',
-    constraint uidx_user_coupon
+    constraint uidx_user_coupon_user_id_coupon_id
         unique (user_id, coupon_id)
 );
 

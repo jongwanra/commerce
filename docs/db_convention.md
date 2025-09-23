@@ -13,6 +13,14 @@
 
 - 예시) `order_line`, `user_coupon`
 
+#### 1-3. 보조 인덱스는 `idx_{테이블이름}_{컬럼1}_{컬럼2}...` 형태로 작성합니다.
+
+- 예시) `idx_orders_user_id`
+
+#### 1-4 유니크 인덱스는 `uidx_{테이블이름}_{컬럼1}_{컬럼2}...` 형태로 작성합니다.
+
+- 예시) `uidx_user_email`
+
 ### 2. Column Naming Convention
 
 #### 2-1. _price vs _amount
