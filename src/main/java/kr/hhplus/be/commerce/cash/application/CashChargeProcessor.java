@@ -33,7 +33,7 @@ public class CashChargeProcessor {
 			CashHistoryEntity.recordOfCharge(
 				cash.getUserId(),
 				newBalance,
-				originalBalance
+				command.amount()
 			)
 		);
 

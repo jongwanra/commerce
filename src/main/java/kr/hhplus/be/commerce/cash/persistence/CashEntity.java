@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import kr.hhplus.be.commerce.global.entity.BaseTimeEntity;
 import kr.hhplus.be.commerce.global.exception.CommerceException;
 import lombok.AccessLevel;
@@ -15,9 +16,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity(name = "cash")
+@Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "cash")
 public class CashEntity extends BaseTimeEntity {
 	private static final BigDecimal MAX_ONCE_CHARGE_AMOUNT = BigDecimal.valueOf(10_000_000);
 

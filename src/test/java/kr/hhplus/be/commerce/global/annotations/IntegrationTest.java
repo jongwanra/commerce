@@ -14,4 +14,5 @@ import org.junit.jupiter.api.Test;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface IntegrationTest {
+	boolean isRunnableInCI() default false;
 }
