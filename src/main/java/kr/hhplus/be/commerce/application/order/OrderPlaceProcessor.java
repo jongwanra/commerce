@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.order.model.Order;
-import kr.hhplus.be.commerce.domain.order.model.OrderLine;
+import kr.hhplus.be.commerce.domain.order.model.input.OrderPlaceInput;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
@@ -38,7 +38,7 @@ public class OrderPlaceProcessor {
 			.stream()
 			.collect(toMap(Product::getId, product -> product));
 
-		List<Product> productsStockDeducted = command.orderLineCommands()
+		List<Product> deductedProducts = command.orderLineCommands()
 			.stream()
 			.map(orderLineCommand -> {
 				Product product = productIdToProductMap.get(orderLineCommand.productId());
@@ -47,17 +47,28 @@ public class OrderPlaceProcessor {
 			})
 			.toList();
 
-		List<OrderLine> orderLines = command.orderLineCommands()
-			.stream().map(orderLineCommand -> {
-				Product product = productIdToProductMap.get(orderLineCommand.productId());
-				return OrderLine.place(product.getId(), product.getName(), product.getPrice(),
-					orderLineCommand.orderQuantity());
-			}).toList();
-
 		return new Output(
-			productRepository.saveAll(productsStockDeducted),
-			orderRepository.save(Order.place(command.userId, orderLines))
-		);
+			productRepository.saveAll(deductedProducts),
+			orderRepository.save(Order.place(toOrderPlaceInput(command, productIdToProductMap))));
+	}
+
+	private OrderPlaceInput toOrderPlaceInput(Command command, Map<Long, Product> productIdToProductMap) {
+		return OrderPlaceInput.builder()
+			.userId(command.userId())
+			.orderLineInputs(command.orderLineCommands()
+				.stream()
+				.map(orderLineCommand -> {
+					Product product = productIdToProductMap.get(orderLineCommand.productId());
+					return OrderPlaceInput.OrderLineInput
+						.builder()
+						.productId(product.getId())
+						.productName(product.getName())
+						.productPrice(product.getPrice())
+						.orderQuantity(orderLineCommand.orderQuantity())
+						.build();
+				})
+				.toList())
+			.build();
 	}
 
 	public record Command(

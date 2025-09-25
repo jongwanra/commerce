@@ -4,6 +4,6 @@ VALUES ('user.a@gmail.com', 'encrypted_password_a', 'ACTIVE'),
        ('user.c@gmail.com', 'encrypted_password_c', 'ACTIVE');
 
 INSERT INTO cash (user_id, balance)
-VALUES (1, 0.00),
-       (2, 0.00),
-       (3, 0.00);
+SELECT u.id, 0.00
+FROM user u
+WHERE u.email IN ('user.a@gmail.com', 'user.b@gmail.com', 'user.c@gmail.com');

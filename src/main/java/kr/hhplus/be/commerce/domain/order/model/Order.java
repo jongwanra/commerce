@@ -11,6 +11,7 @@ import kr.hhplus.be.commerce.domain.global.annotation.InfrastructureOnly;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
+import kr.hhplus.be.commerce.domain.order.model.input.OrderPlaceInput;
 import kr.hhplus.be.commerce.domain.order.policy.DiscountAmountCalculable;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -46,13 +47,19 @@ public final class Order {
 		this.confirmedAt = confirmedAt;
 	}
 
-	public static Order place(Long userId, List<OrderLine> orderLines) {
+	public static Order place(OrderPlaceInput input) {
+		List<OrderLine> orderLines = input.orderLineInputs()
+			.stream()
+			.map((orderLineInput) -> OrderLine.place(orderLineInput.productId(), orderLineInput.productName(),
+				orderLineInput.productPrice(), orderLineInput.orderQuantity()))
+			.toList();
+
 		BigDecimal amount = orderLines.stream()
 			.map(OrderLine::getTotalAmount)
 			.reduce(BigDecimal.ZERO, BigDecimal::add);
 
 		return Order.builder()
-			.userId(userId)
+			.userId(input.userId())
 			.status(OrderStatus.PENDING)
 			.amount(amount)
 			.discountAmount(BigDecimal.ZERO)
@@ -61,7 +68,7 @@ public final class Order {
 			.confirmedAt(null)
 			.build();
 	}
-
+	
 	@InfrastructureOnly
 	public static Order restore(Long id, Long userId, OrderStatus orderStatus, BigDecimal amount,
 		BigDecimal discountAmount, BigDecimal finalAmount, List<OrderLine> orderLines, LocalDateTime confirmedAt) {
