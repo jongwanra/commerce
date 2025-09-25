@@ -383,6 +383,7 @@ class PaymentMakeProcessorUnitTest {
 		final BigDecimal expectedOrderAmount = BigDecimal.valueOf(11_250);
 		final Long userCouponId = 999L;
 		final BigDecimal sufficientBalance = BigDecimal.valueOf(100_000);
+		final LocalDateTime now = LocalDateTime.now();
 
 		OrderLine orderLine = OrderLine.restore(
 			orderLineId,
@@ -407,7 +408,7 @@ class PaymentMakeProcessorUnitTest {
 			orderLines,
 			null
 		);
-		Order confirmedOrder = order.confirm(LocalDateTime.now());
+		Order confirmedOrder = order.confirm(now);
 		CouponEntity coupon = CouponEntity.builder()
 			.name("전품목 10% 할인")
 			.discountAmount(BigDecimal.valueOf(10))
@@ -450,7 +451,7 @@ class PaymentMakeProcessorUnitTest {
 		given(userCouponRepository.save(userCoupon))
 			.willReturn(userCoupon);
 
-		given(orderRepository.save(order))
+		given(orderRepository.save(any(Order.class)))
 			.willReturn(confirmedOrder);
 
 		given(paymentRepository.save(any(Payment.class)))
@@ -462,7 +463,7 @@ class PaymentMakeProcessorUnitTest {
 			orderId,
 			userCouponId,
 			expectedOrderAmount,
-			LocalDateTime.now()
+			now
 		);
 
 		Output output = paymentMakeProcessor.execute(command);
@@ -473,13 +474,13 @@ class PaymentMakeProcessorUnitTest {
 
 		UserCouponEntity outputUserCoupon = output.userCoupon();
 		assertThat(outputUserCoupon.getLastUsedAt()).isNotNull();
-		assertThat(outputUserCoupon.getOrderId()).isEqualTo(order.getId());
+		assertThat(outputUserCoupon.getOrderId()).isEqualTo(order.id());
 		assertThat(outputUserCoupon.getStatus()).isEqualTo(UserCouponStatus.USED);
 		assertThat(outputUserCoupon.getId()).isEqualTo(userCoupon.getId());
 
 		Payment outputPayment = output.payment();
 		assertThat(outputPayment.getStatus()).isEqualTo(PaymentStatus.PAID);
-		assertThat(outputPayment.getTargetId()).isEqualTo(order.getId());
+		assertThat(outputPayment.getTargetId()).isEqualTo(order.id());
 		assertThat(outputPayment.getUserId()).isEqualTo(ordererUserId);
 		assertThat(outputPayment.getAmount()).isEqualTo(BigDecimal.valueOf(11_250));
 		assertThat(outputPayment.getPaidAt()).isNotNull();

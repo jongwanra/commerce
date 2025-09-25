@@ -44,13 +44,13 @@ public class OrderEntity extends BaseTimeEntity {
 
 	public static OrderEntity fromDomain(Order order) {
 		OrderEntity entity = new OrderEntity();
-		entity.id = order.getId() == 0L ? null : order.getId();
-		entity.userId = order.getUserId();
-		entity.status = order.getStatus();
-		entity.amount = order.getAmount();
-		entity.discountAmount = order.getDiscountAmount();
-		entity.finalAmount = order.getFinalAmount();
-		entity.confirmedAt = order.getConfirmedAt();
+		entity.id = order.id();
+		entity.userId = order.userId();
+		entity.status = order.status();
+		entity.amount = order.amount();
+		entity.discountAmount = order.discountAmount();
+		entity.finalAmount = order.finalAmount();
+		entity.confirmedAt = order.confirmedAt();
 		return entity;
 	}
 

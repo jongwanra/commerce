@@ -48,10 +48,10 @@ public class OrderLineEntity extends BaseTimeEntity {
 	public static OrderLineEntity fromDomain(Long orderId, OrderLine orderLine) {
 		return OrderLineEntity.builder()
 			.orderId(orderId)
-			.productId(orderLine.getProductId())
-			.productName(orderLine.getProductName())
-			.productAmount(orderLine.getProductAmount())
-			.orderQuantity(orderLine.getOrderQuantity())
+			.productId(orderLine.productId())
+			.productName(orderLine.productName())
+			.productAmount(orderLine.productAmount())
+			.orderQuantity(orderLine.orderQuantity())
 			.build();
 	}
 

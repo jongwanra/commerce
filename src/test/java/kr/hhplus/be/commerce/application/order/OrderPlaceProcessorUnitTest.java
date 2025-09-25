@@ -136,18 +136,18 @@ class OrderPlaceProcessorUnitTest {
 		assertThat(products.get(0).price()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
 
 		Order order = output.order();
-		assertThat(order.getUserId()).isEqualTo(userId);
-		assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING);
-		assertThat(order.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
-		assertThat(order.getId()).isEqualTo(1L);
-		assertThat(order.getOrderLines().size()).isOne();
+		assertThat(order.userId()).isEqualTo(userId);
+		assertThat(order.status()).isEqualTo(OrderStatus.PENDING);
+		assertThat(order.amount()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
+		assertThat(order.id()).isEqualTo(1L);
+		assertThat(order.orderLines().size()).isOne();
 
-		OrderLine orderLine = order.getOrderLines().get(0);
-		assertThat(orderLine.getId()).isEqualTo(1L);
-		assertThat(orderLine.getProductId()).isEqualTo(productId);
-		assertThat(orderLine.getProductName()).isEqualTo("product name");
-		assertThat(orderLine.getProductAmount()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
-		assertThat(orderLine.getOrderQuantity()).isEqualTo(1);
+		OrderLine orderLine = order.orderLines().get(0);
+		assertThat(orderLine.id()).isEqualTo(1L);
+		assertThat(orderLine.productId()).isEqualTo(productId);
+		assertThat(orderLine.productName()).isEqualTo("product name");
+		assertThat(orderLine.productAmount()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
+		assertThat(orderLine.orderQuantity()).isEqualTo(1);
 
 	}
 

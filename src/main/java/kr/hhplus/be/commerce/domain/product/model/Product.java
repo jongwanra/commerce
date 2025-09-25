@@ -3,14 +3,12 @@ package kr.hhplus.be.commerce.domain.product.model;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import kr.hhplus.be.commerce.domain.global.annotation.ImmutableObject;
 import kr.hhplus.be.commerce.domain.global.annotation.InfrastructureOnly;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import lombok.AccessLevel;
 import lombok.Builder;
 
-@ImmutableObject
 @Builder(access = AccessLevel.PRIVATE)
 public record Product(
 	Long id,

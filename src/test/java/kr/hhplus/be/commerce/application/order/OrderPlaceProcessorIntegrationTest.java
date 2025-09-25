@@ -104,15 +104,15 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 
 				// then
 				Order order = output.order();
-				assertThat(order.getUserId()).isEqualTo(userId);
-				assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING);
-				assertThat(order.getAmount().compareTo(BigDecimal.valueOf(6_700))).isZero();
-				assertThat(order.getOrderLines()).hasSize(1);
+				assertThat(order.userId()).isEqualTo(userId);
+				assertThat(order.status()).isEqualTo(OrderStatus.PENDING);
+				assertThat(order.amount().compareTo(BigDecimal.valueOf(6_700))).isZero();
+				assertThat(order.orderLines()).hasSize(1);
 
-				OrderLine orderLine = order.getOrderLines().get(0);
-				assertThat(orderLine.getProductId()).isEqualTo(product.id());
-				assertThat(orderLine.getProductName()).isEqualTo(product.name());
-				assertThat(orderLine.getOrderQuantity()).isOne();
+				OrderLine orderLine = order.orderLines().get(0);
+				assertThat(orderLine.productId()).isEqualTo(product.id());
+				assertThat(orderLine.productName()).isEqualTo(product.name());
+				assertThat(orderLine.orderQuantity()).isOne();
 				assertThat(orderLine.getTotalAmount().compareTo(product.price())).isZero();
 
 				assertThat(output.products().size()).isOne();

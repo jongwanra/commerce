@@ -78,36 +78,37 @@ public class PaymentMakeProcessor {
 
 	private Output executeWithCoupon(Command command, Order order, CashEntity cash, UserCouponEntity userCoupon) {
 		validatePaymentAmountIsMatched(command.paymentAmount, userCoupon, order);
-		userCoupon.use(command.userId, command.now, order.getId());
+		userCoupon.use(command.userId, command.now, order.id());
 
 		BigDecimal originalBalance = cash.getBalance();
 		cash.use(command.paymentAmount);
 
 		Payment payment = Payment.fromOrder(command.userId, command.orderId, command.paymentAmount)
 			.succeed(command.now);
-		order = order.confirm(command.now, userCoupon);
 
 		cashHistoryRepository.save(
 			CashHistoryEntity.recordOfPurchase(command.userId, cash.getBalance(), originalBalance));
 
+		Order confirmedOrder = order.confirm(command.now, userCoupon);
+		
 		return new Output(
 			cashRepository.save(cash),
 			userCouponRepository.save(userCoupon),
 			paymentRepository.save(payment),
-			orderRepository.save(order)
+			orderRepository.save(confirmedOrder)
 		);
 	}
 
 	private void validatePaymentAmountIsMatched(BigDecimal paymentAmount, UserCouponEntity userCoupon,
 		Order order) {
-		BigDecimal actualPaymentAmount = userCoupon.calculateFinalAmount(order.getAmount());
+		BigDecimal actualPaymentAmount = userCoupon.calculateFinalAmount(order.amount());
 		if (paymentAmount.compareTo(actualPaymentAmount) != 0) {
 			throw new CommerceException(CommerceCode.MISMATCHED_EXPECTED_AMOUNT);
 		}
 	}
 
 	private void validatePaymentAmountIsMatched(BigDecimal paymentAmount, Order order) {
-		BigDecimal actualPaymentAmount = order.getAmount();
+		BigDecimal actualPaymentAmount = order.amount();
 		if (paymentAmount.compareTo(actualPaymentAmount) != 0) {
 			throw new CommerceException(CommerceCode.MISMATCHED_EXPECTED_AMOUNT);
 		}
