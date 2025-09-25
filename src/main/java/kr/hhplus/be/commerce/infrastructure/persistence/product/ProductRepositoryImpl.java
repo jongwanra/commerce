@@ -1,6 +1,7 @@
 package kr.hhplus.be.commerce.infrastructure.persistence.product;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
@@ -32,6 +33,12 @@ public class ProductRepositoryImpl implements ProductRepository {
 			.stream()
 			.map(this::toDomain)
 			.toList();
+	}
+
+	@Override
+	public Optional<Product> findByName(String name) {
+		return productJpaRepository.findByName(name)
+			.map(this::toDomain);
 	}
 
 	private Product toDomain(ProductEntity productEntity) {

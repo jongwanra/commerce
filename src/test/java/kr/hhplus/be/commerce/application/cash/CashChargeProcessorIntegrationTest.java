@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.jdbc.Sql;
 
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
@@ -37,6 +38,7 @@ public class CashChargeProcessorIntegrationTest extends AbstractIntegrationTestS
 
 	// 작성 이유: CashChargeProcessor의 정상 충전 여부를 확인하기 위해 작성했습니다.
 	@IntegrationTest
+	@Sql(scripts = "/sql/setup_user.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 	void 잔액이_없는_회원이_1_000원을_충전할_수_있다() {
 		// given
 		Long userId = userJpaRepository.findByEmail("user.a@gmail.com")
