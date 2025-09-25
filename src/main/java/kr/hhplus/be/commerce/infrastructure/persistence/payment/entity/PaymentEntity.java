@@ -56,13 +56,13 @@ public class PaymentEntity extends BaseTimeEntity {
 
 	public static PaymentEntity fromDomain(Payment payment) {
 		return PaymentEntity.builder()
-			.id(payment.getId())
-			.amount(payment.getAmount())
-			.targetId(payment.getTargetId())
-			.targetType(payment.getTargetType())
-			.userId(payment.getUserId())
-			.status(payment.getStatus())
-			.paidAt(payment.getPaidAt())
+			.id(payment.id())
+			.amount(payment.amount())
+			.targetId(payment.targetId())
+			.targetType(payment.targetType())
+			.userId(payment.userId())
+			.status(payment.status())
+			.paidAt(payment.paidAt())
 			.build();
 	}
 

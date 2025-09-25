@@ -479,11 +479,11 @@ class PaymentMakeProcessorUnitTest {
 		assertThat(outputUserCoupon.getId()).isEqualTo(userCoupon.getId());
 
 		Payment outputPayment = output.payment();
-		assertThat(outputPayment.getStatus()).isEqualTo(PaymentStatus.PAID);
-		assertThat(outputPayment.getTargetId()).isEqualTo(order.id());
-		assertThat(outputPayment.getUserId()).isEqualTo(ordererUserId);
-		assertThat(outputPayment.getAmount()).isEqualTo(BigDecimal.valueOf(11_250));
-		assertThat(outputPayment.getPaidAt()).isNotNull();
+		assertThat(outputPayment.status()).isEqualTo(PaymentStatus.PAID);
+		assertThat(outputPayment.targetId()).isEqualTo(order.id());
+		assertThat(outputPayment.userId()).isEqualTo(ordererUserId);
+		assertThat(outputPayment.amount()).isEqualTo(BigDecimal.valueOf(11_250));
+		assertThat(outputPayment.paidAt()).isNotNull();
 	}
 
 }
