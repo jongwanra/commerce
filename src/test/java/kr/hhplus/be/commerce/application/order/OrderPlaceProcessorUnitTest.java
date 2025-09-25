@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -59,12 +60,8 @@ class OrderPlaceProcessorUnitTest {
 		final int remainStock = 1;
 		final int orderQuantity = 2; // 재고보다 많은 수량 주문
 
-		Product product = Product.builder()
-			.name("product name")
-			.price(BigDecimal.valueOf(10_000))
-			.stock(remainStock) // 재고 1
-			.build();
-		product.assignId(productId);
+		Product product = Product.restore(productId, "product name", remainStock, BigDecimal.valueOf(10_000),
+			LocalDateTime.now());
 
 		Command command = new Command(userId, List.of(new OrderLineCommand(productId, orderQuantity)));
 
@@ -89,25 +86,18 @@ class OrderPlaceProcessorUnitTest {
 		final int orderQuantity = 1; // 재고와 동일한 주문 수량
 		Long orderId = 1L;
 		Long orderLineId = 1L;
-
-		Product product = Product.builder()
-			.name("product name")
-			.price(BigDecimal.valueOf(10_000))
-			.stock(stock)
-			.build();
-		product.assignId(productId);
+		LocalDateTime createdAt = LocalDateTime.now();
+		Product product = Product.restore(productId, "product name", stock, BigDecimal.valueOf(10_000),
+			createdAt);
 
 		Command command = new Command(userId, List.of(new OrderLineCommand(productId, orderQuantity)));
 		// mock
 		given(productRepository.findAllByIdInWithLock(List.of(productId)))
 			.willReturn(List.of(product));
 
-		Product savedProduct = Product.builder()
-			.name("product name")
-			.price(BigDecimal.valueOf(10_000))
-			.stock(stock - orderQuantity)
-			.build();
-		savedProduct.assignId(productId);
+		Product savedProduct = Product.restore(productId, "product name", stock - orderQuantity,
+			BigDecimal.valueOf(10_000),
+			createdAt);
 
 		given(productRepository.saveAll(any()))
 			.willReturn(List.of(savedProduct));
@@ -140,10 +130,10 @@ class OrderPlaceProcessorUnitTest {
 		// then
 		List<Product> products = output.products();
 		assertThat(products.size()).isOne();
-		assertThat(products.get(0).getStock()).isZero();
-		assertThat(products.get(0).getId()).isEqualTo(productId);
-		assertThat(products.get(0).getName()).isEqualTo("product name");
-		assertThat(products.get(0).getPrice()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
+		assertThat(products.get(0).stock()).isZero();
+		assertThat(products.get(0).id()).isEqualTo(productId);
+		assertThat(products.get(0).name()).isEqualTo("product name");
+		assertThat(products.get(0).price()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
 
 		Order order = output.order();
 		assertThat(order.getUserId()).isEqualTo(userId);

@@ -98,7 +98,7 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 					(status) -> orderPlaceProcessor.execute(new OrderPlaceProcessor.Command(
 						userId,
 						List.of(
-							new OrderPlaceProcessor.OrderLineCommand(product.getId(), 1)
+							new OrderPlaceProcessor.OrderLineCommand(product.id(), 1)
 						)
 					)));
 
@@ -110,15 +110,15 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 				assertThat(order.getOrderLines()).hasSize(1);
 
 				OrderLine orderLine = order.getOrderLines().get(0);
-				assertThat(orderLine.getProductId()).isEqualTo(product.getId());
-				assertThat(orderLine.getProductName()).isEqualTo(product.getName());
+				assertThat(orderLine.getProductId()).isEqualTo(product.id());
+				assertThat(orderLine.getProductName()).isEqualTo(product.name());
 				assertThat(orderLine.getOrderQuantity()).isOne();
-				assertThat(orderLine.getTotalAmount().compareTo(product.getPrice())).isZero();
+				assertThat(orderLine.getTotalAmount().compareTo(product.price())).isZero();
 
 				assertThat(output.products().size()).isOne();
 				Product productOfOutput = output.products().get(0);
-				assertThat(productOfOutput.getId()).isEqualTo(product.getId());
-				assertThat(productOfOutput.getStock()).isEqualTo(99).as("100개 중 1개 주문하여 재고가 99개 남아야 합니다.");
+				assertThat(productOfOutput.id()).isEqualTo(product.id());
+				assertThat(productOfOutput.stock()).isEqualTo(99).as("100개 중 1개 주문하여 재고가 99개 남아야 합니다.");
 
 				CashEntity cash = cashJpaRepository.findByUserId(userId)
 					.orElseThrow(() -> new CommerceException("테스트에 필요한 회원의 잔액 정보가 존재하지 않습니다. setup_user.sql을 확인해주세요."));

@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.infrastructure.persistence.global.entity.BaseTimeEntity;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -26,21 +27,31 @@ public class ProductEntity extends BaseTimeEntity {
 	private Integer stock;
 	private BigDecimal price;
 
-	public Product toDomain() {
-		return Product.builder()
-			.name(name)
-			.stock(stock)
-			.price(price)
-			.createdAt(getCreatedAt())
-			.build();
+	@Builder
+	private ProductEntity(Long id, String name, Integer stock, BigDecimal price) {
+		this.id = id;
+		this.name = name;
+		this.stock = stock;
+		this.price = price;
 	}
 
 	public static ProductEntity fromDomain(Product product) {
-		ProductEntity entity = new ProductEntity();
-		entity.id = product.getId();
-		entity.name = product.getName();
-		entity.stock = product.getStock();
-		entity.price = product.getPrice();
-		return entity;
+		return ProductEntity.builder()
+			.id(product.id())
+			.name(product.name())
+			.stock(product.stock())
+			.price(product.price())
+			.build();
 	}
+
+	public Product toDomain() {
+		return Product.restore(
+			id,
+			name,
+			stock,
+			price,
+			getCreatedAt()
+		);
+	}
+
 }

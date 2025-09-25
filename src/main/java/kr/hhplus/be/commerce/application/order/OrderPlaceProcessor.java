@@ -36,23 +36,24 @@ public class OrderPlaceProcessor {
 
 		Map<Long, Product> productIdToProductMap = products
 			.stream()
-			.collect(toMap(Product::getId, product -> product));
+			.collect(toMap(Product::id, product -> product));
 
 		List<Product> deductedProducts = command.orderLineCommands()
 			.stream()
-			.map(orderLineCommand -> {
-				Product product = productIdToProductMap.get(orderLineCommand.productId());
-				product.deductStock(orderLineCommand.orderQuantity());
-				return product;
-			})
+			.map(orderLineCommand -> productIdToProductMap.get(orderLineCommand.productId())
+				.deductStock(orderLineCommand.orderQuantity()))
 			.toList();
 
 		return new Output(
 			productRepository.saveAll(deductedProducts),
-			orderRepository.save(Order.place(toOrderPlaceInput(command, productIdToProductMap))));
+			orderRepository.save(Order.place(toOrderPlaceInput(command, deductedProducts))));
 	}
 
-	private OrderPlaceInput toOrderPlaceInput(Command command, Map<Long, Product> productIdToProductMap) {
+	private OrderPlaceInput toOrderPlaceInput(Command command, List<Product> products) {
+		Map<Long, Product> productIdToProductMap = products
+			.stream()
+			.collect(toMap(Product::id, product -> product));
+		
 		return OrderPlaceInput.builder()
 			.userId(command.userId())
 			.orderLineInputs(command.orderLineCommands()
@@ -61,9 +62,9 @@ public class OrderPlaceProcessor {
 					Product product = productIdToProductMap.get(orderLineCommand.productId());
 					return OrderPlaceInput.OrderLineInput
 						.builder()
-						.productId(product.getId())
-						.productName(product.getName())
-						.productPrice(product.getPrice())
+						.productId(product.id())
+						.productName(product.name())
+						.productPrice(product.price())
 						.orderQuantity(orderLineCommand.orderQuantity())
 						.build();
 				})
