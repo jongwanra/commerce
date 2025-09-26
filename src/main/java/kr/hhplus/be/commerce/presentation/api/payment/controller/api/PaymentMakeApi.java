@@ -1,5 +1,9 @@
 package kr.hhplus.be.commerce.presentation.api.payment.controller.api;
 
+import static kr.hhplus.be.commerce.presentation.global.utils.CommerceHttpRequestHeaderName.*;
+
+import org.springframework.web.bind.annotation.RequestHeader;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -18,6 +22,7 @@ public interface PaymentMakeApi {
 			"""
 	)
 	@ApiResponseErrorCodes({
+		@ApiResponseErrorCode(CommerceCode.IDEMPOTENCY_KEY_IS_REQUIRED),
 		@ApiResponseErrorCode(CommerceCode.UNAUTHENTICATED_USER),
 		@ApiResponseErrorCode(CommerceCode.UNAUTHORIZED_USER),
 		@ApiResponseErrorCode(CommerceCode.INSUFFICIENT_CASH),
@@ -27,6 +32,7 @@ public interface PaymentMakeApi {
 	})
 	EmptyResponse makePayment(
 		@Parameter(hidden = true) Long userId,
+		@RequestHeader(name = X_COMMERCE_IDEMPOTENCY_KEY) String idempotencyKey,
 		@RequestBody(required = true) PaymentMakeRequest request
 	);
 }

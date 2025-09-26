@@ -18,8 +18,9 @@ public record PaymentMakeRequest(
 	@NotNull(message = "expectedPaymentAmount is required")
 	BigDecimal expectedPaymentAmount
 ) {
-	public PaymentMakeProcessor.Command toCommand(Long userId, LocalDateTime now) {
+	public PaymentMakeProcessor.Command toCommand(String idempotencyKey, Long userId, LocalDateTime now) {
 		return new PaymentMakeProcessor.Command(
+			idempotencyKey,
 			userId,
 			orderId,
 			userCouponId,

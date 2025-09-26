@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -81,12 +82,16 @@ class PaymentMakeProcessorUnitTest {
 			orderLines,
 			null
 		);
+		final String idempotencyKey = UUID.randomUUID().toString()
+			.replace("-", "")
+			.substring(0, 14);
 
 		// mock
 		given(orderRepository.findByIdWithLock(orderId))
 			.willReturn(Optional.of(order));
 
 		Command command = new Command(
+			idempotencyKey,
 			payerUserId,
 			orderId,
 			null,
@@ -139,6 +144,9 @@ class PaymentMakeProcessorUnitTest {
 			.balance(BigDecimal.valueOf(100_000))
 			.userId(ordererUserId)
 			.build();
+		final String idempotencyKey = UUID.randomUUID().toString()
+			.replace("-", "")
+			.substring(0, 14);
 
 		// mock
 		given(orderRepository.findByIdWithLock(orderId))
@@ -148,6 +156,7 @@ class PaymentMakeProcessorUnitTest {
 			.willReturn(Optional.of(cash));
 
 		Command command = new Command(
+			idempotencyKey,
 			ordererUserId,
 			orderId,
 			null,
@@ -198,6 +207,10 @@ class PaymentMakeProcessorUnitTest {
 			.userId(ordererUserId)
 			.build();
 
+		final String idempotencyKey = UUID.randomUUID().toString()
+			.replace("-", "")
+			.substring(0, 14);
+
 		// mock
 		given(orderRepository.findByIdWithLock(orderId))
 			.willReturn(Optional.of(order));
@@ -211,6 +224,7 @@ class PaymentMakeProcessorUnitTest {
 
 		// when & then
 		Command command = new Command(
+			idempotencyKey,
 			ordererUserId,
 			orderId,
 			nonExistUserCouponId,
@@ -275,6 +289,10 @@ class PaymentMakeProcessorUnitTest {
 			.userId(ordererUserId)
 			.build();
 
+		final String idempotencyKey = UUID.randomUUID().toString()
+			.replace("-", "")
+			.substring(0, 14);
+
 		// mock
 		given(orderRepository.findByIdWithLock(orderId))
 			.willReturn(Optional.of(order));
@@ -287,6 +305,7 @@ class PaymentMakeProcessorUnitTest {
 
 		// when & then
 		Command command = new Command(
+			idempotencyKey,
 			ordererUserId,
 			orderId,
 			userCouponId,
@@ -350,6 +369,10 @@ class PaymentMakeProcessorUnitTest {
 			.userId(ordererUserId)
 			.build();
 
+		final String idempotencyKey = UUID.randomUUID().toString()
+			.replace("-", "")
+			.substring(0, 14);
+
 		// mock
 		given(orderRepository.findByIdWithLock(orderId))
 			.willReturn(Optional.of(order));
@@ -362,6 +385,7 @@ class PaymentMakeProcessorUnitTest {
 
 		// when & then
 		Command command = new Command(
+			idempotencyKey,
 			ordererUserId,
 			orderId,
 			userCouponId,
@@ -425,9 +449,14 @@ class PaymentMakeProcessorUnitTest {
 			.userId(ordererUserId)
 			.build();
 
+		final String idempotencyKey = UUID.randomUUID().toString()
+			.replace("-", "")
+			.substring(0, 14);
+
 		Long paymentId = 1L;
 		Payment payment = Payment.restore(
 			paymentId,
+			idempotencyKey,
 			ordererUserId,
 			orderId,
 			PaymentTargetType.ORDER,
@@ -459,6 +488,7 @@ class PaymentMakeProcessorUnitTest {
 
 		// when & then
 		Command command = new Command(
+			idempotencyKey,
 			ordererUserId,
 			orderId,
 			userCouponId,

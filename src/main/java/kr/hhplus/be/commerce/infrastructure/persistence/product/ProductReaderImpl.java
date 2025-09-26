@@ -1,6 +1,6 @@
 package kr.hhplus.be.commerce.infrastructure.persistence.product;
 
-import static kr.hhplus.be.commerce.product.infrastructure.persistence.QProductEntity.*;
+import static kr.hhplus.be.commerce.infrastructure.persistence.product.entity.QProductEntity.*;
 
 import java.time.LocalDateTime;
 import java.util.List;

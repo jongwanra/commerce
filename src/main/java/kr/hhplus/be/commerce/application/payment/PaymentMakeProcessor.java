@@ -25,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 /**
  * expectedPaymentAmount를 클라이언트로 부터 받는 이유
  * - 사용자가 결제 페이지에서 최종적으로 확인한 금액과 다른 금액이 실제로 결제되는 것을 방지하기 위함입니다.
+ *
  */
 @RequiredArgsConstructor
 public class PaymentMakeProcessor {
@@ -49,6 +50,17 @@ public class PaymentMakeProcessor {
 				Optional.of(userCouponRepository.findById(command.userCouponId)
 					.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER_COUPON)));
 
+		// 중복 호출일 경우 동일한 결과값 반환
+		Optional<Payment> paymentOpt = paymentRepository.findByIdempotencyKey(command.idempotencyKey);
+		if (paymentOpt.isPresent()) {
+			return new Output(
+				cash,
+				userCouponOpt.orElse(null),
+				paymentOpt.get(),
+				order
+			);
+		}
+
 		return userCouponOpt.map(userCoupon -> executeWithCoupon(command, order, cash, userCoupon))
 			.orElseGet(() -> executeWithoutCoupon(command, order, cash));
 
@@ -60,7 +72,8 @@ public class PaymentMakeProcessor {
 		BigDecimal originalBalance = cash.getBalance();
 		cash.use(command.paymentAmount);
 
-		Payment payment = Payment.fromOrder(command.userId, command.orderId, command.paymentAmount)
+		Payment payment = Payment.fromOrder(command.idempotencyKey, command.userId, command.orderId,
+				command.paymentAmount)
 			.succeed(command.now);
 
 		order = order.confirm(command.now);
@@ -83,14 +96,16 @@ public class PaymentMakeProcessor {
 		BigDecimal originalBalance = cash.getBalance();
 		cash.use(command.paymentAmount);
 
-		Payment payment = Payment.fromOrder(command.userId, command.orderId, command.paymentAmount)
+		Payment payment = Payment.fromOrder(command.idempotencyKey, command.userId, command.orderId,
+				command.paymentAmount)
 			.succeed(command.now);
 
 		cashHistoryRepository.save(
 			CashHistoryEntity.recordOfPurchase(command.userId, cash.getBalance(), originalBalance));
 
 		Order confirmedOrder = order.confirm(command.now, userCoupon);
-		
+
+		System.out.println("confirmedOrder.discountAmount() = " + confirmedOrder.discountAmount());
 		return new Output(
 			cashRepository.save(cash),
 			userCouponRepository.save(userCoupon),
@@ -115,6 +130,7 @@ public class PaymentMakeProcessor {
 	}
 
 	public record Command(
+		String idempotencyKey,
 		Long userId,
 		Long orderId,
 		Long userCouponId,

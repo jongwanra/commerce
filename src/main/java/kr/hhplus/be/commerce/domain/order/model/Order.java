@@ -95,7 +95,7 @@ public record Order(
 		if (status.isConfirmed()) {
 			throw new CommerceException(CommerceCode.ALREADY_CONFIRMED_ORDER);
 		}
-		BigDecimal discountAmount = BigDecimal.ZERO;
+		BigDecimal discountAmount = BigDecimal.valueOf(0, 2);
 		return Order.builder()
 			.id(this.id)
 			.userId(this.userId)

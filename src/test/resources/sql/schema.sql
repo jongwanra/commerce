@@ -62,16 +62,20 @@ create table orders
 
 create table payment
 (
-    id          bigint auto_increment comment '고유 식별자' primary key,
-    user_id     bigint                                   not null comment '사용자 고유 식별자',
-    target_id   bigint                                   not null comment '결제 대상 고유 식별자',
-    target_type varchar(32)                              null comment '결제 대상(ORDER)',
-    amount      decimal(12, 2) default 0.00              not null comment '결제 금액',
-    status      varchar(32)    default 'PENDING'         not null comment '결제 상태',
-    paid_at     timestamp                                null comment '결제 일시',
-    created_at  timestamp      default CURRENT_TIMESTAMP not null comment '생성 일시',
-    modified_at timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시'
+    id              bigint auto_increment comment '고유 식별자' primary key,
+    idempotency_key varchar(255)   default ''                not null comment '멱등키',
+    user_id         bigint                                   not null comment '사용자 고유 식별자',
+    target_id       bigint                                   not null comment '결제 대상 고유 식별자',
+    target_type     varchar(32)                              null comment '결제 대상(ORDER)',
+    amount          decimal(12, 2) default 0.00              not null comment '결제 금액',
+    status          varchar(32)    default 'PENDING'         not null comment '결제 상태',
+    paid_at         timestamp                                null comment '결제 일시',
+    created_at      timestamp      default CURRENT_TIMESTAMP not null comment '생성 일시',
+    modified_at     timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시',
+    constraint uidx_payment_idempotency_key
+        unique (idempotency_key)
 );
+
 
 -- 최신순 상품 목록 조회를 가장 많이 할 것으로 판단하여, created_at 컬럼의 인덱스를 내림차순으로 생성했습니다.
 create table product

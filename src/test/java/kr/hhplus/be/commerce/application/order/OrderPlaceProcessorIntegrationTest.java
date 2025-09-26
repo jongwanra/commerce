@@ -108,7 +108,7 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 				assertThat(order.status()).isEqualTo(OrderStatus.PENDING);
 				assertThat(order.amount().compareTo(BigDecimal.valueOf(6_700))).isZero();
 				assertThat(order.orderLines()).hasSize(1);
-
+				
 				OrderLine orderLine = order.orderLines().get(0);
 				assertThat(orderLine.productId()).isEqualTo(product.id());
 				assertThat(orderLine.productName()).isEqualTo(product.name());
