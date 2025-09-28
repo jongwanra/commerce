@@ -8,6 +8,8 @@ import java.util.Optional;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.hhplus.be.commerce.domain.event.model.OrderConfirmedEvent;
+import kr.hhplus.be.commerce.domain.event.publisher.EventPublisher;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.order.model.Order;
@@ -34,6 +36,7 @@ public class PaymentMakeProcessor {
 	private final UserCouponRepository userCouponRepository;
 	private final CashRepository cashRepository;
 	private final CashHistoryRepository cashHistoryRepository;
+	private final EventPublisher eventPublisher;
 
 	@Transactional
 	public Output execute(Command command) {
@@ -61,8 +64,11 @@ public class PaymentMakeProcessor {
 			);
 		}
 
-		return userCouponOpt.map(userCoupon -> executeWithCoupon(command, order, cash, userCoupon))
+		Output output = userCouponOpt.map(userCoupon -> executeWithCoupon(command, order, cash, userCoupon))
 			.orElseGet(() -> executeWithoutCoupon(command, order, cash));
+
+		eventPublisher.publish(OrderConfirmedEvent.from(order));
+		return output;
 
 	}
 
@@ -76,7 +82,7 @@ public class PaymentMakeProcessor {
 				command.paymentAmount)
 			.succeed(command.now);
 
-		order = order.confirm(command.now);
+		Order confirmedOrder = order.confirm(command.now);
 
 		cashHistoryRepository.save(
 			CashHistoryEntity.recordOfPurchase(command.userId, cash.getBalance(), originalBalance));
@@ -85,7 +91,7 @@ public class PaymentMakeProcessor {
 			cashRepository.save(cash),
 			null,
 			paymentRepository.save(payment),
-			orderRepository.save(order)
+			orderRepository.save(confirmedOrder)
 		);
 	}
 
@@ -105,7 +111,6 @@ public class PaymentMakeProcessor {
 
 		Order confirmedOrder = order.confirm(command.now, userCoupon);
 
-		System.out.println("confirmedOrder.discountAmount() = " + confirmedOrder.discountAmount());
 		return new Output(
 			cashRepository.save(cash),
 			userCouponRepository.save(userCoupon),

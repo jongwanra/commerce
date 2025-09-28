@@ -14,6 +14,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import net.bytebuddy.utility.RandomString;
 
 import kr.hhplus.be.commerce.application.order.OrderPlaceProcessor;
+import kr.hhplus.be.commerce.domain.event.publisher.EventPublisher;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
@@ -51,6 +52,9 @@ class PaymentMakeProcessorIntegrationTest extends AbstractIntegrationTestSupport
 	private ProductRepository productRepository;
 
 	@Autowired
+	private EventPublisher eventPublisher;
+
+	@Autowired
 	private TransactionTemplate transactionTemplate;
 
 	@BeforeEach
@@ -65,7 +69,8 @@ class PaymentMakeProcessorIntegrationTest extends AbstractIntegrationTestSupport
 			orderRepository,
 			userCouponRepository,
 			cashRepository,
-			cashHistoryRepository
+			cashHistoryRepository,
+			eventPublisher
 		);
 	}
 

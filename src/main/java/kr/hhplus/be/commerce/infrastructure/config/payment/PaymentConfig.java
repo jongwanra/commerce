@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import kr.hhplus.be.commerce.application.payment.PaymentMakeProcessor;
+import kr.hhplus.be.commerce.domain.event.publisher.EventPublisher;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
@@ -25,14 +26,16 @@ public class PaymentConfig {
 		OrderRepository orderRepository,
 		UserCouponRepository userCouponRepository,
 		CashRepository cashRepository,
-		CashHistoryRepository cashHistoryRepository
+		CashHistoryRepository cashHistoryRepository,
+		EventPublisher eventPublisher
 	) {
 		return new PaymentMakeProcessor(
 			paymentRepository,
 			orderRepository,
 			userCouponRepository,
 			cashRepository,
-			cashHistoryRepository
+			cashHistoryRepository,
+			eventPublisher
 		);
 
 	}

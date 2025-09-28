@@ -23,11 +23,9 @@ import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.ScenarioIntegrationTest;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryJpaRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.enums.CashHistoryAction;
-import kr.hhplus.be.commerce.infrastructure.persistence.user.UserJpaRepository;
 
 class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport {
 	private CashChargeProcessor cashChargeProcessor;
@@ -37,12 +35,6 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 	private OrderRepository orderRepository;
 	@Autowired
 	private ProductRepository productRepository;
-
-	@Autowired
-	private UserJpaRepository userJpaRepository;
-
-	@Autowired
-	private CashJpaRepository cashJpaRepository;
 
 	@Autowired
 	private CashHistoryJpaRepository cashHistoryJpaRepository;
@@ -108,7 +100,7 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 				assertThat(order.status()).isEqualTo(OrderStatus.PENDING);
 				assertThat(order.amount().compareTo(BigDecimal.valueOf(6_700))).isZero();
 				assertThat(order.orderLines()).hasSize(1);
-				
+
 				OrderLine orderLine = order.orderLines().get(0);
 				assertThat(orderLine.productId()).isEqualTo(product.id());
 				assertThat(orderLine.productName()).isEqualTo(product.name());
