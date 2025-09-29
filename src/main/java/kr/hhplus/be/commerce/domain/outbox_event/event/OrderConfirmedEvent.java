@@ -1,8 +1,8 @@
-package kr.hhplus.be.commerce.domain.event.model;
+package kr.hhplus.be.commerce.domain.outbox_event.event;
 
-import kr.hhplus.be.commerce.domain.event.model.enums.EventTargetType;
-import kr.hhplus.be.commerce.domain.event.model.enums.EventType;
 import kr.hhplus.be.commerce.domain.order.model.Order;
+import kr.hhplus.be.commerce.domain.outbox_event.enums.EventTargetType;
+import kr.hhplus.be.commerce.domain.outbox_event.enums.EventType;
 import lombok.AccessLevel;
 import lombok.Builder;
 
@@ -21,4 +21,5 @@ public record OrderConfirmedEvent(
 			.order(order)
 			.build();
 	}
+
 }

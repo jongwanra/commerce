@@ -16,12 +16,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import kr.hhplus.be.commerce.domain.event.publisher.EventPublisher;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.OrderLine;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
+import kr.hhplus.be.commerce.domain.outbox_event.publisher.EventPublisher;
 import kr.hhplus.be.commerce.domain.payment.model.Payment;
 import kr.hhplus.be.commerce.domain.payment.model.enums.PaymentStatus;
 import kr.hhplus.be.commerce.domain.payment.model.enums.PaymentTargetType;

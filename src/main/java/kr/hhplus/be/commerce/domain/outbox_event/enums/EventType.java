@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.domain.event.model.enums;
+package kr.hhplus.be.commerce.domain.outbox_event.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -7,6 +7,5 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum EventType {
 	ORDER_CONFIRMED("결제가 완료된 주문건");
-
 	private final String description;
 }

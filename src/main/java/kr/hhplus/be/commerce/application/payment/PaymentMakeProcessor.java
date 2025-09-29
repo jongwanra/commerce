@@ -8,12 +8,12 @@ import java.util.Optional;
 
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.hhplus.be.commerce.domain.event.model.OrderConfirmedEvent;
-import kr.hhplus.be.commerce.domain.event.publisher.EventPublisher;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
+import kr.hhplus.be.commerce.domain.outbox_event.event.OrderConfirmedEvent;
+import kr.hhplus.be.commerce.domain.outbox_event.publisher.EventPublisher;
 import kr.hhplus.be.commerce.domain.payment.model.Payment;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;

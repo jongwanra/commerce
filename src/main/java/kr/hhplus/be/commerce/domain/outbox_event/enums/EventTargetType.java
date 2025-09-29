@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.domain.event.model.enums;
+package kr.hhplus.be.commerce.domain.outbox_event.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
