@@ -13,7 +13,7 @@ import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
 import kr.hhplus.be.commerce.domain.outbox_event.event.OrderConfirmedEvent;
-import kr.hhplus.be.commerce.domain.outbox_event.publisher.EventPublisher;
+import kr.hhplus.be.commerce.domain.outbox_event.recorder.EventRecorder;
 import kr.hhplus.be.commerce.domain.payment.model.Payment;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
@@ -36,7 +36,7 @@ public class PaymentMakeProcessor {
 	private final UserCouponRepository userCouponRepository;
 	private final CashRepository cashRepository;
 	private final CashHistoryRepository cashHistoryRepository;
-	private final EventPublisher eventPublisher;
+	private final EventRecorder eventRecorder;
 
 	@Transactional
 	public Output execute(Command command) {
@@ -67,7 +67,7 @@ public class PaymentMakeProcessor {
 		Output output = userCouponOpt.map(userCoupon -> executeWithCoupon(command, order, cash, userCoupon))
 			.orElseGet(() -> executeWithoutCoupon(command, order, cash));
 
-		eventPublisher.publish(OrderConfirmedEvent.from(order));
+		eventRecorder.record(OrderConfirmedEvent.from(order));
 		return output;
 
 	}

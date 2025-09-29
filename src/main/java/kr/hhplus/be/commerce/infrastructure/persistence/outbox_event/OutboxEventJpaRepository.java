@@ -13,8 +13,4 @@ public interface OutboxEventJpaRepository extends JpaRepository<OutboxEventEntit
 	@Query("SELECT oe FROM OutboxEventEntity oe WHERE oe.status= :status ORDER BY oe.createdAt ASC LIMIT :limit")
 	List<OutboxEventEntity> findAllByStatusOrderByCreatedAtAscLimit(@Param("status") EventStatus status,
 		@Param("limit") int limit);
-
-	@Query("SELECT oe FROM OutboxEventEntity oe WHERE oe.status= 'FAILED' AND oe.failedCount < :failedCountThreshold ORDER BY oe.createdAt ASC LIMIT :limit")
-	List<OutboxEventEntity> findRetryableFailedEvents(@Param("failedCountThreshold") int failedCountThreshold,
-		@Param("limit") int limit);
 }

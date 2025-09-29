@@ -11,6 +11,4 @@ public interface OutboxEventRepository {
 	List<OutboxEvent> findAllByStatusOrderByCreatedAtAscLimit(EventStatus status, int limit);
 
 	List<OutboxEvent> saveAll(List<OutboxEvent> outboxEvents);
-
-	List<OutboxEvent> findRetryableFailedEvents(int failedCountThreshold, int limit);
 }

@@ -15,7 +15,7 @@ import net.bytebuddy.utility.RandomString;
 
 import kr.hhplus.be.commerce.application.order.OrderPlaceProcessor;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
-import kr.hhplus.be.commerce.domain.outbox_event.publisher.EventPublisher;
+import kr.hhplus.be.commerce.domain.outbox_event.recorder.EventRecorder;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
@@ -52,7 +52,7 @@ class PaymentMakeProcessorIntegrationTest extends AbstractIntegrationTestSupport
 	private ProductRepository productRepository;
 
 	@Autowired
-	private EventPublisher eventPublisher;
+	private EventRecorder eventRecorder;
 
 	@Autowired
 	private TransactionTemplate transactionTemplate;
@@ -70,7 +70,7 @@ class PaymentMakeProcessorIntegrationTest extends AbstractIntegrationTestSupport
 			userCouponRepository,
 			cashRepository,
 			cashHistoryRepository,
-			eventPublisher
+			eventRecorder
 		);
 	}
 

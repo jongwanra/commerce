@@ -6,11 +6,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.outbox_event.enums.EventStatus;
-import kr.hhplus.be.commerce.domain.outbox_event.enums.EventType;
-import kr.hhplus.be.commerce.domain.outbox_event.handler.EventHandler;
+import kr.hhplus.be.commerce.domain.outbox_event.mapper.EventPublisherMapping;
 import kr.hhplus.be.commerce.domain.outbox_event.model.OutboxEvent;
+import kr.hhplus.be.commerce.domain.outbox_event.publisher.EventPublisher;
 import kr.hhplus.be.commerce.domain.outbox_event.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +22,7 @@ public class OutboxPendingEventsScheduler {
 	private static final int FIVE_SECONDS = 5 * 1000;
 
 	private final OutboxEventRepository outboxEventRepository;
-	private final List<EventHandler> eventHandlers;
+	private final EventPublisherMapping eventPublisherMapping;
 
 	@Scheduled(fixedDelay = FIVE_SECONDS)
 	@Transactional
@@ -33,26 +32,17 @@ public class OutboxPendingEventsScheduler {
 			.stream()
 			.map((outboxEvent) -> {
 				try {
-					EventHandler eventHandler = getEventHandler(outboxEvent.type());
-					eventHandler.handle(outboxEvent.toEvent());
-					return outboxEvent.sent();
+					EventPublisher eventPublisher = eventPublisherMapping.get(outboxEvent.type());
+					eventPublisher.publish(outboxEvent.toEvent());
+					return outboxEvent.published();
 				} catch (Exception e) {
-					return outboxEvent.fail(e.getMessage());
+					return outboxEvent.failed(e.getMessage());
 				}
 
 			})
 			.toList();
 
 		outboxEventRepository.saveAll(outboxEvents);
-	}
-
-	private EventHandler getEventHandler(EventType eventType) {
-		for (EventHandler eventHandler : eventHandlers) {
-			if (eventHandler.support(eventType)) {
-				return eventHandler;
-			}
-		}
-		throw new CommerceException("Event handler not found for event type " + eventType);
 	}
 
 }

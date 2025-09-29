@@ -6,10 +6,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
-import kr.hhplus.be.commerce.domain.outbox_event.enums.EventType;
-import kr.hhplus.be.commerce.domain.outbox_event.handler.EventHandler;
+import kr.hhplus.be.commerce.domain.outbox_event.enums.EventStatus;
+import kr.hhplus.be.commerce.domain.outbox_event.event.Event;
+import kr.hhplus.be.commerce.domain.outbox_event.mapper.EventPublisherMapping;
 import kr.hhplus.be.commerce.domain.outbox_event.model.OutboxEvent;
+import kr.hhplus.be.commerce.domain.outbox_event.publisher.EventPublisher;
 import kr.hhplus.be.commerce.domain.outbox_event.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,25 +18,28 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class OutboxRetryableFailedEventsScheduler {
+public class OutboxFailedEventsScheduler {
 	private static final int BATCH_SIZE = 100;
 	private static final int ONE_MINUTE = 60 * 1000;
 
 	private final OutboxEventRepository outboxEventRepository;
-	private final List<EventHandler> eventHandlers;
+	private final EventPublisherMapping eventPublisherMapping;
 
 	@Scheduled(fixedDelay = ONE_MINUTE)
 	@Transactional
 	public void execute() {
-		List<OutboxEvent> outboxEvents = outboxEventRepository.findRetryableFailedEvents(4, BATCH_SIZE)
+		List<OutboxEvent> outboxEvents = outboxEventRepository.findAllByStatusOrderByCreatedAtAscLimit(
+				EventStatus.FAILED, BATCH_SIZE)
 			.stream()
 			.map((outboxEvent) -> {
 				try {
-					EventHandler eventHandler = getEventHandler(outboxEvent.type());
-					eventHandler.handle(outboxEvent.toEvent());
-					return outboxEvent.sent();
+					Event event = outboxEvent.toEvent();
+					EventPublisher eventPublisher = eventPublisherMapping.get(event.type());
+					eventPublisher.publish(event);
+
+					return outboxEvent.published();
 				} catch (Exception e) {
-					return outboxEvent.fail(e.getMessage());
+					return outboxEvent.failed(e.getMessage());
 				}
 
 			})
@@ -43,15 +47,6 @@ public class OutboxRetryableFailedEventsScheduler {
 
 		outboxEventRepository.saveAll(outboxEvents);
 
-	}
-
-	private EventHandler getEventHandler(EventType eventType) {
-		for (EventHandler eventHandler : eventHandlers) {
-			if (eventHandler.support(eventType)) {
-				return eventHandler;
-			}
-		}
-		throw new CommerceException("Event handler not found for event type " + eventType);
 	}
 
 }

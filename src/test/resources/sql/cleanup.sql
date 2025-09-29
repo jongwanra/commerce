@@ -7,3 +7,4 @@ TRUNCATE TABLE user_coupon;
 TRUNCATE TABLE coupon;
 TRUNCATE TABLE cash;
 TRUNCATE TABLE cash_history;
+TRUNCATE TABLE outbox_event;

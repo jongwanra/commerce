@@ -21,7 +21,7 @@ import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.OrderLine;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
-import kr.hhplus.be.commerce.domain.outbox_event.publisher.EventPublisher;
+import kr.hhplus.be.commerce.domain.outbox_event.recorder.EventRecorder;
 import kr.hhplus.be.commerce.domain.payment.model.Payment;
 import kr.hhplus.be.commerce.domain.payment.model.enums.PaymentStatus;
 import kr.hhplus.be.commerce.domain.payment.model.enums.PaymentTargetType;
@@ -52,7 +52,7 @@ class PaymentMakeProcessorUnitTest {
 	private CashHistoryRepository cashHistoryRepository;
 
 	@Mock
-	private EventPublisher eventPublisher;
+	private EventRecorder eventRecorder;
 
 	// 작성 이유: 주문한 사용자만 결제가 가능한지 검증하기 위해서 작성했습니다.
 	@Test

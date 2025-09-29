@@ -121,3 +121,24 @@ create table user_coupon
     constraint uidx_user_coupon_user_id_coupon_id
         unique (user_id, coupon_id)
 );
+
+create table outbox_event
+(
+    id            bigint auto_increment comment '고유 식별자' primary key,
+    type          varchar(32)                             not null comment '이벤트 종류(ORDER_CONFIRMED, ...)',
+    target_id     bigint                                  not null comment '대상 고유 식별자',
+    target_type   varchar(32)                             not null comment 'ORDER, PAYMENT, ...',
+    status        varchar(32)                             not null comment 'PENDING, PUBLISHED, FAILED, DEAD_LETTER',
+    payload       text                                    not null comment '외부 API로 전송할 데이터',
+    sent_at       timestamp                               null comment '보낸 일시',
+    failed_count  int           default 0                 not null comment '실패 횟수',
+    failed_at     timestamp                               null comment '최근 전송 실패 일시',
+    failed_reason varchar(1028) default ''                not null comment '전송 실패 이유',
+    created_at    timestamp     default CURRENT_TIMESTAMP not null comment '생성 일시',
+    modified_at   timestamp     default CURRENT_TIMESTAMP not null comment '수정 일시'
+)
+    comment '외부 시스템에 정보를 전송';
+
+
+
+

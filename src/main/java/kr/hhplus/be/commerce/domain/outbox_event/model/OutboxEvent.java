@@ -28,6 +28,7 @@ public record OutboxEvent(
 	Integer failedCount
 ) {
 	private static final ObjectMapper objectMapper = new ObjectMapper();
+	private static final int FAILED_COUNT_THRESHOLD = 3;
 
 	@InfrastructureOnly
 	public static OutboxEvent restore(Long id, Long targetId, EventTargetType targetType, EventType type,
@@ -47,14 +48,17 @@ public record OutboxEvent(
 			.build();
 	}
 
-	public static OutboxEvent publish(EventType type, Long targetId, EventTargetType targetType, String payload) {
-		return OutboxEvent
-			.builder()
+	public static OutboxEvent ofPending(EventType type, Long targetId, EventTargetType targetType, String payload) {
+		return OutboxEvent.builder()
 			.targetId(targetId)
 			.targetType(targetType)
 			.type(type)
 			.status(EventStatus.PENDING)
 			.payload(payload)
+			.sentAt(null)
+			.failedAt(null)
+			.failedReason("")
+			.failedCount(0)
 			.build();
 	}
 
@@ -71,15 +75,18 @@ public record OutboxEvent(
 		}
 	}
 
-	public OutboxEvent fail(String failedReason) {
+	public OutboxEvent failed(String failedReason) {
 		final int newFailedCount = failedCount + 1;
+		// 3번 실패했을 경우 DEAD_LETTER 상태로 변경
+		EventStatus newEventStatus =
+			newFailedCount >= FAILED_COUNT_THRESHOLD ? EventStatus.DEAD_LETTER : EventStatus.FAILED;
 
 		return OutboxEvent.builder()
 			.id(id)
 			.targetId(targetId)
 			.targetType(targetType)
 			.type(type)
-			.status(EventStatus.FAILED)
+			.status(newEventStatus)
 			.payload(payload)
 			.sentAt(sentAt)
 			.failedAt(LocalDateTime.now())
@@ -89,13 +96,13 @@ public record OutboxEvent(
 
 	}
 
-	public OutboxEvent sent() {
+	public OutboxEvent published() {
 		return OutboxEvent.builder()
 			.id(id)
 			.targetId(targetId)
 			.targetType(targetType)
 			.type(type)
-			.status(EventStatus.SENT)
+			.status(EventStatus.PUBLISHED)
 			.payload(payload)
 			.sentAt(LocalDateTime.now())
 			.failedAt(failedAt)

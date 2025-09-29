@@ -39,12 +39,5 @@ public class OutboxEventRepositoryImpl implements OutboxEventRepository {
 			.map(OutboxEventEntity::toDomain)
 			.toList();
 	}
-
-	@Override
-	public List<OutboxEvent> findRetryableFailedEvents(int failedCountThreshold, int limit) {
-		return outboxEventJpaRepository.findRetryableFailedEvents(failedCountThreshold, limit)
-			.stream()
-			.map(OutboxEventEntity::toDomain)
-			.toList();
-	}
+	
 }

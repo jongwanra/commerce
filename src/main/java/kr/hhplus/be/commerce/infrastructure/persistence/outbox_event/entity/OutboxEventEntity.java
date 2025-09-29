@@ -59,8 +59,7 @@ public class OutboxEventEntity extends BaseTimeEntity {
 	}
 
 	public static OutboxEventEntity fromDomain(OutboxEvent outboxEvent) {
-		return OutboxEventEntity
-			.builder()
+		return OutboxEventEntity.builder()
 			.id(outboxEvent.id())
 			.targetId(outboxEvent.targetId())
 			.targetType(outboxEvent.targetType())
