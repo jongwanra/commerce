@@ -41,4 +41,17 @@ public class OrderRepositoryImpl implements OrderRepository {
 			});
 	}
 
+	@Override
+	public Optional<Order> findByIdempotencyKeyWithLock(String idempotencyKey) {
+		if (idempotencyKey.isBlank()) {
+			return Optional.empty();
+		}
+		return orderJpaRepository.findByIdempotencyKeyWithLock(idempotencyKey)
+			.map((orderEntity) -> {
+				List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.findAllByOrderId(orderEntity.getId());
+				return orderEntity.toDomain(orderLineEntities);
+			});
+
+	}
+
 }

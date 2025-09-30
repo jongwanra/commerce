@@ -28,8 +28,6 @@ public class PaymentEntity extends BaseTimeEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	private String idempotencyKey;
-
 	private Long userId;
 
 	private Long targetId;
@@ -45,11 +43,10 @@ public class PaymentEntity extends BaseTimeEntity {
 	LocalDateTime paidAt;
 
 	@Builder
-	private PaymentEntity(Long id, String idempotencyKey, Long userId, Long targetId, PaymentTargetType targetType,
+	private PaymentEntity(Long id, Long userId, Long targetId, PaymentTargetType targetType,
 		BigDecimal amount,
 		PaymentStatus status, LocalDateTime paidAt) {
 		this.id = id;
-		this.idempotencyKey = idempotencyKey;
 		this.userId = userId;
 		this.targetId = targetId;
 		this.targetType = targetType;
@@ -61,7 +58,6 @@ public class PaymentEntity extends BaseTimeEntity {
 	public static PaymentEntity fromDomain(Payment payment) {
 		return PaymentEntity.builder()
 			.id(payment.id())
-			.idempotencyKey(payment.idempotencyKey())
 			.amount(payment.amount())
 			.targetId(payment.targetId())
 			.targetType(payment.targetType())
@@ -74,7 +70,6 @@ public class PaymentEntity extends BaseTimeEntity {
 	public Payment toDomain() {
 		return Payment.restore(
 			id,
-			idempotencyKey,
 			userId,
 			targetId,
 			targetType,

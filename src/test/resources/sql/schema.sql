@@ -49,7 +49,9 @@ create index idx_order_line_order_id
 
 create table orders
 (
-    id              bigint auto_increment comment '고유 식별자' primary key,
+    id              bigint auto_increment comment '고유 식별자'
+        primary key,
+    idempotency_key varchar(255)   default ''                not null comment '멱등키(중복 호출 방지)',
     user_id         bigint                                   not null comment '사용자 고유 식별자',
     status          varchar(32)    default 'PENDING'         not null comment '주문 상태(PENDING, CONFIRMED, CANCELLED)',
     amount          decimal(12, 2) default 0.00              not null comment '주문가(각 주문 항목 * 주문 수량의 총합)',
@@ -57,23 +59,24 @@ create table orders
     final_amount    decimal(12, 2) default 0.00              not null comment '최종 가격(amonut - discount_amount)',
     confirmed_at    timestamp                                null comment '주문 확정 일시',
     created_at      timestamp      default CURRENT_TIMESTAMP not null comment '생성 일시',
-    modified_at     timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시'
+    modified_at     timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시',
+    constraint uidx_orders_idempotency_key
+        unique (idempotency_key)
 );
+
+
 
 create table payment
 (
-    id              bigint auto_increment comment '고유 식별자' primary key,
-    idempotency_key varchar(255)   default ''                not null comment '멱등키',
-    user_id         bigint                                   not null comment '사용자 고유 식별자',
-    target_id       bigint                                   not null comment '결제 대상 고유 식별자',
-    target_type     varchar(32)                              null comment '결제 대상(ORDER)',
-    amount          decimal(12, 2) default 0.00              not null comment '결제 금액',
-    status          varchar(32)    default 'PENDING'         not null comment '결제 상태',
-    paid_at         timestamp                                null comment '결제 일시',
-    created_at      timestamp      default CURRENT_TIMESTAMP not null comment '생성 일시',
-    modified_at     timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시',
-    constraint uidx_payment_idempotency_key
-        unique (idempotency_key)
+    id          bigint auto_increment comment '고유 식별자' primary key,
+    user_id     bigint                                   not null comment '사용자 고유 식별자',
+    target_id   bigint                                   not null comment '결제 대상 고유 식별자',
+    target_type varchar(32)                              null comment '결제 대상(ORDER)',
+    amount      decimal(12, 2) default 0.00              not null comment '결제 금액',
+    status      varchar(32)    default 'PENDING'         not null comment '결제 상태',
+    paid_at     timestamp                                null comment '결제 일시',
+    created_at  timestamp      default CURRENT_TIMESTAMP not null comment '생성 일시',
+    modified_at timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시'
 );
 
 

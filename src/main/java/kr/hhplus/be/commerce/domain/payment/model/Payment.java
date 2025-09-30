@@ -12,7 +12,6 @@ import lombok.Builder;
 @Builder(access = AccessLevel.PRIVATE)
 public record Payment(
 	Long id,
-	String idempotencyKey,
 	Long userId,
 	Long targetId,
 	PaymentTargetType targetType,
@@ -21,26 +20,22 @@ public record Payment(
 	LocalDateTime paidAt
 ) {
 
-	public static Payment fromOrder(String idempotencyKey, Long userId, Long orderId, BigDecimal amount) {
+	public static Payment fromOrder(Long userId, Long orderId, BigDecimal amount) {
 		return Payment.builder()
-			.id(null)
-			.idempotencyKey(idempotencyKey)
 			.userId(userId)
 			.targetId(orderId)
 			.targetType(PaymentTargetType.ORDER)
 			.amount(amount)
 			.status(PaymentStatus.PENDING)
-			.paidAt(null)
 			.build();
 	}
 
 	@InfrastructureOnly
-	public static Payment restore(Long id, String idempotencyKey, Long userId, Long targetId,
+	public static Payment restore(Long id, Long userId, Long targetId,
 		PaymentTargetType targetType, BigDecimal amount,
 		PaymentStatus status, LocalDateTime paidAt) {
 		return Payment.builder()
 			.id(id)
-			.idempotencyKey(idempotencyKey)
 			.userId(userId)
 			.targetId(targetId)
 			.targetType(targetType)
@@ -52,12 +47,11 @@ public record Payment(
 
 	public Payment succeed(LocalDateTime paidAt) {
 		return Payment.builder()
-			.id(this.id)
-			.idempotencyKey(this.idempotencyKey)
-			.userId(this.userId)
-			.targetId(this.targetId)
-			.targetType(this.targetType)
-			.amount(this.amount)
+			.id(id)
+			.userId(userId)
+			.targetId(targetId)
+			.targetType(targetType)
+			.amount(amount)
 			.status(PaymentStatus.PAID)
 			.paidAt(paidAt)
 			.build();

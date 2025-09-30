@@ -5,7 +5,12 @@ import org.springframework.context.annotation.Configuration;
 
 import kr.hhplus.be.commerce.application.order.OrderPlaceProcessor;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
+import kr.hhplus.be.commerce.domain.outbox_event.recorder.EventRecorder;
+import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.coupon.UserCouponRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderLineJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderRepositoryImpl;
@@ -26,11 +31,21 @@ public class OrderConfig {
 	@Bean
 	public OrderPlaceProcessor orderPlaceProcessor(
 		OrderRepository orderRepository,
-		ProductRepository productRepository
+		PaymentRepository paymentRepository,
+		ProductRepository productRepository,
+		UserCouponRepository userCouponRepository,
+		CashRepository cashRepository,
+		CashHistoryRepository cashHistoryRepository,
+		EventRecorder eventRecorder
 	) {
 		return new OrderPlaceProcessor(
 			orderRepository,
-			productRepository
+			paymentRepository,
+			productRepository,
+			userCouponRepository,
+			cashRepository,
+			cashHistoryRepository,
+			eventRecorder
 		);
 	}
 

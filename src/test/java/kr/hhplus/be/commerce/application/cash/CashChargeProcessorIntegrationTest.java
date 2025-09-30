@@ -13,8 +13,8 @@ import org.springframework.test.context.jdbc.Sql;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.IntegrationTest;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryJpaRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashJpaRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.enums.CashHistoryAction;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.UserJpaRepository;
@@ -26,14 +26,14 @@ public class CashChargeProcessorIntegrationTest extends AbstractIntegrationTestS
 	private UserJpaRepository userJpaRepository;
 
 	@Autowired
-	private CashJpaRepository cashJpaRepository;
+	private CashRepository cashRepository;
 
 	@Autowired
-	private CashHistoryJpaRepository cashHistoryJpaRepository;
+	private CashHistoryRepository cashHistoryRepository;
 
 	@BeforeEach
 	void setUp() {
-		cashChargeProcessor = new CashChargeProcessor(cashJpaRepository, cashHistoryJpaRepository);
+		cashChargeProcessor = new CashChargeProcessor(cashRepository, cashHistoryRepository);
 	}
 
 	// 작성 이유: CashChargeProcessor의 정상 충전 여부를 확인하기 위해 작성했습니다.
@@ -57,7 +57,7 @@ public class CashChargeProcessorIntegrationTest extends AbstractIntegrationTestS
 		assertThat(output.originalBalance().compareTo(BigDecimal.ZERO)).isZero();
 		assertThat(output.newBalance().compareTo(amount)).isZero();
 
-		List<CashHistoryEntity> cashHistories = cashHistoryJpaRepository.findAllByUserId(userId);
+		List<CashHistoryEntity> cashHistories = cashHistoryRepository.findAllByUserId(userId);
 		assertThat(cashHistories).hasSize(1);
 		CashHistoryEntity cashHistory = cashHistories.get(0);
 		assertThat(cashHistory.getUserId()).isEqualTo(userId);

@@ -8,4 +8,6 @@ public interface OrderRepository {
 	Order save(Order order);
 
 	Optional<Order> findByIdWithLock(Long orderId);
+
+	Optional<Order> findByIdempotencyKeyWithLock(String idempotencyKey);
 }

@@ -42,6 +42,8 @@ public class OrderEntity extends BaseTimeEntity {
 
 	private LocalDateTime confirmedAt;
 
+	private String idempotencyKey;
+
 	public static OrderEntity fromDomain(Order order) {
 		OrderEntity entity = new OrderEntity();
 		entity.id = order.id();
@@ -51,6 +53,7 @@ public class OrderEntity extends BaseTimeEntity {
 		entity.discountAmount = order.discountAmount();
 		entity.finalAmount = order.finalAmount();
 		entity.confirmedAt = order.confirmedAt();
+		entity.idempotencyKey = order.idempotencyKey();
 		return entity;
 	}
 
@@ -63,7 +66,8 @@ public class OrderEntity extends BaseTimeEntity {
 			discountAmount,
 			finalAmount,
 			orderLineEntities.stream().map(OrderLineEntity::toDomain).toList(),
-			confirmedAt
+			confirmedAt,
+			idempotencyKey
 		);
 	}
 

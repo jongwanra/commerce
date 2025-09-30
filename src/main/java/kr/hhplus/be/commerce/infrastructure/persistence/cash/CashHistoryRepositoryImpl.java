@@ -1,5 +1,7 @@
 package kr.hhplus.be.commerce.infrastructure.persistence.cash;
 
+import java.util.List;
+
 import org.springframework.stereotype.Repository;
 
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
@@ -13,5 +15,10 @@ public class CashHistoryRepositoryImpl implements CashHistoryRepository {
 	@Override
 	public CashHistoryEntity save(CashHistoryEntity cashHistoryEntity) {
 		return cashHistoryJpaRepository.save(cashHistoryEntity);
+	}
+
+	@Override
+	public List<CashHistoryEntity> findAllByUserId(Long userId) {
+		return cashHistoryJpaRepository.findAllByUserId(userId);
 	}
 }

@@ -1,8 +1,10 @@
 package kr.hhplus.be.commerce.application.order;
 
+import static kr.hhplus.be.commerce.application.order.OrderPlaceProcessor.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -18,14 +20,19 @@ import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.OrderLine;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
+import kr.hhplus.be.commerce.domain.outbox_event.recorder.EventRecorder;
+import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
+import kr.hhplus.be.commerce.global.annotation.IntegrationTest;
 import kr.hhplus.be.commerce.global.annotation.ScenarioIntegrationTest;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryJpaRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.enums.CashHistoryAction;
+import kr.hhplus.be.commerce.infrastructure.persistence.coupon.UserCouponRepository;
 
 class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport {
 	private CashChargeProcessor cashChargeProcessor;
@@ -37,15 +44,33 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 	private ProductRepository productRepository;
 
 	@Autowired
-	private CashHistoryJpaRepository cashHistoryJpaRepository;
+	private PaymentRepository paymentRepository;
+
+	@Autowired
+	private UserCouponRepository userCouponRepository;
+
+	@Autowired
+	private CashRepository cashRepository;
+
+	@Autowired
+	private CashHistoryRepository cashHistoryRepository;
 
 	@Autowired
 	private TransactionTemplate transactionTemplate;
 
+	@Autowired
+	private EventRecorder eventRecorder;
+
 	@BeforeEach
 	void setUp() {
-		cashChargeProcessor = new CashChargeProcessor(cashJpaRepository, cashHistoryJpaRepository);
-		orderPlaceProcessor = new OrderPlaceProcessor(orderRepository, productRepository);
+		cashChargeProcessor = new CashChargeProcessor(cashRepository, cashHistoryRepository);
+		orderPlaceProcessor = new OrderPlaceProcessor(orderRepository,
+			paymentRepository,
+			productRepository,
+			userCouponRepository,
+			cashRepository,
+			cashHistoryRepository,
+			eventRecorder);
 	}
 
 	@Sql(scripts = {"/sql/setup_user.sql",
@@ -72,7 +97,7 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 				assertThat(output.originalBalance().compareTo(BigDecimal.ZERO)).isZero();
 				assertThat(output.newBalance().compareTo(BigDecimal.valueOf(10_000))).isZero().as("잔액 1만원 충전");
 
-				List<CashHistoryEntity> cashHistories = cashHistoryJpaRepository.findAllByUserId(userId);
+				List<CashHistoryEntity> cashHistories = cashHistoryRepository.findAllByUserId(userId);
 				assertThat(cashHistories).hasSize(1);
 				CashHistoryEntity cashHistory = cashHistories.get(0);
 				assertThat(cashHistory.getUserId()).isEqualTo(userId);
@@ -84,20 +109,26 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 				// given
 				Product product = productRepository.findByName("오뚜기 진라면 매운맛 120g")
 					.orElseThrow(() -> new CommerceException("테스트에 필요한 상품이 존재하지 않습니다. setup_product.sql을 확인해주세요."));
-
+				final String idempotencyKey = "ORD_OAJOJNW_OJQOWJOA";
+				final BigDecimal expectedPaymentAmount = BigDecimal.valueOf(6_700);
+				final LocalDateTime now = LocalDateTime.now();
 				// when
-				OrderPlaceProcessor.Output output = transactionTemplate.execute(
-					(status) -> orderPlaceProcessor.execute(new OrderPlaceProcessor.Command(
+				Output output = transactionTemplate.execute(
+					(status) -> orderPlaceProcessor.execute(new Command(
+						idempotencyKey,
 						userId,
+						null,
+						expectedPaymentAmount,
+						now,
 						List.of(
-							new OrderPlaceProcessor.OrderLineCommand(product.id(), 1)
+							new OrderLineCommand(product.id(), 1)
 						)
 					)));
 
 				// then
 				Order order = output.order();
 				assertThat(order.userId()).isEqualTo(userId);
-				assertThat(order.status()).isEqualTo(OrderStatus.PENDING);
+				assertThat(order.status()).isEqualTo(OrderStatus.CONFIRMED);
 				assertThat(order.amount().compareTo(BigDecimal.valueOf(6_700))).isZero();
 				assertThat(order.orderLines()).hasSize(1);
 
@@ -115,9 +146,14 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 				CashEntity cash = cashJpaRepository.findByUserId(userId)
 					.orElseThrow(() -> new CommerceException("테스트에 필요한 회원의 잔액 정보가 존재하지 않습니다. setup_user.sql을 확인해주세요."));
 
-				assertThat(cash.getBalance().compareTo(BigDecimal.valueOf(10_000))).isZero()
-					.as("잔액은 10,000원을 그대로 유지합니다. 잔액 차감은 주문 시점이 아니라, 결제 시점에 진행됩니다.");
+				assertThat(cash.getBalance().compareTo(BigDecimal.valueOf(3_300))).isZero()
+					.as("기존 잔액 10,000원에서 주문 가격 6,700원을 뺀 잔액입니다.");
 			})
 		);
+	}
+
+	@IntegrationTest
+	void 중복_결제를_시도할_경우_동일한_결과값을_제공한다() {
+
 	}
 }
