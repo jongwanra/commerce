@@ -15,11 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
+import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
+import kr.hhplus.be.commerce.domain.message.model.Message;
+import kr.hhplus.be.commerce.domain.message.model.message_payload.OrderConfirmedMessagePayload;
+import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.input.OrderPlaceInput;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
-import kr.hhplus.be.commerce.domain.outbox_event.event.OrderConfirmedEvent;
-import kr.hhplus.be.commerce.domain.outbox_event.recorder.EventRecorder;
 import kr.hhplus.be.commerce.domain.payment.model.Payment;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
@@ -47,7 +49,7 @@ public class OrderPlaceProcessor {
 	private final UserCouponRepository userCouponRepository;
 	private final CashRepository cashRepository;
 	private final CashHistoryRepository cashHistoryRepository;
-	private final EventRecorder eventRecorder;
+	private final MessageRepository messageRepository;
 
 	@Transactional
 	public Output execute(Command command) {
@@ -91,7 +93,12 @@ public class OrderPlaceProcessor {
 		Order order = orderRepository.save(
 			Order.place(toOrderPlaceInput(command, deductedProducts, command.idempotencyKey)));
 
-		eventRecorder.record(OrderConfirmedEvent.from(order));
+		messageRepository.save(
+			Message.ofPending(
+				order.id(),
+				MessageTargetType.ORDER,
+				OrderConfirmedMessagePayload.from(order)
+			));
 
 		return userCouponOpt.map(userCoupon -> executeWithCoupon(command, order, cash, userCoupon, deductedProducts))
 			.orElseGet(() -> executeWithoutCoupon(command, order, cash, deductedProducts));

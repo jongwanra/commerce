@@ -16,11 +16,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
+import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.OrderLine;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
-import kr.hhplus.be.commerce.domain.outbox_event.recorder.EventRecorder;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
@@ -51,7 +51,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 	@Mock
 	private CashHistoryRepository cashHistoryRepository;
 	@Mock
-	private EventRecorder eventRecorder;
+	private MessageRepository messageRepository;
 
 	// 작성 이유: 주문하고자 하는 상품이 존재하지 않는 상품인 경우 예외를 발생시키는지 검증하기 위해 작성했습니다.
 	@Test

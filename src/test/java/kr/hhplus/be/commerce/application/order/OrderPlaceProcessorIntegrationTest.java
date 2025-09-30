@@ -15,11 +15,11 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import kr.hhplus.be.commerce.application.cash.CashChargeProcessor;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
+import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.OrderLine;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
-import kr.hhplus.be.commerce.domain.outbox_event.recorder.EventRecorder;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
@@ -61,7 +61,7 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 	private TransactionTemplate transactionTemplate;
 
 	@Autowired
-	private EventRecorder eventRecorder;
+	private MessageRepository messageRepository;
 
 	@BeforeEach
 	void setUp() {
@@ -72,7 +72,7 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 			userCouponRepository,
 			cashRepository,
 			cashHistoryRepository,
-			eventRecorder);
+			messageRepository);
 	}
 
 	@ScenarioIntegrationTest
