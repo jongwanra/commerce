@@ -11,7 +11,6 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DynamicTest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import kr.hhplus.be.commerce.application.cash.CashChargeProcessor;
@@ -33,6 +32,9 @@ import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.enums.CashHistoryAction;
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.UserCouponRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.product.entity.ProductEntity;
+import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.UserEntity;
+import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
 
 class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport {
 	private CashChargeProcessor cashChargeProcessor;
@@ -73,13 +75,25 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 			eventRecorder);
 	}
 
-	@Sql(scripts = {"/sql/setup_user.sql",
-		"/sql/setup_product.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 	@ScenarioIntegrationTest
 	Stream<DynamicTest> 잔액을_충전하고_주문을_할_수_있다() {
-		Long userId = userJpaRepository.findByEmail("user.a@gmail.com")
-			.orElseThrow(() -> new CommerceException("테스트에 필요한 회원이 존재하지 않습니다. setup_user.sql을 확인해주세요."))
-			.getId();
+		// given
+		UserEntity user = userJpaRepository.save(UserEntity.builder()
+			.email("user@gmail.com")
+			.encryptedPassword("encrypted_password")
+			.status(UserStatus.ACTIVE)
+			.build());
+		Long userId = user.getId();
+		cashJpaRepository.save(CashEntity.builder()
+			.balance(BigDecimal.ZERO)
+			.userId(userId)
+			.build());
+
+		Product product = productJpaRepository.save(ProductEntity.builder()
+			.name("오뚜기 진라면 매운맛 120g")
+			.price(BigDecimal.valueOf(6_700))
+			.stock(100)
+			.build()).toDomain();
 
 		return Stream.of(
 			DynamicTest.dynamicTest("잔액 10,000원을 충전한다.", () -> {
@@ -107,8 +121,6 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 			}),
 			DynamicTest.dynamicTest("주문을 한다", () -> {
 				// given
-				Product product = productRepository.findByName("오뚜기 진라면 매운맛 120g")
-					.orElseThrow(() -> new CommerceException("테스트에 필요한 상품이 존재하지 않습니다. setup_product.sql을 확인해주세요."));
 				final String idempotencyKey = "ORD_OAJOJNW_OJQOWJOA";
 				final BigDecimal expectedPaymentAmount = BigDecimal.valueOf(6_700);
 				final LocalDateTime now = LocalDateTime.now();

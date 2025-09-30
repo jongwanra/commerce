@@ -8,16 +8,17 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.jdbc.Sql;
 
-import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.IntegrationTest;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.enums.CashHistoryAction;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.UserJpaRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.UserEntity;
+import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
 
 public class CashChargeProcessorIntegrationTest extends AbstractIntegrationTestSupport {
 	private CashChargeProcessor cashChargeProcessor;
@@ -38,12 +39,18 @@ public class CashChargeProcessorIntegrationTest extends AbstractIntegrationTestS
 
 	// 작성 이유: CashChargeProcessor의 정상 충전 여부를 확인하기 위해 작성했습니다.
 	@IntegrationTest
-	@Sql(scripts = "/sql/setup_user.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 	void 잔액이_없는_회원이_1_000원을_충전할_수_있다() {
 		// given
-		Long userId = userJpaRepository.findByEmail("user.a@gmail.com")
-			.orElseThrow(() -> new CommerceException("테스트에 필요한 회원이 존재하지 않습니다. setup.sql을 확인해주세요."))
-			.getId();
+		UserEntity user = userJpaRepository.save(UserEntity.builder()
+			.email("user@gmail.com")
+			.encryptedPassword("encrypted_password")
+			.status(UserStatus.ACTIVE)
+			.build());
+		Long userId = user.getId();
+		cashJpaRepository.save(CashEntity.builder()
+			.balance(BigDecimal.ZERO)
+			.userId(userId)
+			.build());
 
 		BigDecimal amount = BigDecimal.valueOf(1_000);
 
