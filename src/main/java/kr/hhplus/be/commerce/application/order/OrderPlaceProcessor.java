@@ -55,11 +55,14 @@ public class OrderPlaceProcessor {
 	public Output execute(Command command) {
 		command.validate();
 
-		// 중복 호출인 경우 반환합니다.
+		/**
+		 * TODO IdempotencyKey가 존재하지 않은 경우에는 Pessimistic Lock의 범위는 어떻게 잡힐까?
+		 *
+		 * 중복 호출인 경우 반환합니다.
+		 */
 		Optional<Order> alreadyPlacedOrderOpt = orderRepository.findByIdempotencyKeyWithLock(command.idempotencyKey);
 		if (alreadyPlacedOrderOpt.isPresent()) {
-			// TODO IdempotencyKey가 존재하지 않은 경우에는 Pessimistic Lock의 범위는 어떻게 잡힐까?
-			return null;
+			return Output.empty();
 		}
 
 		List<Long> productIds = command.toProductIds();
@@ -229,5 +232,14 @@ public class OrderPlaceProcessor {
 		Payment payment,
 		Order order
 	) {
+		public static Output empty() {
+			return new Output(
+				null,
+				null,
+				List.of(),
+				null,
+				null
+			);
+		}
 	}
 }

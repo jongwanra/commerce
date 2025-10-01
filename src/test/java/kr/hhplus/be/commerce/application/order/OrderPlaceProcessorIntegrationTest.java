@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import kr.hhplus.be.commerce.application.cash.CashChargeProcessor;
-import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
+import kr.hhplus.be.commerce.domain.message.enums.MessageStatus;
+import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
+import kr.hhplus.be.commerce.domain.message.enums.MessageType;
 import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.OrderLine;
@@ -24,7 +26,6 @@ import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
-import kr.hhplus.be.commerce.global.annotation.IntegrationTest;
 import kr.hhplus.be.commerce.global.annotation.ScenarioIntegrationTest;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
@@ -32,6 +33,7 @@ import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.enums.CashHistoryAction;
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.UserCouponRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.message.entity.MessageEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.product.entity.ProductEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.UserEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
@@ -75,6 +77,16 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 			messageRepository);
 	}
 
+	/**
+	 * 작성 이유: 상품을 주문하고 결제를 하는 전체 흐름이 정상 동작하는지 검증하기 위해 작성했습니다.
+	 * 1. 잔액이 정상적으로 충전된다.
+	 * 2. 주문 및 결제한다.
+	 * - 2-1. 주문을 한다.
+	 * - 2-2. 재고를 차감한다.
+	 * - 2-3. 잔액을 차감한다.
+	 * - 2-4. 주문을 저장한다.
+	 * - 2-5. 외부 전송을 위한 Message를 저장한다.
+	 */
 	@ScenarioIntegrationTest
 	Stream<DynamicTest> 잔액을_충전하고_주문을_할_수_있다() {
 		// given
@@ -126,18 +138,24 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 				final LocalDateTime now = LocalDateTime.now();
 				// when
 				Output output = transactionTemplate.execute(
-					(status) -> orderPlaceProcessor.execute(new Command(
-						idempotencyKey,
-						userId,
-						null,
-						expectedPaymentAmount,
-						now,
-						List.of(
-							new OrderLineCommand(product.id(), 1)
-						)
-					)));
+					(status) -> {
+						Command command = new Command(
+							idempotencyKey,
+							userId,
+							null,
+							expectedPaymentAmount,
+							now,
+							List.of(
+								new OrderLineCommand(product.id(), 1)
+							)
+						);
+
+						return orderPlaceProcessor.execute(command);
+					});
 
 				// then
+
+				// (Order) 주문 저장 결과 확인
 				Order order = output.order();
 				assertThat(order.userId()).isEqualTo(userId);
 				assertThat(order.status()).isEqualTo(OrderStatus.CONFIRMED);
@@ -150,22 +168,29 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 				assertThat(orderLine.orderQuantity()).isOne();
 				assertThat(orderLine.totalAmount().compareTo(product.price())).isZero();
 
+				// (Product) 상품 재고 차감 결과 확인
 				assertThat(output.products().size()).isOne();
 				Product productOfOutput = output.products().get(0);
 				assertThat(productOfOutput.id()).isEqualTo(product.id());
 				assertThat(productOfOutput.stock()).isEqualTo(99).as("100개 중 1개 주문하여 재고가 99개 남아야 합니다.");
 
-				CashEntity cash = cashJpaRepository.findByUserId(userId)
-					.orElseThrow(() -> new CommerceException("테스트에 필요한 회원의 잔액 정보가 존재하지 않습니다. setup_user.sql을 확인해주세요."));
-
+				// (Cash) 잔액 차감 결과 확인
+				CashEntity cash = output.cash();
+				assertThat(cash.getUserId()).isEqualTo(userId);
 				assertThat(cash.getBalance().compareTo(BigDecimal.valueOf(3_300))).isZero()
 					.as("기존 잔액 10,000원에서 주문 가격 6,700원을 뺀 잔액입니다.");
+
+				// (Message) 외부 전송을 위한 Message 저장 결과 확인
+				List<MessageEntity> messages = messageJpaRepository.findAll();
+				assertThat(messages.size()).isOne();
+
+				MessageEntity message = messages.get(0);
+				assertThat(message.getStatus()).isEqualTo(MessageStatus.PENDING);
+				assertThat(message.getTargetId()).isEqualTo(order.id());
+				assertThat(message.getTargetType()).isEqualTo(MessageTargetType.ORDER);
+				assertThat(message.getType()).isEqualTo(MessageType.ORDER_CONFIRMED);
+
 			})
 		);
-	}
-
-	@IntegrationTest
-	void 중복_결제를_시도할_경우_동일한_결과값을_제공한다() {
-
 	}
 }

@@ -7,8 +7,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import kr.hhplus.be.commerce.domain.global.annotation.InfrastructureOnly;
-import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
-import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
 import kr.hhplus.be.commerce.domain.order.model.input.OrderPlaceInput;
 import lombok.AccessLevel;
@@ -72,12 +70,5 @@ public record Order(
 			.idempotencyKey(idempotencyKey)
 			.build();
 	}
-
-	public void authorize(Long userId) {
-		if (this.userId.equals(userId)) {
-			return;
-		}
-		throw new CommerceException(CommerceCode.UNAUTHORIZED_USER);
-	}
-
+	
 }
