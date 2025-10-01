@@ -11,7 +11,7 @@ import kr.hhplus.be.commerce.infrastructure.persistence.message.MessageRepositor
 public class MessageConfig {
 
 	@Bean
-	public MessageRepository outboxEventRepository(MessageJpaRepository messageJpaRepository) {
+	public MessageRepository messageRepository(MessageJpaRepository messageJpaRepository) {
 		return new MessageRepositoryImpl(messageJpaRepository);
 	}
 

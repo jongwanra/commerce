@@ -15,7 +15,7 @@ public record OrderLine(
 	BigDecimal productAmount,
 	Integer orderQuantity
 ) {
-	
+
 	public static OrderLine place(Long productId, String productName, BigDecimal productAmount, Integer orderQuantity) {
 		return OrderLine.builder()
 			.productId(productId)
@@ -38,7 +38,7 @@ public record OrderLine(
 			.build();
 	}
 
-	public BigDecimal getTotalAmount() {
+	public BigDecimal totalAmount() {
 		return productAmount.multiply(BigDecimal.valueOf(orderQuantity));
 	}
 }

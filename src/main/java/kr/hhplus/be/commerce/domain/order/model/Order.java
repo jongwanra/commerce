@@ -38,7 +38,7 @@ public record Order(
 			.toList();
 
 		BigDecimal amount = orderLines.stream()
-			.map(OrderLine::getTotalAmount)
+			.map(OrderLine::totalAmount)
 			.reduce(BigDecimal.ZERO, BigDecimal::add);
 
 		BigDecimal discountAmount = nonNull(input.discountAmountCalculable()) ?
