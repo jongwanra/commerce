@@ -13,12 +13,9 @@ import java.util.Optional;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.hhplus.be.commerce.application.event.publisher.EventPublisher;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
-import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
-import kr.hhplus.be.commerce.domain.message.model.Message;
-import kr.hhplus.be.commerce.domain.message.model.message_payload.OrderConfirmedMessagePayload;
-import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.input.OrderPlaceInput;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
@@ -49,7 +46,7 @@ public class OrderPlaceProcessor {
 	private final UserCouponRepository userCouponRepository;
 	private final CashRepository cashRepository;
 	private final CashHistoryRepository cashHistoryRepository;
-	private final MessageRepository messageRepository;
+	private final EventPublisher eventPublisher;
 
 	@Transactional
 	public Output execute(Command command) {
@@ -93,15 +90,12 @@ public class OrderPlaceProcessor {
 
 		// 주문 및 잔액을 차감합니다.
 		// 주문 식별자를 미리 받기 위해서 save method를 호출합니다.
+		Order pendingOrder = orderRepository.save(Order.ofPending(command.userId));
 		Order order = orderRepository.save(
-			Order.place(toOrderPlaceInput(command, deductedProducts, command.idempotencyKey)));
+			pendingOrder.place(toOrderPlaceInput(command, deductedProducts, command.idempotencyKey)));
 
-		messageRepository.save(
-			Message.ofPending(
-				order.id(),
-				MessageTargetType.ORDER,
-				OrderConfirmedMessagePayload.from(order)
-			));
+		order.events()
+			.forEach(eventPublisher::publish);
 
 		return userCouponOpt.map(userCoupon -> executeWithCoupon(command, order, cash, userCoupon, deductedProducts))
 			.orElseGet(() -> executeWithoutCoupon(command, order, cash, deductedProducts));

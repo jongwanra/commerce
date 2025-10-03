@@ -14,10 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import kr.hhplus.be.commerce.application.cash.CashChargeProcessor;
-import kr.hhplus.be.commerce.domain.message.enums.MessageStatus;
-import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
-import kr.hhplus.be.commerce.domain.message.enums.MessageType;
-import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
+import kr.hhplus.be.commerce.application.event.publisher.EventPublisher;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.OrderLine;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
@@ -63,7 +60,7 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 	private TransactionTemplate transactionTemplate;
 
 	@Autowired
-	private MessageRepository messageRepository;
+	private EventPublisher eventPublisher;
 
 	@BeforeEach
 	void setUp() {
@@ -74,7 +71,7 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 			userCouponRepository,
 			cashRepository,
 			cashHistoryRepository,
-			messageRepository);
+			eventPublisher);
 	}
 
 	/**
@@ -182,13 +179,7 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 
 				// (Message) 외부 전송을 위한 Message 저장 결과 확인
 				List<MessageEntity> messages = messageJpaRepository.findAll();
-				assertThat(messages.size()).isOne();
-
-				MessageEntity message = messages.get(0);
-				assertThat(message.getStatus()).isEqualTo(MessageStatus.PENDING);
-				assertThat(message.getTargetId()).isEqualTo(order.id());
-				assertThat(message.getTargetType()).isEqualTo(MessageTargetType.ORDER);
-				assertThat(message.getType()).isEqualTo(MessageType.ORDER_CONFIRMED);
+				assertThat(messages.size()).isZero();
 
 			})
 		);

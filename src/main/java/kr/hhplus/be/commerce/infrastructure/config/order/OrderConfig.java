@@ -3,8 +3,8 @@ package kr.hhplus.be.commerce.infrastructure.config.order;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import kr.hhplus.be.commerce.application.event.publisher.EventPublisher;
 import kr.hhplus.be.commerce.application.order.OrderPlaceProcessor;
-import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
@@ -36,7 +36,7 @@ public class OrderConfig {
 		UserCouponRepository userCouponRepository,
 		CashRepository cashRepository,
 		CashHistoryRepository cashHistoryRepository,
-		MessageRepository messageRepository
+		EventPublisher eventPublisher
 	) {
 		return new OrderPlaceProcessor(
 			orderRepository,
@@ -45,7 +45,7 @@ public class OrderConfig {
 			userCouponRepository,
 			cashRepository,
 			cashHistoryRepository,
-			messageRepository
+			eventPublisher
 		);
 	}
 

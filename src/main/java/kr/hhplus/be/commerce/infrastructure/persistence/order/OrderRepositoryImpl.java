@@ -1,7 +1,5 @@
 package kr.hhplus.be.commerce.infrastructure.persistence.order;
 
-import static java.util.Objects.*;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -28,19 +26,7 @@ public class OrderRepositoryImpl implements OrderRepository {
 		return orderEntity.toDomain(orderLineEntities);
 
 	}
-
-	@Override
-	public Optional<Order> findByIdWithLock(Long orderId) {
-		if (isNull(orderId)) {
-			return Optional.empty();
-		}
-		return orderJpaRepository.findByIdWithLock(orderId)
-			.map((orderEntity) -> {
-				List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.findAllByOrderId(orderEntity.getId());
-				return orderEntity.toDomain(orderLineEntities);
-			});
-	}
-
+	
 	@Override
 	public Optional<Order> findByIdempotencyKeyWithLock(String idempotencyKey) {
 		if (idempotencyKey.isBlank()) {
@@ -52,6 +38,15 @@ public class OrderRepositoryImpl implements OrderRepository {
 				return orderEntity.toDomain(orderLineEntities);
 			});
 
+	}
+
+	@Override
+	public Optional<Order> findById(Long id) {
+		return orderJpaRepository.findById(id)
+			.map((orderEntity) -> {
+				List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.findAllByOrderId(orderEntity.getId());
+				return orderEntity.toDomain(orderLineEntities);
+			});
 	}
 
 }
