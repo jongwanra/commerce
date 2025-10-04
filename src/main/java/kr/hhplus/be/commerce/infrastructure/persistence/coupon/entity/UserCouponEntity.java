@@ -35,7 +35,8 @@ public class UserCouponEntity extends BaseTimeEntity implements DiscountAmountCa
 	private Long userId;
 	private Long couponId;
 	private Long orderId;
-	private String originName;
+	@Column(name = "name_snapshot", nullable = false)
+	private String name;
 
 	@Column(name = "discount_type_snapshot", updatable = false)
 	@Enumerated(EnumType.STRING)
@@ -56,7 +57,7 @@ public class UserCouponEntity extends BaseTimeEntity implements DiscountAmountCa
 		UserCouponEntity userCoupon = new UserCouponEntity();
 		userCoupon.userId = userId;
 		userCoupon.couponId = coupon.getId();
-		userCoupon.originName = coupon.getName();
+		userCoupon.name = coupon.getName();
 		userCoupon.discountType = coupon.getDiscountType();
 		userCoupon.discountAmount = coupon.getDiscountAmount();
 		userCoupon.expiredAt = coupon.getExpiredAt();

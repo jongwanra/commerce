@@ -35,7 +35,7 @@ public class UserCouponReadPageQueryManager {
 				.map(userCoupon -> new UserCouponSummaryResponse(
 					userCoupon.getId(),
 					userCoupon.getCouponId(),
-					userCoupon.getOriginName(),
+					userCoupon.getName(),
 					userCoupon.getDiscountType(),
 					userCoupon.getDiscountAmount(),
 					userCoupon.getStatus(),

@@ -34,9 +34,10 @@ public class UserCouponIssueProcessor {
 		}
 
 		try {
-			UserCouponEntity savedUserCoupon = userCouponRepository.save(
-				UserCouponEntity.of(command.userId, coupon, command.now));
-			return new Output(coupon, savedUserCoupon);
+			return new Output(
+				couponJpaRepository.save(coupon),
+				userCouponRepository.save(UserCouponEntity.of(command.userId, coupon, command.now))
+			);
 		} catch (DataIntegrityViolationException e) {
 			// userId와 couponId의 unique 제약 조건 위반 시 중복 발급으로 간주합니다.
 			// 위에서 coupon에 대한 Pessimistic Lock을 획득했기 때문에, 동시성 이슈로 인한 중복 발급은 발생하지 않습니다.
