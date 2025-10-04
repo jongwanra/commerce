@@ -59,6 +59,7 @@ public record Order(
 			input.discountAmountCalculable().calculateDiscountAmount(amount) : BigDecimal.valueOf(0, 2);
 
 		return Order.builder()
+			.id(id)
 			.userId(input.userId())
 			.status(OrderStatus.CONFIRMED)
 			.amount(amount)

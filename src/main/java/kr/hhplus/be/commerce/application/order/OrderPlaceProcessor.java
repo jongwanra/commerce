@@ -30,6 +30,7 @@ import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryE
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.UserCouponRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.UserCouponEntity;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * ref: https://discord.com/channels/1288769861589270590/1406891766153744485/1421467275982012577
@@ -38,6 +39,7 @@ import lombok.RequiredArgsConstructor;
  * 결제 시, 포인트 차감으로 외부 PG사에 의존하지 않기 때문에 주문과 결제를 통합하기로 결정했습니다.
  */
 
+@Slf4j
 @RequiredArgsConstructor
 public class OrderPlaceProcessor {
 	private final OrderRepository orderRepository;
@@ -90,14 +92,14 @@ public class OrderPlaceProcessor {
 
 		// 주문 및 잔액을 차감합니다.
 		// 주문 식별자를 미리 받기 위해서 save method를 호출합니다.
-		Order pendingOrder = orderRepository.save(Order.ofPending(command.userId));
-		Order order = orderRepository.save(
-			pendingOrder.place(toOrderPlaceInput(command, deductedProducts, command.idempotencyKey)));
+		Order order = orderRepository.save(Order.ofPending(command.userId))
+			.place(toOrderPlaceInput(command, deductedProducts, command.idempotencyKey));
 
 		order.events()
 			.forEach(eventPublisher::publish);
 
-		return userCouponOpt.map(userCoupon -> executeWithCoupon(command, order, cash, userCoupon, deductedProducts))
+		return userCouponOpt.map(
+				userCoupon -> executeWithCoupon(command, order, cash, userCoupon, deductedProducts))
 			.orElseGet(() -> executeWithoutCoupon(command, order, cash, deductedProducts));
 	}
 
@@ -118,7 +120,7 @@ public class OrderPlaceProcessor {
 			null,
 			productRepository.saveAll(products),
 			paymentRepository.save(payment),
-			order
+			orderRepository.save(order)
 		);
 	}
 
@@ -142,7 +144,7 @@ public class OrderPlaceProcessor {
 			userCouponRepository.save(userCoupon),
 			productRepository.saveAll(products),
 			paymentRepository.save(payment),
-			order
+			orderRepository.save(order)
 		);
 	}
 

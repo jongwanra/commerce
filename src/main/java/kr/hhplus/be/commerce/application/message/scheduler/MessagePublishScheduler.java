@@ -3,6 +3,7 @@ package kr.hhplus.be.commerce.application.message.scheduler;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -19,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Profile({"local"})
 public class MessagePublishScheduler {
 	private static final int BATCH_SIZE = 20;
 	private static final int FIVE_SECONDS = 5 * 1000;

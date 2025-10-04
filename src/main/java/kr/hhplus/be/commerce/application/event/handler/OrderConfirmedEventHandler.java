@@ -32,6 +32,7 @@ public class OrderConfirmedEventHandler {
 			slackSendMessageClient.send("...");
 		} catch (Exception e) {
 			// fallback
+			System.out.println("call fallback method! message: " + e.getMessage());
 			messageRepository.save(
 				Message.ofPending(
 					order.id(),
