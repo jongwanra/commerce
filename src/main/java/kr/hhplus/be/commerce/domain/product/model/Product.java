@@ -29,7 +29,7 @@ public record Product(
 			.build();
 	}
 
-	public Product deductStock(int quantity) {
+	public Product decreaseStock(int quantity) {
 		if (this.stock < quantity) {
 			throw new CommerceException(CommerceCode.INSUFFICIENT_PRODUCT_STOCK);
 		}

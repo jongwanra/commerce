@@ -64,43 +64,47 @@ public class OrderPlaceProcessor {
 			return Output.empty();
 		}
 
+		// 상품의 비관적 잠금을 획득한 상태로 조회 및 재고를 감소시킵니다.
+		List<Product> productsWithDecreasedStock = decreaseStock(command, fetchProductsWithLock(command));
+
+		CashEntity cash = cashRepository.findByUserId(command.userId)
+			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_CASH));
+
+		// 주문 및 잔액을 차감합니다.
+		// 주문 식별자를 미리 받기 위해서 save method를 호출합니다.
+		Order order = orderRepository.save(Order.ofPending(command.userId))
+			.place(toOrderPlaceInput(command, productsWithDecreasedStock, command.idempotencyKey));
+
+		order.events()
+			.forEach(eventPublisher::publish);
+		
+		return isNull(command.userCouponId) ?
+			executeWithoutCoupon(command, order, cash, productsWithDecreasedStock) :
+			executeWithCoupon(command, order, cash, productsWithDecreasedStock);
+	}
+
+	private List<Product> fetchProductsWithLock(Command command) {
 		List<Long> productIds = command.toProductIds();
 		List<Product> products = productRepository.findAllByIdInWithLock(productIds);
-
 		if (products.size() != productIds.size()) {
 			throw new CommerceException(CommerceCode.NOT_FOUND_PRODUCT);
 		}
+		return products;
+	}
 
+	private List<Product> decreaseStock(Command command, List<Product> products) {
 		Map<Long, Product> productIdToProductMap = products
 			.stream()
 			.collect(toMap(Product::id, product -> product));
 
 		// 재고를 차감합니다.
-		List<Product> deductedProducts = command.orderLineCommands()
+		return command.orderLineCommands()
 			.stream()
-			.map(orderLineCommand -> productIdToProductMap.get(orderLineCommand.productId())
-				.deductStock(orderLineCommand.orderQuantity()))
+			.map(orderLineCommand -> {
+				Product product = productIdToProductMap.get(orderLineCommand.productId());
+				return product.decreaseStock(orderLineCommand.orderQuantity());
+			})
 			.toList();
-
-		CashEntity cash = cashRepository.findByUserId(command.userId)
-			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_CASH));
-
-		Optional<UserCouponEntity> userCouponOpt =
-			isNull(command.userCouponId) ? Optional.empty() :
-				Optional.of(userCouponRepository.findById(command.userCouponId)
-					.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER_COUPON)));
-
-		// 주문 및 잔액을 차감합니다.
-		// 주문 식별자를 미리 받기 위해서 save method를 호출합니다.
-		Order order = orderRepository.save(Order.ofPending(command.userId))
-			.place(toOrderPlaceInput(command, deductedProducts, command.idempotencyKey));
-
-		order.events()
-			.forEach(eventPublisher::publish);
-
-		return userCouponOpt.map(
-				userCoupon -> executeWithCoupon(command, order, cash, userCoupon, deductedProducts))
-			.orElseGet(() -> executeWithoutCoupon(command, order, cash, deductedProducts));
 	}
 
 	private Output executeWithoutCoupon(Command command, Order order, CashEntity cash, List<Product> products) {
@@ -124,8 +128,10 @@ public class OrderPlaceProcessor {
 		);
 	}
 
-	private Output executeWithCoupon(Command command, Order order, CashEntity cash,
-		UserCouponEntity userCoupon, List<Product> products) {
+	private Output executeWithCoupon(Command command, Order order, CashEntity cash, List<Product> products) {
+		UserCouponEntity userCoupon = userCouponRepository.findById(command.userCouponId)
+			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER_COUPON));
+
 		validatePaymentAmountIsMatched(command.paymentAmount, userCoupon, order);
 		userCoupon.use(command.userId, command.now, order.id());
 

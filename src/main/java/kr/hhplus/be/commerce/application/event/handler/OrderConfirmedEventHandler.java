@@ -6,6 +6,8 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import kr.hhplus.be.commerce.domain.event.OrderConfirmedEvent;
+import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
+import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
 import kr.hhplus.be.commerce.domain.message.model.Message;
 import kr.hhplus.be.commerce.domain.message.model.message_payload.OrderConfirmedMessagePayload;
@@ -26,10 +28,10 @@ public class OrderConfirmedEventHandler {
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void handle(OrderConfirmedEvent event) {
 		Order order = orderRepository.findById(event.orderId())
-			.orElseThrow();
+			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_ORDER));
 
 		try {
-			slackSendMessageClient.send("...");
+			slackSendMessageClient.send(event.toString());
 		} catch (Exception e) {
 			// fallback
 			System.out.println("call fallback method! message: " + e.getMessage());
