@@ -3,9 +3,9 @@ package kr.hhplus.be.commerce.domain.message.publisher;
 import kr.hhplus.be.commerce.domain.message.enums.MessageType;
 import kr.hhplus.be.commerce.domain.message.model.message_payload.MessagePayload;
 
-public interface MessagePublisher {
+public interface MessagePublisher<T extends MessagePayload> {
 	MessageType getSupportingMessageType();
 
-	void publish(MessagePayload messagePayload);
+	void publish(T messagePayload);
 
 }

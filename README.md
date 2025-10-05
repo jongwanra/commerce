@@ -34,10 +34,15 @@ docker-compose up -d
 
 ## Convention
 
-### Application Convetion
+### Application Convention
 
 - [상세 보기](docs/application_convention.md)
 
 ### Database Convention
 
 - [상세 보기](docs/db_convention.md)
+
+## Guides
+
+- 외부 API 연동 실패 시 메시지 기반 Fallback 가이드: [상세 보기](docs/trouble_shooting/message_fallback_guide.md)
+- 외부 연동: 이벤트 기반 Eventually Persistent 연동 + Fallback 가이드: [상세 보기](docs/guides/external_system_integration_guide.md)
