@@ -13,9 +13,12 @@ import java.util.Optional;
 
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.hhplus.be.commerce.application.event.publisher.EventPublisher;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
+import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
+import kr.hhplus.be.commerce.domain.message.model.Message;
+import kr.hhplus.be.commerce.domain.message.model.message_payload.OrderConfirmedMessagePayload;
+import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.input.OrderPlaceInput;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
@@ -48,7 +51,7 @@ public class OrderPlaceProcessor {
 	private final UserCouponRepository userCouponRepository;
 	private final CashRepository cashRepository;
 	private final CashHistoryRepository cashHistoryRepository;
-	private final EventPublisher eventPublisher;
+	private final MessageRepository messageRepository;
 
 	@Transactional
 	public Output execute(Command command) {
@@ -75,9 +78,12 @@ public class OrderPlaceProcessor {
 		Order order = orderRepository.save(Order.ofPending(command.userId))
 			.place(toOrderPlaceInput(command, productsWithDecreasedStock, command.idempotencyKey));
 
-		order.events()
-			.forEach(eventPublisher::publish);
-		
+		messageRepository.save(Message.ofPending(
+			order.id(),
+			MessageTargetType.ORDER,
+			OrderConfirmedMessagePayload.from(order.id())
+		));
+
 		return isNull(command.userCouponId) ?
 			executeWithoutCoupon(command, order, cash, productsWithDecreasedStock) :
 			executeWithCoupon(command, order, cash, productsWithDecreasedStock);

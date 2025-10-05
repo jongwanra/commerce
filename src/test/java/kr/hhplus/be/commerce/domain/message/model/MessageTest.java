@@ -46,7 +46,7 @@ class MessageTest {
 		Message message = Message.ofPending(
 			orderId,
 			MessageTargetType.ORDER,
-			OrderConfirmedMessagePayload.from(order)
+			OrderConfirmedMessagePayload.from(orderId)
 		);
 
 		// then
@@ -91,7 +91,7 @@ class MessageTest {
 		Message message = Message.ofPending(
 				orderId,
 				MessageTargetType.ORDER,
-				OrderConfirmedMessagePayload.from(order)
+				OrderConfirmedMessagePayload.from(orderId)
 			)
 			.published(now);
 
@@ -136,7 +136,7 @@ class MessageTest {
 		Message message = Message.ofPending(
 				orderId,
 				MessageTargetType.ORDER,
-				OrderConfirmedMessagePayload.from(order)
+				OrderConfirmedMessagePayload.from(orderId)
 			)
 			.failed("Timeout Exceed", now);
 
@@ -183,7 +183,7 @@ class MessageTest {
 		Message message = Message.ofPending(
 			orderId,
 			MessageTargetType.ORDER,
-			OrderConfirmedMessagePayload.from(order)
+			OrderConfirmedMessagePayload.from(orderId)
 		);
 
 		// when

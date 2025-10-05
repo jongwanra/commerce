@@ -2,27 +2,22 @@ package kr.hhplus.be.commerce.application.order;
 
 import static kr.hhplus.be.commerce.application.order.OrderPlaceProcessor.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.*;
-import static org.testcontainers.shaded.org.awaitility.Awaitility.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DynamicTest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import kr.hhplus.be.commerce.application.cash.CashChargeProcessor;
-import kr.hhplus.be.commerce.application.event.publisher.EventPublisher;
 import kr.hhplus.be.commerce.domain.message.enums.MessageStatus;
 import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
 import kr.hhplus.be.commerce.domain.message.enums.MessageType;
+import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.OrderLine;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
@@ -31,10 +26,7 @@ import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
-import kr.hhplus.be.commerce.global.annotation.IntegrationTest;
 import kr.hhplus.be.commerce.global.annotation.ScenarioIntegrationTest;
-import kr.hhplus.be.commerce.infrastructure.client.slack.SlackException;
-import kr.hhplus.be.commerce.infrastructure.client.slack.SlackSendMessageClient;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
@@ -71,10 +63,7 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 	private TransactionTemplate transactionTemplate;
 
 	@Autowired
-	private EventPublisher eventPublisher;
-
-	@MockitoBean
-	private SlackSendMessageClient slackSendMessageClient;
+	private MessageRepository messageRepository;
 
 	@BeforeEach
 	void setUp() {
@@ -85,7 +74,7 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 			userCouponRepository,
 			cashRepository,
 			cashHistoryRepository,
-			eventPublisher);
+			messageRepository);
 	}
 
 	/**
@@ -149,8 +138,6 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 				final LocalDateTime now = LocalDateTime.now();
 
 				// mock
-				doNothing()
-					.when(slackSendMessageClient).send(anyString());
 
 				// when
 				Output output = transactionTemplate.execute(
@@ -197,81 +184,24 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 					.as("기존 잔액 10,000원에서 주문 가격 6,700원을 뺀 잔액입니다.");
 
 				// (Message) 외부 전송을 위한 Message 저장 결과 확인
+				List<MessageEntity> messageEntities = messageJpaRepository.findAll();
+				assertThat(messageEntities).hasSize(1);
+				MessageEntity messageEntity = messageEntities.get(0);
+				assertThat(messageEntity.getStatus()).isEqualTo(MessageStatus.PENDING);
+				assertThat(messageEntity.getTargetId()).isEqualTo(order.id());
+				assertThat(messageEntity.getTargetType()).isEqualTo(MessageTargetType.ORDER);
+				assertThat(messageEntity.getType()).isEqualTo(MessageType.ORDER_CONFIRMED);
 
 				// 비동기 처리가 완료될 때까지 대기합니다.
-				await()
-					.atMost(5, TimeUnit.SECONDS)
-					.untilAsserted(() -> verify(slackSendMessageClient, times(1)).send(anyString()));
-
-				List<MessageEntity> messages = messageJpaRepository.findAll();
-				assertThat(messages)
-					.as("비동기 처리가 성공적이었기 때문에, Message Entity는 비워 있어야 합니다.")
-					.isEmpty();
+				// await()
+				// 	.atMost(5, TimeUnit.SECONDS)
+				// 	.untilAsserted(() -> verify(slackSendMessageClient, times(1)).send(anyString()));
+				//
+				// List<MessageEntity> messages = messageJpaRepository.findAll();
+				// assertThat(messages)
+				// 	.as("비동기 처리가 성공적이었기 때문에, Message Entity는 비워 있어야 합니다.")
+				// 	.isEmpty();
 			})
 		);
-	}
-
-	/**
-	 * 작성 이유: Slack(외부 API)에 데이터 전송이 실패했을 경우, Fallback 처리를 검증하기 위해 작성했습니다.
-	 * Fallback: 트랜잭션 커밋 이후 비동기 이벤트 처리로 Message에 데이터를 저장하고 MessagePublishScheduler를 통해 이후에 처리합니다.
-	 */
-	@IntegrationTest
-	void Slack_전송_실패_MessageEntity로_저장되어야_한다() {
-		// given
-		UserEntity user = userJpaRepository.save(UserEntity.builder()
-			.email("user@gmail.com")
-			.encryptedPassword("encrypted_password")
-			.status(UserStatus.ACTIVE)
-			.build());
-		Long userId = user.getId();
-		cashJpaRepository.save(CashEntity.builder()
-			.balance(BigDecimal.valueOf(10_000))
-			.userId(userId)
-			.build());
-
-		Product product = productJpaRepository.save(ProductEntity.builder()
-			.name("오뚜기 진라면 매운맛 120g")
-			.price(BigDecimal.valueOf(6_700))
-			.stock(100)
-			.build()).toDomain();
-
-		final String idempotencyKey = "ORD_OAJOJNW_OJQOWJOA";
-		final BigDecimal expectedPaymentAmount = BigDecimal.valueOf(6_700);
-		final LocalDateTime now = LocalDateTime.now();
-
-		Command command = new Command(
-			idempotencyKey,
-			userId,
-			null,
-			expectedPaymentAmount,
-			now,
-			List.of(
-				new OrderLineCommand(product.id(), 1)
-			)
-		);
-
-		// mock
-		doThrow(new SlackException("메시지를 전송하는데 실패했습니다."))
-			.when(slackSendMessageClient).send(anyString());
-
-		// when
-		Output output = transactionTemplate.execute((transactionStatus) -> orderPlaceProcessor.execute(command));
-
-		// then
-		Order order = output.order();
-
-		// 비동기 이벤트 처리 대기 & 검증 합니다.
-		await()
-			.atMost(5, TimeUnit.SECONDS) // 최대 5초까지 비동기 이벤트 처리가 완료하는데 기다립니다.
-			.untilAsserted(() -> {
-				List<MessageEntity> messageEntities = messageJpaRepository.findAll();
-				assertThat(messageEntities.size()).isOne();
-
-				MessageEntity messageEntity = messageEntities.get(0);
-				assertThat(messageEntity.getType()).isEqualTo(MessageType.ORDER_CONFIRMED);
-				assertThat(messageEntity.getTargetType()).isEqualTo(MessageTargetType.ORDER);
-				assertThat(messageEntity.getTargetId()).isEqualTo(order.id());
-				assertThat(messageEntity.getStatus()).isEqualTo(MessageStatus.PENDING);
-			});
 	}
 }

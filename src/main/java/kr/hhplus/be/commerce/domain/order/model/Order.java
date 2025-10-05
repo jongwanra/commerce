@@ -6,8 +6,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import kr.hhplus.be.commerce.domain.event.Event;
-import kr.hhplus.be.commerce.domain.event.OrderConfirmedEvent;
 import kr.hhplus.be.commerce.domain.global.annotation.InfrastructureOnly;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
 import kr.hhplus.be.commerce.domain.order.model.input.OrderPlaceInput;
@@ -27,8 +25,7 @@ public record Order(
 	BigDecimal finalAmount,
 	List<OrderLine> orderLines,
 	LocalDateTime confirmedAt,
-	String idempotencyKey,
-	List<Event> events
+	String idempotencyKey
 ) {
 
 	public static Order ofPending(Long userId) {
@@ -40,7 +37,6 @@ public record Order(
 			.finalAmount(BigDecimal.ZERO)
 			.orderLines(List.of())
 			.idempotencyKey("")
-			.events(List.of())
 			.build();
 	}
 
@@ -68,7 +64,6 @@ public record Order(
 			.orderLines(orderLines)
 			.confirmedAt(input.now())
 			.idempotencyKey(input.idempotencyKey())
-			.events(List.of(OrderConfirmedEvent.withId(id)))
 			.build();
 	}
 
@@ -86,7 +81,6 @@ public record Order(
 			.orderLines(orderLines)
 			.confirmedAt(confirmedAt)
 			.idempotencyKey(idempotencyKey)
-			.events(List.of())
 			.build();
 	}
 
