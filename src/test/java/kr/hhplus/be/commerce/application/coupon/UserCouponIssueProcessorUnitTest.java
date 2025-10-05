@@ -183,6 +183,9 @@ class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 		given(userCouponRepository.save(userCoupon))
 			.willReturn(assignedUserCoupon);
 
+		given(couponJpaRepository.save(any(CouponEntity.class)))
+			.willReturn(coupon);
+
 		// when
 		Output output = userCouponIssueProcessor.execute(command);
 
