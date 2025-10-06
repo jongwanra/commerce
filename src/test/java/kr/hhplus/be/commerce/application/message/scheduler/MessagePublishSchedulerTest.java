@@ -11,9 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import kr.hhplus.be.commerce.application.message.mapper.MessagePublisherMapper;
 import kr.hhplus.be.commerce.domain.message.enums.MessageStatus;
 import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
-import kr.hhplus.be.commerce.domain.message.mapper.MessagePublisherMapper;
 import kr.hhplus.be.commerce.domain.message.model.Message;
 import kr.hhplus.be.commerce.domain.message.model.message_payload.OrderConfirmedMessagePayload;
 import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;

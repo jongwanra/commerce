@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.domain.message.publisher;
+package kr.hhplus.be.commerce.application.message.publisher;
 
 import org.springframework.stereotype.Component;
 
@@ -23,5 +23,5 @@ public class OrderConfirmedMessagePublisher implements MessagePublisher<OrderCon
 	public void publish(OrderConfirmedMessagePayload messagePayload) {
 		slackSendMessageClient.send(messagePayload.toString());
 	}
-	
+
 }

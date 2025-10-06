@@ -8,11 +8,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import kr.hhplus.be.commerce.application.message.mapper.MessagePublisherMapper;
+import kr.hhplus.be.commerce.application.message.publisher.MessagePublisher;
 import kr.hhplus.be.commerce.domain.message.enums.MessageStatus;
-import kr.hhplus.be.commerce.domain.message.mapper.MessagePublisherMapper;
 import kr.hhplus.be.commerce.domain.message.model.Message;
 import kr.hhplus.be.commerce.domain.message.model.message_payload.MessagePayload;
-import kr.hhplus.be.commerce.domain.message.publisher.MessagePublisher;
 import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

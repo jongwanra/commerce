@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.domain.message.mapper;
+package kr.hhplus.be.commerce.application.message.mapper;
 
 import static java.util.Objects.*;
 
@@ -8,9 +8,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
 
+import kr.hhplus.be.commerce.application.message.publisher.MessagePublisher;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.message.enums.MessageType;
-import kr.hhplus.be.commerce.domain.message.publisher.MessagePublisher;
 
 @Component
 public class MessagePublisherMapper {
