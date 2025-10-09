@@ -2,10 +2,10 @@ package kr.hhplus.be.commerce.infrastructure.persistence.cash;
 
 import java.util.Optional;
 
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
+import kr.hhplus.be.commerce.domain.cash.model.Cash;
 
 public interface CashRepository {
-	Optional<CashEntity> findByUserId(Long userId);
+	Optional<Cash> findByUserId(Long userId);
 
-	CashEntity save(CashEntity cash);
+	Cash save(Cash cash);
 }

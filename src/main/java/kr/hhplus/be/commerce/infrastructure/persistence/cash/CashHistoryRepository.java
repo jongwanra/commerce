@@ -2,10 +2,10 @@ package kr.hhplus.be.commerce.infrastructure.persistence.cash;
 
 import java.util.List;
 
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
+import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
 
 public interface CashHistoryRepository {
-	CashHistoryEntity save(CashHistoryEntity cashHistoryEntity);
+	CashHistory save(CashHistory cashHistory);
 
-	List<CashHistoryEntity> findAllByUserId(Long userId);
+	List<CashHistory> findAllByUserId(Long userId);
 }

@@ -13,12 +13,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import kr.hhplus.be.commerce.domain.cash.model.Cash;
+import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.global.AbstractUnitTestSupport;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
 
 @ExtendWith(MockitoExtension.class)
 class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
@@ -37,12 +37,11 @@ class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
 		BigDecimal currentBalance = BigDecimal.valueOf(1_000);
 		BigDecimal chargeAmount = BigDecimal.valueOf(1);
 
-		CashEntity cash = CashEntity.builder()
-			.userId(userId)
-			.balance(currentBalance)
-			.build();
-
-		assignId(1L, cash);
+		Cash cash = Cash.restore(
+			1L,
+			userId,
+			currentBalance
+		);
 
 		// mock
 		given(cashRepository.findByUserId(userId))
@@ -56,8 +55,8 @@ class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
 
 		// then
 		verify(cashRepository, times(1)).findByUserId(userId);
-		verify(cashRepository, times(1)).save(any(CashEntity.class));
-		verify(cashHistoryRepository, times(1)).save(any(CashHistoryEntity.class));
+		verify(cashRepository, times(1)).save(any(Cash.class));
+		verify(cashHistoryRepository, times(1)).save(any(CashHistory.class));
 
 		assertThat(output.originalBalance()).isEqualTo(BigDecimal.valueOf(1_000));
 		assertThat(output.newBalance()).isEqualTo(BigDecimal.valueOf(1_001));
@@ -71,12 +70,7 @@ class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
 		BigDecimal currentBalance = BigDecimal.valueOf(1_000);
 		BigDecimal chargeAmount = BigDecimal.ZERO;
 
-		CashEntity cash = CashEntity.builder()
-			.userId(userId)
-			.balance(currentBalance)
-			.build();
-
-		assignId(1L, cash);
+		Cash cash = Cash.restore(1L, userId, currentBalance);
 
 		// mock
 		given(cashRepository.findByUserId(userId))
@@ -94,8 +88,8 @@ class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
 
 		// then
 		verify(cashRepository, times(1)).findByUserId(userId);
-		verify(cashRepository, never()).save(any(CashEntity.class));
-		verify(cashHistoryRepository, never()).save(any(CashHistoryEntity.class));
+		verify(cashRepository, never()).save(any(Cash.class));
+		verify(cashHistoryRepository, never()).save(any(CashHistory.class));
 	}
 
 	// 작성 이유: 한 번에 1000만원 까지 충전 가능함을 검증하기 위해 작성했습니다. [경계값 검증]
@@ -106,12 +100,7 @@ class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
 		BigDecimal currentBalance = BigDecimal.valueOf(1_000);
 		BigDecimal chargeAmount = BigDecimal.valueOf(10_000_000);
 
-		CashEntity cash = CashEntity.builder()
-			.userId(userId)
-			.balance(currentBalance)
-			.build();
-
-		assignId(1L, cash);
+		Cash cash = Cash.restore(1L, userId, currentBalance);
 
 		// mock
 		given(cashRepository.findByUserId(userId))
@@ -125,8 +114,8 @@ class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
 
 		// then
 		verify(cashRepository, times(1)).findByUserId(userId);
-		verify(cashRepository, times(1)).save(any(CashEntity.class));
-		verify(cashHistoryRepository, times(1)).save(any(CashHistoryEntity.class));
+		verify(cashRepository, times(1)).save(any(Cash.class));
+		verify(cashHistoryRepository, times(1)).save(any(CashHistory.class));
 
 		assertThat(output.originalBalance()).isEqualTo(BigDecimal.valueOf(1_000));
 		assertThat(output.newBalance()).isEqualTo(BigDecimal.valueOf(10_001_000));
@@ -140,12 +129,7 @@ class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
 		BigDecimal currentBalance = BigDecimal.valueOf(1_000);
 		BigDecimal chargeAmount = BigDecimal.valueOf(10_000_001);
 
-		CashEntity cash = CashEntity.builder()
-			.userId(userId)
-			.balance(currentBalance)
-			.build();
-
-		assignId(1L, cash);
+		Cash cash = Cash.restore(1L, userId, currentBalance);
 
 		// mock
 		given(cashRepository.findByUserId(userId))
@@ -163,8 +147,8 @@ class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
 
 		// then
 		verify(cashRepository, times(1)).findByUserId(userId);
-		verify(cashRepository, never()).save(any(CashEntity.class));
-		verify(cashHistoryRepository, never()).save(any(CashHistoryEntity.class));
+		verify(cashRepository, never()).save(any(Cash.class));
+		verify(cashHistoryRepository, never()).save(any(CashHistory.class));
 	}
 
 }

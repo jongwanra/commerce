@@ -13,6 +13,8 @@ import java.util.Optional;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.hhplus.be.commerce.domain.cash.model.Cash;
+import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
@@ -28,8 +30,6 @@ import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.UserCouponRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.UserCouponEntity;
 import lombok.RequiredArgsConstructor;
@@ -70,7 +70,7 @@ public class OrderPlaceProcessor {
 		// 상품의 비관적 잠금을 획득한 상태로 조회 및 재고를 감소시킵니다.
 		List<Product> productsWithDecreasedStock = decreaseStock(command, fetchProductsWithLock(command));
 
-		CashEntity cash = cashRepository.findByUserId(command.userId)
+		Cash cash = cashRepository.findByUserId(command.userId)
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_CASH));
 
 		// 주문 및 잔액을 차감합니다.
@@ -113,20 +113,20 @@ public class OrderPlaceProcessor {
 			.toList();
 	}
 
-	private Output executeWithoutCoupon(Command command, Order order, CashEntity cash, List<Product> products) {
+	private Output executeWithoutCoupon(Command command, Order order, Cash cash, List<Product> products) {
 		validatePaymentAmountIsMatched(command.paymentAmount, order);
 
-		BigDecimal originalBalance = cash.getBalance();
-		cash.use(command.paymentAmount);
+		BigDecimal originalBalance = cash.balance();
+		Cash usedCash = cash.use(command.paymentAmount);
 
 		Payment payment = Payment.fromOrder(command.userId, order.id(), command.paymentAmount)
 			.succeed(command.now);
 
 		cashHistoryRepository.save(
-			CashHistoryEntity.recordOfPurchase(command.userId, cash.getBalance(), originalBalance));
+			CashHistory.recordOfPurchase(command.userId, usedCash.balance(), originalBalance));
 
 		return new Output(
-			cashRepository.save(cash),
+			cashRepository.save(usedCash),
 			null,
 			productRepository.saveAll(products),
 			paymentRepository.save(payment),
@@ -134,22 +134,22 @@ public class OrderPlaceProcessor {
 		);
 	}
 
-	private Output executeWithCoupon(Command command, Order order, CashEntity cash, List<Product> products) {
+	private Output executeWithCoupon(Command command, Order order, Cash cash, List<Product> products) {
 		UserCouponEntity userCoupon = userCouponRepository.findById(command.userCouponId)
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER_COUPON));
 
 		validatePaymentAmountIsMatched(command.paymentAmount, userCoupon, order);
 		userCoupon.use(command.userId, command.now, order.id());
 
-		BigDecimal originalBalance = cash.getBalance();
-		cash.use(command.paymentAmount);
+		BigDecimal originalBalance = cash.balance();
+		Cash usedCash = cash.use(command.paymentAmount);
 
 		Payment payment = Payment.fromOrder(command.userId, order.id(),
 				command.paymentAmount)
 			.succeed(command.now);
 
 		cashHistoryRepository.save(
-			CashHistoryEntity.recordOfPurchase(command.userId, cash.getBalance(), originalBalance));
+			CashHistory.recordOfPurchase(command.userId, usedCash.balance(), originalBalance));
 
 		return new Output(
 			cashRepository.save(cash),
@@ -234,7 +234,7 @@ public class OrderPlaceProcessor {
 	}
 
 	public record Output(
-		CashEntity cash,
+		Cash cash,
 		UserCouponEntity userCoupon,
 		List<Product> products,
 		Payment payment,

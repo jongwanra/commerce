@@ -5,12 +5,12 @@ import java.math.BigDecimal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.hhplus.be.commerce.domain.cash.model.Cash;
+import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -21,26 +21,24 @@ public class CashChargeProcessor {
 
 	@Transactional
 	public Output execute(Command command) {
-		CashEntity cash = cashRepository.findByUserId(command.userId())
+		Cash originalCash = cashRepository.findByUserId(command.userId())
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_CASH));
 
-		BigDecimal originalBalance = cash.getBalance();
-		cash.charge(command.amount);
-		BigDecimal newBalance = cash.getBalance();
+		Cash chargedCash = originalCash.charge(command.amount);
 
-		cashRepository.save(cash);
+		cashRepository.save(chargedCash);
 		cashHistoryRepository.save(
-			CashHistoryEntity.recordOfCharge(
-				cash.getUserId(),
-				newBalance,
+			CashHistory.recordOfCharge(
+				chargedCash.userId(),
+				chargedCash.balance(),
 				command.amount()
 			)
 		);
 
 		return new Output(
-			cash.getUserId(),
-			originalBalance,
-			newBalance
+			chargedCash.userId(),
+			originalCash.balance(),
+			chargedCash.balance()
 		);
 	}
 

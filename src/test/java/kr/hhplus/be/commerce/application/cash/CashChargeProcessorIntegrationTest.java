@@ -9,13 +9,14 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import kr.hhplus.be.commerce.domain.cash.model.Cash;
+import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
+import kr.hhplus.be.commerce.domain.cash.model.enums.CashHistoryAction;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.IntegrationTest;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.enums.CashHistoryAction;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.UserJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.UserEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
@@ -47,10 +48,7 @@ public class CashChargeProcessorIntegrationTest extends AbstractIntegrationTestS
 			.status(UserStatus.ACTIVE)
 			.build());
 		Long userId = user.getId();
-		cashJpaRepository.save(CashEntity.builder()
-			.balance(BigDecimal.ZERO)
-			.userId(userId)
-			.build());
+		cashJpaRepository.save(CashEntity.fromDomain(Cash.restore(null, userId, BigDecimal.ZERO)));
 
 		BigDecimal amount = BigDecimal.valueOf(1_000);
 
@@ -64,12 +62,12 @@ public class CashChargeProcessorIntegrationTest extends AbstractIntegrationTestS
 		assertThat(output.originalBalance().compareTo(BigDecimal.ZERO)).isZero();
 		assertThat(output.newBalance().compareTo(amount)).isZero();
 
-		List<CashHistoryEntity> cashHistories = cashHistoryRepository.findAllByUserId(userId);
+		List<CashHistory> cashHistories = cashHistoryRepository.findAllByUserId(userId);
 		assertThat(cashHistories).hasSize(1);
-		CashHistoryEntity cashHistory = cashHistories.get(0);
-		assertThat(cashHistory.getUserId()).isEqualTo(userId);
-		assertThat(cashHistory.getAction()).isEqualTo(CashHistoryAction.CHARGE);
-		assertThat(cashHistory.getAmount().compareTo(BigDecimal.valueOf(1_000))).isZero().as("충전 금액");
-		assertThat(cashHistory.getBalanceAfter().compareTo(BigDecimal.valueOf(1_000))).isZero().as("충전 이후 잔액");
+		CashHistory cashHistory = cashHistories.get(0);
+		assertThat(cashHistory.userId()).isEqualTo(userId);
+		assertThat(cashHistory.action()).isEqualTo(CashHistoryAction.CHARGE);
+		assertThat(cashHistory.amount().compareTo(BigDecimal.valueOf(1_000))).isZero().as("충전 금액");
+		assertThat(cashHistory.balanceAfter().compareTo(BigDecimal.valueOf(1_000))).isZero().as("충전 이후 잔액");
 	}
 }

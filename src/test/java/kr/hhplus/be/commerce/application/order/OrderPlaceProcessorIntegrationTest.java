@@ -14,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import kr.hhplus.be.commerce.application.cash.CashChargeProcessor;
+import kr.hhplus.be.commerce.domain.cash.model.Cash;
+import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
+import kr.hhplus.be.commerce.domain.cash.model.enums.CashHistoryAction;
 import kr.hhplus.be.commerce.domain.message.enums.MessageStatus;
 import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
 import kr.hhplus.be.commerce.domain.message.enums.MessageType;
@@ -30,8 +33,6 @@ import kr.hhplus.be.commerce.global.annotation.ScenarioIntegrationTest;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.enums.CashHistoryAction;
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.UserCouponRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.message.entity.MessageEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.product.entity.ProductEntity;
@@ -96,10 +97,8 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 			.status(UserStatus.ACTIVE)
 			.build());
 		Long userId = user.getId();
-		cashJpaRepository.save(CashEntity.builder()
-			.balance(BigDecimal.ZERO)
-			.userId(userId)
-			.build());
+
+		cashJpaRepository.save(CashEntity.fromDomain(Cash.restore(null, userId, BigDecimal.ZERO)));
 
 		Product product = productJpaRepository.save(ProductEntity.builder()
 			.name("오뚜기 진라면 매운맛 120g")
@@ -123,13 +122,13 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 				assertThat(output.originalBalance().compareTo(BigDecimal.ZERO)).isZero();
 				assertThat(output.newBalance().compareTo(BigDecimal.valueOf(10_000))).isZero().as("잔액 1만원 충전");
 
-				List<CashHistoryEntity> cashHistories = cashHistoryRepository.findAllByUserId(userId);
+				List<CashHistory> cashHistories = cashHistoryRepository.findAllByUserId(userId);
 				assertThat(cashHistories).hasSize(1);
-				CashHistoryEntity cashHistory = cashHistories.get(0);
-				assertThat(cashHistory.getUserId()).isEqualTo(userId);
-				assertThat(cashHistory.getAction()).isEqualTo(CashHistoryAction.CHARGE);
-				assertThat(cashHistory.getAmount().compareTo(BigDecimal.valueOf(10_000))).isZero().as("충전 금액");
-				assertThat(cashHistory.getBalanceAfter().compareTo(BigDecimal.valueOf(10_000))).isZero().as("충전 이후 잔액");
+				CashHistory cashHistory = cashHistories.get(0);
+				assertThat(cashHistory.userId()).isEqualTo(userId);
+				assertThat(cashHistory.action()).isEqualTo(CashHistoryAction.CHARGE);
+				assertThat(cashHistory.amount().compareTo(BigDecimal.valueOf(10_000))).isZero().as("충전 금액");
+				assertThat(cashHistory.balanceAfter().compareTo(BigDecimal.valueOf(10_000))).isZero().as("충전 이후 잔액");
 			}),
 			DynamicTest.dynamicTest("주문을 한다", () -> {
 				// given
@@ -178,9 +177,9 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 				assertThat(productOfOutput.stock()).isEqualTo(99).as("100개 중 1개 주문하여 재고가 99개 남아야 합니다.");
 
 				// (Cash) 잔액 차감 결과 확인
-				CashEntity cash = output.cash();
-				assertThat(cash.getUserId()).isEqualTo(userId);
-				assertThat(cash.getBalance().compareTo(BigDecimal.valueOf(3_300))).isZero()
+				Cash cash = output.cash();
+				assertThat(cash.userId()).isEqualTo(userId);
+				assertThat(cash.balance().compareTo(BigDecimal.valueOf(3_300))).isZero()
 					.as("기존 잔액 10,000원에서 주문 가격 6,700원을 뺀 잔액입니다.");
 
 				// (Message) 외부 전송을 위한 Message 저장 결과 확인

@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.model.Order;
@@ -27,7 +28,6 @@ import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.global.AbstractUnitTestSupport;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.UserCouponRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -121,11 +121,9 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 			createdAt);
 
 		Long cashId = 233L;
-		CashEntity cashEntity = CashEntity.builder()
-			.balance(BigDecimal.valueOf(200_000))
-			.userId(userId)
-			.build();
-		assignId(cashId, cashEntity);
+		Cash cash = Cash.restore(
+			cashId, userId, BigDecimal.valueOf(200_000)
+		);
 
 		final String idempotencyKey = "ORD_250930_AOMEWD";
 		LocalDateTime now = LocalDateTime.now();
@@ -145,7 +143,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 			.willReturn(List.of(savedProduct));
 
 		given(cashRepository.findByUserId(anyLong()))
-			.willReturn(Optional.of(cashEntity));
+			.willReturn(Optional.of(cash));
 
 		OrderLine savedOrderLine = OrderLine.restore(
 			orderLineId,

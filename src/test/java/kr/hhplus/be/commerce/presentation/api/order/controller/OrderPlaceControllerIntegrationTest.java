@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestClient;
 
+import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.IntegrationTest;
@@ -60,10 +61,7 @@ class OrderPlaceControllerIntegrationTest extends AbstractIntegrationTestSupport
 			.status(UserStatus.ACTIVE)
 			.build());
 		Long userId = user.getId();
-		cashJpaRepository.save(CashEntity.builder()
-			.balance(BigDecimal.valueOf(15_000))
-			.userId(userId)
-			.build());
+		cashJpaRepository.save(CashEntity.fromDomain(Cash.restore(null, userId, BigDecimal.valueOf(15_000))));
 
 		Product product = productJpaRepository.save(ProductEntity.builder()
 			.name("오뚜기 진라면 매운맛 120g")

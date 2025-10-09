@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.enums;
+package kr.hhplus.be.commerce.domain.cash.model.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
