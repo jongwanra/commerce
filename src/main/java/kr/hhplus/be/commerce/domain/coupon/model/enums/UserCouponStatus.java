@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.enums;
+package kr.hhplus.be.commerce.domain.coupon.model.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

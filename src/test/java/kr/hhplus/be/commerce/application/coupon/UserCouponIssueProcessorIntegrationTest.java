@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import net.bytebuddy.utility.RandomString;
 
+import kr.hhplus.be.commerce.domain.coupon.model.Coupon;
+import kr.hhplus.be.commerce.domain.coupon.model.enums.CouponDiscountType;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.IntegrationTest;
@@ -24,7 +26,6 @@ import kr.hhplus.be.commerce.infrastructure.persistence.coupon.CouponJpaReposito
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.UserCouponJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.CouponEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.UserCouponEntity;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.enums.CouponDiscountType;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.UserEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
 
@@ -35,7 +36,7 @@ class UserCouponIssueProcessorIntegrationTest extends AbstractIntegrationTestSup
 
 	@Autowired
 	private CouponJpaRepository couponJpaRepository;
-	
+
 	@Autowired
 	private UserCouponJpaRepository userCouponJpaRepository;
 
@@ -65,14 +66,14 @@ class UserCouponIssueProcessorIntegrationTest extends AbstractIntegrationTestSup
 		final LocalDateTime expiredAt = now.plusDays(7);
 
 		CouponEntity coupon = couponJpaRepository.save(
-			CouponEntity
-				.builder()
-				.name("전상품 50% 할인")
-				.stock(couponQuantity)
-				.discountAmount(BigDecimal.valueOf(50))
-				.discountType(CouponDiscountType.PERCENT)
-				.expiredAt(expiredAt)
-				.build()
+			CouponEntity.fromDomain(Coupon.restore(
+				null,
+				"전상품 50% 할인",
+				couponQuantity,
+				expiredAt,
+				CouponDiscountType.PERCENT,
+				BigDecimal.valueOf(50)
+			))
 		);
 
 		CountDownLatch countDownLatch = new CountDownLatch(userCount);

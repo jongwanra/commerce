@@ -9,14 +9,14 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import jakarta.persistence.EntityManager;
+import kr.hhplus.be.commerce.domain.coupon.model.UserCoupon;
+import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.UserCouponEntity;
 
-@Repository
 public class UserCouponRepositoryImpl implements UserCouponRepository {
 	private final UserCouponJpaRepository userCouponJpaRepository;
 	private final JPAQueryFactory queryFactory;
@@ -36,12 +36,13 @@ public class UserCouponRepositoryImpl implements UserCouponRepository {
 	}
 
 	@Override
-	public UserCouponEntity save(UserCouponEntity userCoupon) {
-		return userCouponJpaRepository.save(userCoupon);
+	public UserCoupon save(UserCoupon userCoupon) {
+		return userCouponJpaRepository.save(UserCouponEntity.fromDomain(userCoupon))
+			.toDomain();
 	}
 
 	@Override
-	public Page<UserCouponEntity> findPageByUserId(Long userId, Long lastId, Pageable pageable) {
+	public Page<UserCoupon> findPageByUserId(Long userId, Long lastId, Pageable pageable) {
 		requireNonNull(List.of(
 			Param.of(userId),
 			Param.of(lastId),
@@ -69,12 +70,13 @@ public class UserCouponRepositoryImpl implements UserCouponRepository {
 			.where(userCouponEntity.userId.eq(userId))
 			.fetchFirst();
 
-		return new PageImpl<>(userCoupons, pageable, totalCount);
+		return new PageImpl<>(userCoupons.stream().map(UserCouponEntity::toDomain).toList(), pageable, totalCount);
 	}
 
 	@Override
-	public Optional<UserCouponEntity> findById(Long userCouponId) {
-		return userCouponJpaRepository.findById(userCouponId);
+	public Optional<UserCoupon> findById(Long userCouponId) {
+		return userCouponJpaRepository.findById(userCouponId)
+			.map(UserCouponEntity::toDomain);
 	}
 
 }

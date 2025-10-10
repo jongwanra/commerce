@@ -3,8 +3,8 @@ package kr.hhplus.be.commerce.presentation.api.coupon.response;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.enums.CouponDiscountType;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.enums.UserCouponStatus;
+import kr.hhplus.be.commerce.domain.coupon.model.enums.CouponDiscountType;
+import kr.hhplus.be.commerce.domain.coupon.model.enums.UserCouponStatus;
 
 public record UserCouponSummaryResponse(
 	Long id,

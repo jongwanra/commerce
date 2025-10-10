@@ -6,8 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.UserCouponRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.UserCouponEntity;
+import kr.hhplus.be.commerce.domain.coupon.model.UserCoupon;
+import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.commerce.presentation.api.coupon.response.UserCouponSummaryResponse;
 import kr.hhplus.be.commerce.presentation.global.response.CursorPage;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public class UserCouponReadPageQueryManager {
 	@Transactional(readOnly = true)
 	public CursorPage<UserCouponSummaryResponse> read(Query query) {
 		Pageable pageable = PageRequest.ofSize(query.size);
-		Page<UserCouponEntity> pageOfUserCoupon = userCouponRepository.findPageByUserId(
+		Page<UserCoupon> pageOfUserCoupon = userCouponRepository.findPageByUserId(
 			query.userId(),
 			query.lastId() == 0L ? Long.MAX_VALUE : query.lastId(),
 			pageable
@@ -33,14 +33,14 @@ public class UserCouponReadPageQueryManager {
 				.getContent()
 				.stream()
 				.map(userCoupon -> new UserCouponSummaryResponse(
-					userCoupon.getId(),
-					userCoupon.getCouponId(),
-					userCoupon.getName(),
-					userCoupon.getDiscountType(),
-					userCoupon.getDiscountAmount(),
-					userCoupon.getStatus(),
-					userCoupon.getIssuedAt(),
-					userCoupon.getExpiredAt()
+					userCoupon.id(),
+					userCoupon.couponId(),
+					userCoupon.name(),
+					userCoupon.discountType(),
+					userCoupon.discountAmount(),
+					userCoupon.status(),
+					userCoupon.issuedAt(),
+					userCoupon.expiredAt()
 				))
 				.toList()
 		);

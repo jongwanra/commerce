@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity;
+package kr.hhplus.be.commerce.domain.coupon.model;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -7,12 +7,11 @@ import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 
+import kr.hhplus.be.commerce.domain.coupon.model.enums.CouponDiscountType;
+import kr.hhplus.be.commerce.domain.coupon.model.enums.UserCouponStatus;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.enums.CouponDiscountType;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.enums.UserCouponStatus;
 
-class UserCouponEntityTest {
-
+public class UserCouponTest {
 	@Test
 	void 본인_소유가_아닌_쿠폰을_사용할_경우_예외를_발생시킨다() {
 		// given
@@ -22,15 +21,16 @@ class UserCouponEntityTest {
 		LocalDateTime issuedAt = now.minusDays(3);
 		LocalDateTime expiredAt = issuedAt.plusDays(7); // 쿠폰을 발급한 일시로 부터 1주일간 유효한 쿠폰입니다.
 
-		CouponEntity coupon = CouponEntity.builder()
-			.stock(10)
-			.discountType(CouponDiscountType.FIXED)
-			.discountAmount(BigDecimal.valueOf(10_000))
-			.name("전 상품 10,000원 할인 쿠폰")
-			.expiredAt(expiredAt)
-			.build();
+		Coupon coupon = Coupon.restore(
+			3L,
+			"전 상품 10,000원 할인 쿠폰",
+			10,
+			expiredAt,
+			CouponDiscountType.FIXED,
+			BigDecimal.valueOf(10_000)
+		);
 
-		UserCouponEntity userCoupon = UserCouponEntity.of(userIdHavingCoupon, coupon, issuedAt);
+		UserCoupon userCoupon = UserCoupon.of(userIdHavingCoupon, coupon, issuedAt);
 
 		// when & then
 		assertThatThrownBy(() -> userCoupon.use(userIdToUseCoupon, now, 1L))
@@ -47,15 +47,16 @@ class UserCouponEntityTest {
 		LocalDateTime expiredAt = now.minusSeconds(1);
 		LocalDateTime issuedAt = now.minusDays(3);
 
-		CouponEntity coupon = CouponEntity.builder()
-			.stock(10)
-			.discountType(CouponDiscountType.FIXED)
-			.discountAmount(BigDecimal.valueOf(10_000))
-			.name("전 상품 10,000원 할인 쿠폰")
-			.expiredAt(expiredAt)
-			.build();
+		Coupon coupon = Coupon.restore(
+			3L,
+			"전 상품 10,000원 할인 쿠폰",
+			10,
+			expiredAt,
+			CouponDiscountType.FIXED,
+			BigDecimal.valueOf(10_000)
+		);
 
-		UserCouponEntity userCoupon = UserCouponEntity.of(userId, coupon, issuedAt);
+		UserCoupon userCoupon = UserCoupon.of(userId, coupon, issuedAt);
 
 		// when & then
 		assertThatThrownBy(() -> userCoupon.use(userId, now, 1L))
@@ -72,15 +73,15 @@ class UserCouponEntityTest {
 		LocalDateTime expiredAt = now;
 		LocalDateTime issuedAt = now.minusDays(3);
 
-		CouponEntity coupon = CouponEntity.builder()
-			.stock(10)
-			.discountType(CouponDiscountType.FIXED)
-			.discountAmount(BigDecimal.valueOf(10_000))
-			.name("전 상품 10,000원 할인 쿠폰")
-			.expiredAt(expiredAt)
-			.build();
-
-		UserCouponEntity userCoupon = UserCouponEntity.of(userId, coupon, issuedAt);
+		Coupon coupon = Coupon.restore(
+			3L,
+			"전 상품 10,000원 할인 쿠폰",
+			10,
+			expiredAt,
+			CouponDiscountType.FIXED,
+			BigDecimal.valueOf(10_000)
+		);
+		UserCoupon userCoupon = UserCoupon.of(userId, coupon, issuedAt);
 
 		// when & then
 		assertThatThrownBy(() -> userCoupon.use(userId, now, 1L))
@@ -96,22 +97,22 @@ class UserCouponEntityTest {
 		LocalDateTime issuedAt = now.minusDays(3);
 		LocalDateTime expiredAt = issuedAt.plusDays(7);
 
-		CouponEntity coupon = CouponEntity.builder()
-			.stock(10)
-			.discountType(CouponDiscountType.FIXED)
-			.discountAmount(BigDecimal.valueOf(10_000))
-			.name("전 상품 10,000원 할인 쿠폰")
-			.expiredAt(expiredAt)
-			.build();
-
-		UserCouponEntity userCoupon = UserCouponEntity.of(userId, coupon, issuedAt);
+		Coupon coupon = Coupon.restore(
+			3L,
+			"전 상품 10,000원 할인 쿠폰",
+			10,
+			expiredAt,
+			CouponDiscountType.FIXED,
+			BigDecimal.valueOf(10_000)
+		);
+		UserCoupon userCoupon = UserCoupon.of(userId, coupon, issuedAt);
 		// when
-		userCoupon.use(userId, now, 1L);
+		UserCoupon usedUserCoupon = userCoupon.use(userId, now, 1L);
 
 		// then
-		assertThat(userCoupon.getStatus()).isEqualTo(UserCouponStatus.USED);
-		assertThat(userCoupon.getLastUsedAt()).isEqualTo(now);
-		assertThat(userCoupon.getOrderId()).isEqualTo(1L);
+		assertThat(usedUserCoupon.status()).isEqualTo(UserCouponStatus.USED);
+		assertThat(usedUserCoupon.lastUsedAt()).isEqualTo(now);
+		assertThat(usedUserCoupon.orderId()).isEqualTo(1L);
 	}
 
 	@Test
@@ -122,15 +123,16 @@ class UserCouponEntityTest {
 		LocalDateTime issuedAt = now.minusDays(3);
 		LocalDateTime expiredAt = issuedAt.plusDays(7);
 
-		CouponEntity coupon = CouponEntity.builder()
-			.stock(10)
-			.discountType(CouponDiscountType.PERCENT)
-			.discountAmount(BigDecimal.valueOf(10))
-			.name("상품 10% 할인 쿠폰")
-			.expiredAt(expiredAt)
-			.build();
+		Coupon coupon = Coupon.restore(
+			3L,
+			"전 상품 10% 할인 쿠폰",
+			10,
+			expiredAt,
+			CouponDiscountType.PERCENT,
+			BigDecimal.valueOf(10)
+		);
 
-		UserCouponEntity userCoupon = UserCouponEntity.of(userId, coupon, issuedAt);
+		UserCoupon userCoupon = UserCoupon.of(userId, coupon, issuedAt);
 
 		// when & then
 		assertThat(userCoupon.calculateFinalAmount(BigDecimal.valueOf(10_000))).isEqualByComparingTo(
@@ -149,18 +151,19 @@ class UserCouponEntityTest {
 		LocalDateTime issuedAt = now.minusDays(3);
 		LocalDateTime expiredAt = issuedAt.plusDays(7);
 
-		CouponEntity coupon = CouponEntity.builder()
-			.stock(10)
-			.discountType(CouponDiscountType.FIXED)
-			.discountAmount(BigDecimal.valueOf(10_000))
-			.name("전 상품 10,000원 할인 쿠폰")
-			.expiredAt(expiredAt)
-			.build();
+		Coupon coupon = Coupon.restore(
+			3L,
+			"전 상품 10,000원 할인 쿠폰",
+			10,
+			expiredAt,
+			CouponDiscountType.FIXED,
+			BigDecimal.valueOf(10_000)
+		);
 
-		UserCouponEntity userCoupon = UserCouponEntity.of(userId, coupon, issuedAt);
-		userCoupon.use(userId, now, 1L);
+		UserCoupon userCoupon = UserCoupon.of(userId, coupon, issuedAt)
+			.use(userId, now, 1L);
 
-		assertThat(userCoupon.getStatus()).isEqualTo(UserCouponStatus.USED);
+		assertThat(userCoupon.status()).isEqualTo(UserCouponStatus.USED);
 
 		// when & then
 		assertThatThrownBy(() -> userCoupon.use(userId, now, 1L))
@@ -168,5 +171,4 @@ class UserCouponEntityTest {
 			.hasMessage("이용 불가능한 쿠폰입니다.");
 
 	}
-
 }

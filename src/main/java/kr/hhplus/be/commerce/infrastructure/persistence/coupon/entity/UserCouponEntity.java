@@ -1,7 +1,5 @@
 package kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity;
 
-import static java.util.Objects.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -12,13 +10,13 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
-import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
-import kr.hhplus.be.commerce.domain.order.policy.DiscountAmountCalculable;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.enums.CouponDiscountType;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.enums.UserCouponStatus;
+import kr.hhplus.be.commerce.domain.coupon.model.UserCoupon;
+import kr.hhplus.be.commerce.domain.coupon.model.enums.CouponDiscountType;
+import kr.hhplus.be.commerce.domain.coupon.model.enums.UserCouponStatus;
 import kr.hhplus.be.commerce.infrastructure.persistence.global.entity.BaseTimeEntity;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,7 +25,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(callSuper = false)
-public class UserCouponEntity extends BaseTimeEntity implements DiscountAmountCalculable {
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(access = AccessLevel.PRIVATE)
+public class UserCouponEntity extends BaseTimeEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -53,60 +53,37 @@ public class UserCouponEntity extends BaseTimeEntity implements DiscountAmountCa
 	private LocalDateTime lastUsedAt;
 	private LocalDateTime lastCancelledAt;
 
-	public static UserCouponEntity of(Long userId, CouponEntity coupon, LocalDateTime now) {
-		UserCouponEntity userCoupon = new UserCouponEntity();
-		userCoupon.userId = userId;
-		userCoupon.couponId = coupon.getId();
-		userCoupon.name = coupon.getName();
-		userCoupon.discountType = coupon.getDiscountType();
-		userCoupon.discountAmount = coupon.getDiscountAmount();
-		userCoupon.expiredAt = coupon.getExpiredAt();
-		userCoupon.status = UserCouponStatus.AVAILABLE;
-		userCoupon.issuedAt = now;
-		userCoupon.lastUsedAt = null;
-		userCoupon.lastCancelledAt = null;
-		userCoupon.orderId = null;
-		return userCoupon;
+	public static UserCouponEntity fromDomain(UserCoupon userCoupon) {
+		return UserCouponEntity.builder()
+			.id(userCoupon.id())
+			.userId(userCoupon.userId())
+			.couponId(userCoupon.couponId())
+			.orderId(userCoupon.orderId())
+			.name(userCoupon.name())
+			.discountType(userCoupon.discountType())
+			.discountAmount(userCoupon.discountAmount())
+			.status(userCoupon.status())
+			.issuedAt(userCoupon.issuedAt())
+			.lastUsedAt(userCoupon.lastUsedAt())
+			.expiredAt(userCoupon.expiredAt())
+			.lastCancelledAt(userCoupon.lastCancelledAt())
+			.build();
 	}
 
-	public void use(Long userId, LocalDateTime now, Long orderId) {
-		authorize(userId);
-		if (this.status.isUsed()) {
-			throw new CommerceException(CommerceCode.UNAVAILABLE_USER_COUPON);
-		}
-
-		if (nonNull(this.expiredAt) && (expiredAt.isEqual(now) || expiredAt.isBefore(now))) {
-			throw new CommerceException(CommerceCode.EXPIRED_COUPON);
-		}
-
-		this.status = UserCouponStatus.USED;
-		this.lastUsedAt = now;
-		this.orderId = orderId;
-	}
-
-	private void authorize(Long userId) {
-		if (!this.userId.equals(userId)) {
-			throw new CommerceException(CommerceCode.UNAUTHORIZED_USER);
-		}
-	}
-
-	public BigDecimal calculateFinalAmount(BigDecimal originalAmount) {
-		if (this.discountType.equals(CouponDiscountType.FIXED)) {
-			return originalAmount.subtract(discountAmount);
-		}
-
-		BigDecimal discountRateAsDecimal = discountAmount.multiply(BigDecimal.valueOf(0.01)); // 할인율
-		BigDecimal discountAmount = originalAmount.multiply(discountRateAsDecimal); // 할인 금액
-		return originalAmount.subtract(discountAmount);
-	}
-
-	@Override
-	public BigDecimal calculateDiscountAmount(BigDecimal originalAmount) {
-		if (this.discountType.equals(CouponDiscountType.FIXED)) {
-			return discountAmount;
-		}
-
-		BigDecimal discountRateAsDecimal = discountAmount.multiply(BigDecimal.valueOf(0.01)); // 할인율
-		return originalAmount.multiply(discountRateAsDecimal); // 할인 금액
+	public UserCoupon toDomain() {
+		return UserCoupon.restore(
+			id,
+			userId,
+			couponId,
+			orderId,
+			name,
+			discountType,
+			discountAmount,
+			status,
+			issuedAt,
+			expiredAt,
+			lastUsedAt,
+			lastCancelledAt
+		);
 	}
 }

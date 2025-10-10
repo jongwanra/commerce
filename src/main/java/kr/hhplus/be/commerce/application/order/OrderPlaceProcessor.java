@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
+import kr.hhplus.be.commerce.domain.coupon.model.UserCoupon;
+import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
@@ -30,8 +32,6 @@ import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.UserCouponRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.UserCouponEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -135,7 +135,7 @@ public class OrderPlaceProcessor {
 	}
 
 	private Output executeWithCoupon(Command command, Order order, Cash cash, List<Product> products) {
-		UserCouponEntity userCoupon = userCouponRepository.findById(command.userCouponId)
+		UserCoupon userCoupon = userCouponRepository.findById(command.userCouponId)
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER_COUPON));
 
 		validatePaymentAmountIsMatched(command.paymentAmount, userCoupon, order);
@@ -160,7 +160,7 @@ public class OrderPlaceProcessor {
 		);
 	}
 
-	private void validatePaymentAmountIsMatched(BigDecimal paymentAmount, UserCouponEntity userCoupon,
+	private void validatePaymentAmountIsMatched(BigDecimal paymentAmount, UserCoupon userCoupon,
 		Order order) {
 		BigDecimal actualPaymentAmount = userCoupon.calculateFinalAmount(order.amount());
 		if (paymentAmount.compareTo(actualPaymentAmount) != 0) {
@@ -235,7 +235,7 @@ public class OrderPlaceProcessor {
 
 	public record Output(
 		Cash cash,
-		UserCouponEntity userCoupon,
+		UserCoupon userCoupon,
 		List<Product> products,
 		Payment payment,
 		Order order
