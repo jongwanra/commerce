@@ -97,7 +97,7 @@ cat docs/api-spec.json | head -n 5
 
 ## 3. API Specification
 
-- [상세 보기](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/jongwanra/commerce/jongwanra/impl/docs/api-spec.json)
+- [상세 보기](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/jongwanra/commerce/main/docs/api-spec.json)
 
 ---
 
