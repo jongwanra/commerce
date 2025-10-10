@@ -14,21 +14,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import kr.hhplus.be.commerce.domain.coupon.model.Coupon;
+import kr.hhplus.be.commerce.domain.coupon.model.UserCoupon;
+import kr.hhplus.be.commerce.domain.coupon.model.enums.CouponDiscountType;
+import kr.hhplus.be.commerce.domain.coupon.model.enums.UserCouponStatus;
+import kr.hhplus.be.commerce.domain.coupon.repository.CouponRepository;
+import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.global.AbstractUnitTestSupport;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.CouponJpaRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.UserCouponRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.CouponEntity;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.UserCouponEntity;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.enums.CouponDiscountType;
 
 @ExtendWith(MockitoExtension.class)
 class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 	@InjectMocks
 	private UserCouponIssueProcessor userCouponIssueProcessor;
 	@Mock
-	private CouponJpaRepository couponJpaRepository;
+	private CouponRepository couponRepository;
 	@Mock
 	private UserCouponRepository userCouponRepository;
 
@@ -42,7 +43,7 @@ class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 		Command command = new Command(userId, couponId, now);
 
 		// mock
-		given(couponJpaRepository.findByIdWithLock(couponId))
+		given(couponRepository.findByIdWithLock(couponId))
 			.willThrow(new CommerceException(CommerceCode.NOT_FOUND_COUPON));
 
 		// when & then
@@ -65,16 +66,17 @@ class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 		LocalDateTime expiredAt = now;
 		Command command = new Command(userId, couponId, now);
 
-		CouponEntity expiredCoupon = CouponEntity.builder()
-			.discountAmount(BigDecimal.valueOf(5_000))
-			.discountType(CouponDiscountType.FIXED)
-			.stock(10)
-			.expiredAt(expiredAt)
-			.build();
-		assignId(couponId, expiredCoupon);
+		Coupon expiredCoupon = Coupon.restore(
+			couponId,
+			"-",
+			10,
+			expiredAt,
+			CouponDiscountType.FIXED,
+			BigDecimal.valueOf(5_000)
+		);
 
 		// mock
-		given(couponJpaRepository.findByIdWithLock(couponId))
+		given(couponRepository.findByIdWithLock(couponId))
 			.willReturn(Optional.of(expiredCoupon));
 
 		// when & then
@@ -96,17 +98,11 @@ class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 		LocalDateTime expiredAt = now.plusSeconds(1L);
 		Command command = new Command(userId, couponId, now);
 
-		CouponEntity outOfStockCoupon = CouponEntity.builder()
-			.discountAmount(BigDecimal.valueOf(5_000))
-			.discountType(CouponDiscountType.FIXED)
-			.stock(0)
-			.expiredAt(expiredAt)
-			.build();
-
-		assignId(couponId, outOfStockCoupon);
+		Coupon outOfStockCoupon = Coupon.restore(couponId, "-", 0, expiredAt, CouponDiscountType.FIXED,
+			BigDecimal.valueOf(5_000));
 
 		// mock
-		given(couponJpaRepository.findByIdWithLock(couponId))
+		given(couponRepository.findByIdWithLock(couponId))
 			.willReturn(Optional.of(outOfStockCoupon));
 
 		// when & then
@@ -127,27 +123,18 @@ class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 		LocalDateTime expiredAt = now.plusSeconds(1L);
 		Command command = new Command(userId, couponId, now);
 
-		CouponEntity alreadyIssuedCoupon = CouponEntity.builder()
-			.discountAmount(BigDecimal.valueOf(5_000))
-			.discountType(CouponDiscountType.FIXED)
-			.stock(10)
-			.expiredAt(expiredAt)
-			.build();
-		assignId(couponId, alreadyIssuedCoupon);
-
-		UserCouponEntity userCoupon = UserCouponEntity.of(userId, alreadyIssuedCoupon, now);
+		Coupon alreadyIssuedCoupon = Coupon.restore(couponId, "-", 10, expiredAt, CouponDiscountType.FIXED,
+			BigDecimal.valueOf(5_000));
 
 		// mock
-		given(couponJpaRepository.findByIdWithLock(couponId))
+		given(couponRepository.findByIdWithLock(couponId))
 			.willReturn(Optional.of(alreadyIssuedCoupon));
 
 		given(userCouponRepository.existsByUserIdAndCouponId(userId, couponId))
 			.willReturn(true);
 
 		// when & then
-		assertThatThrownBy(() -> {
-			userCouponIssueProcessor.execute(command);
-		})
+		assertThatThrownBy(() -> userCouponIssueProcessor.execute(command))
 			.isInstanceOf(CommerceException.class)
 			.hasMessage("이미 발급 받은 쿠폰입니다.");
 	}
@@ -163,42 +150,51 @@ class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 		LocalDateTime expiredAt = now.plusSeconds(1L);
 		Command command = new Command(userId, couponId, now);
 
-		CouponEntity coupon = CouponEntity.builder()
-			.discountAmount(BigDecimal.valueOf(5_000))
-			.discountType(CouponDiscountType.FIXED)
-			.stock(10)
-			.expiredAt(expiredAt)
-			.build();
-		assignId(couponId, coupon);
+		Coupon coupon = Coupon.restore(couponId, "-", 10, expiredAt, CouponDiscountType.FIXED,
+			BigDecimal.valueOf(5_000));
+		Coupon issuedCoupon = coupon.issue(now);
 
-		UserCouponEntity userCoupon = UserCouponEntity.of(userId, coupon, now);
-
-		UserCouponEntity assignedUserCoupon = UserCouponEntity.of(userId, coupon, now);
-		assignId(userCouponId, assignedUserCoupon);
+		UserCoupon userCoupon = UserCoupon.restore(
+			userCouponId,
+			userId,
+			couponId,
+			null,
+			coupon.name(),
+			coupon.discountType(),
+			coupon.discountAmount(),
+			UserCouponStatus.AVAILABLE,
+			now,
+			coupon.expiredAt(),
+			null,
+			null
+		);
 
 		// mock
-		given(couponJpaRepository.findByIdWithLock(couponId))
+		given(couponRepository.findByIdWithLock(couponId))
 			.willReturn(Optional.of(coupon));
 
-		given(userCouponRepository.save(userCoupon))
-			.willReturn(assignedUserCoupon);
+		given(userCouponRepository.save(any(UserCoupon.class)))
+			.willReturn(userCoupon);
+
+		given(couponRepository.save(any(Coupon.class)))
+			.willReturn(issuedCoupon);
 
 		// when
 		Output output = userCouponIssueProcessor.execute(command);
 
 		// then
-		UserCouponEntity userCouponOutput = output.userCoupon();
-		assertThat(userCouponOutput.getId()).isEqualTo(userCouponId);
-		assertThat(userCouponOutput.getUserId()).isEqualTo(userId);
-		assertThat(userCouponOutput.getCouponId()).isEqualTo(couponId);
-		assertThat(userCouponOutput.getIssuedAt()).isEqualTo(now);
+		UserCoupon userCouponOutput = output.userCoupon();
+		assertThat(userCouponOutput.id()).isEqualTo(userCouponId);
+		assertThat(userCouponOutput.userId()).isEqualTo(userId);
+		assertThat(userCouponOutput.couponId()).isEqualTo(couponId);
+		assertThat(userCouponOutput.issuedAt()).isEqualTo(now);
 
-		CouponEntity couponOutput = output.coupon();
-		assertThat(couponOutput.getId()).isEqualTo(couponId);
-		assertThat(couponOutput.getDiscountAmount()).isEqualTo(BigDecimal.valueOf(5_000));
-		assertThat(couponOutput.getDiscountType()).isEqualTo(CouponDiscountType.FIXED);
-		assertThat(couponOutput.getStock()).isEqualTo(9).as("쿠폰 재고가 1 감소했는지 확인합니다.");
-		assertThat(couponOutput.getExpiredAt()).isEqualTo(expiredAt);
+		Coupon couponOutput = output.coupon();
+		assertThat(couponOutput.id()).isEqualTo(couponId);
+		assertThat(couponOutput.discountAmount()).isEqualTo(BigDecimal.valueOf(5_000));
+		assertThat(couponOutput.discountType()).isEqualTo(CouponDiscountType.FIXED);
+		assertThat(couponOutput.stock()).isEqualTo(9).as("쿠폰 재고가 1 감소했는지 확인합니다.");
+		assertThat(couponOutput.expiredAt()).isEqualTo(expiredAt);
 
 	}
 

@@ -50,6 +50,8 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:mysql")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // 트랜잭션 이후 이벤트 처리를 테스트하기 위해 추가했습니다.
+    testImplementation("org.awaitility:awaitility:4.2.0")
 
     // Open API
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")

@@ -5,7 +5,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,16 +15,23 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import kr.hhplus.be.commerce.domain.cash.model.Cash;
+import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
+import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.OrderLine;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
+import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
+import kr.hhplus.be.commerce.global.AbstractUnitTestSupport;
+import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
 
 @ExtendWith(MockitoExtension.class)
-class OrderPlaceProcessorUnitTest {
+class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 	@InjectMocks
 	private OrderPlaceProcessor orderPlaceProcessor;
 
@@ -30,14 +39,29 @@ class OrderPlaceProcessorUnitTest {
 	private OrderRepository orderRepository;
 
 	@Mock
+	private PaymentRepository paymentRepository;
+
+	@Mock
 	private ProductRepository productRepository;
+
+	@Mock
+	private UserCouponRepository userCouponRepository;
+	@Mock
+	private CashRepository cashRepository;
+	@Mock
+	private CashHistoryRepository cashHistoryRepository;
+	@Mock
+	private MessageRepository messageRepository;
 
 	// 작성 이유: 주문하고자 하는 상품이 존재하지 않는 상품인 경우 예외를 발생시키는지 검증하기 위해 작성했습니다.
 	@Test
 	void 주문할_상품이_존재하지_않는_경우_예외를_발생_시킨다() {
 		// given
 		Long notExistProductId = 999L;
-		Command command = new Command(1L, List.of(new OrderLineCommand(notExistProductId, 1)));
+		final String idempotencyKey = "ORD_250930_AOMEWD";
+		LocalDateTime now = LocalDateTime.now();
+		Command command = new Command(idempotencyKey, 1L, 100L, BigDecimal.valueOf(3_000), now,
+			List.of(new OrderLineCommand(notExistProductId, 1)));
 
 		// mock
 		given(productRepository.findAllByIdInWithLock(List.of(notExistProductId)))
@@ -56,17 +80,20 @@ class OrderPlaceProcessorUnitTest {
 		// given
 		Long productId = 999L;
 		Long userId = 1L;
-		final int remainStock = 1;
+		final int remainingStock = 1;
 		final int orderQuantity = 2; // 재고보다 많은 수량 주문
 
-		Product product = Product.builder()
-			.name("product name")
-			.price(BigDecimal.valueOf(10_000))
-			.stock(remainStock) // 재고 1
-			.build();
-		product.assignId(productId);
+		final String idempotencyKey = "ORD_250930_AOMEWD";
+		LocalDateTime now = LocalDateTime.now();
 
-		Command command = new Command(userId, List.of(new OrderLineCommand(productId, orderQuantity)));
+		Product product = Product.restore(productId, "product name", remainingStock,
+			BigDecimal.valueOf(10_000),
+			LocalDateTime.now());
+
+		BigDecimal paymentAmount = BigDecimal.valueOf(20_000);
+
+		Command command = new Command(idempotencyKey, userId, null, paymentAmount, now,
+			List.of(new OrderLineCommand(productId, orderQuantity)));
 
 		// mock
 		given(productRepository.findAllByIdInWithLock(List.of(productId)))
@@ -89,28 +116,34 @@ class OrderPlaceProcessorUnitTest {
 		final int orderQuantity = 1; // 재고와 동일한 주문 수량
 		Long orderId = 1L;
 		Long orderLineId = 1L;
+		LocalDateTime createdAt = LocalDateTime.now();
+		Product product = Product.restore(productId, "product name", stock, BigDecimal.valueOf(10_000),
+			createdAt);
 
-		Product product = Product.builder()
-			.name("product name")
-			.price(BigDecimal.valueOf(10_000))
-			.stock(stock)
-			.build();
-		product.assignId(productId);
+		Long cashId = 233L;
+		Cash cash = Cash.restore(
+			cashId, userId, BigDecimal.valueOf(200_000)
+		);
 
-		Command command = new Command(userId, List.of(new OrderLineCommand(productId, orderQuantity)));
+		final String idempotencyKey = "ORD_250930_AOMEWD";
+		LocalDateTime now = LocalDateTime.now();
+		BigDecimal paymentAmount = BigDecimal.valueOf(10_000);
+
+		Command command = new Command(idempotencyKey, userId, null, paymentAmount, now,
+			List.of(new OrderLineCommand(productId, orderQuantity)));
 		// mock
 		given(productRepository.findAllByIdInWithLock(List.of(productId)))
 			.willReturn(List.of(product));
 
-		Product savedProduct = Product.builder()
-			.name("product name")
-			.price(BigDecimal.valueOf(10_000))
-			.stock(stock - orderQuantity)
-			.build();
-		savedProduct.assignId(productId);
+		Product savedProduct = Product.restore(productId, "product name", stock - orderQuantity,
+			BigDecimal.valueOf(10_000),
+			createdAt);
 
 		given(productRepository.saveAll(any()))
 			.willReturn(List.of(savedProduct));
+
+		given(cashRepository.findByUserId(anyLong()))
+			.willReturn(Optional.of(cash));
 
 		OrderLine savedOrderLine = OrderLine.restore(
 			orderLineId,
@@ -129,7 +162,8 @@ class OrderPlaceProcessorUnitTest {
 			BigDecimal.ZERO,
 			BigDecimal.ZERO,
 			List.of(savedOrderLine),
-			null
+			null,
+			idempotencyKey
 		);
 
 		given(orderRepository.save(any()))
@@ -140,24 +174,24 @@ class OrderPlaceProcessorUnitTest {
 		// then
 		List<Product> products = output.products();
 		assertThat(products.size()).isOne();
-		assertThat(products.get(0).getStock()).isZero();
-		assertThat(products.get(0).getId()).isEqualTo(productId);
-		assertThat(products.get(0).getName()).isEqualTo("product name");
-		assertThat(products.get(0).getPrice()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
+		assertThat(products.get(0).stock()).isZero();
+		assertThat(products.get(0).id()).isEqualTo(productId);
+		assertThat(products.get(0).name()).isEqualTo("product name");
+		assertThat(products.get(0).price()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
 
 		Order order = output.order();
-		assertThat(order.getUserId()).isEqualTo(userId);
-		assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING);
-		assertThat(order.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
-		assertThat(order.getId()).isEqualTo(1L);
-		assertThat(order.getOrderLines().size()).isOne();
+		assertThat(order.userId()).isEqualTo(userId);
+		assertThat(order.status()).isEqualTo(OrderStatus.PENDING);
+		assertThat(order.amount()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
+		assertThat(order.id()).isEqualTo(1L);
+		assertThat(order.orderLines().size()).isOne();
 
-		OrderLine orderLine = order.getOrderLines().get(0);
-		assertThat(orderLine.getId()).isEqualTo(1L);
-		assertThat(orderLine.getProductId()).isEqualTo(productId);
-		assertThat(orderLine.getProductName()).isEqualTo("product name");
-		assertThat(orderLine.getProductAmount()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
-		assertThat(orderLine.getOrderQuantity()).isEqualTo(1);
+		OrderLine orderLine = order.orderLines().get(0);
+		assertThat(orderLine.id()).isEqualTo(1L);
+		assertThat(orderLine.productId()).isEqualTo(productId);
+		assertThat(orderLine.productName()).isEqualTo("product name");
+		assertThat(orderLine.productAmount()).isEqualByComparingTo(BigDecimal.valueOf(10_000));
+		assertThat(orderLine.orderQuantity()).isEqualTo(1);
 
 	}
 
@@ -166,8 +200,12 @@ class OrderPlaceProcessorUnitTest {
 	void 주문할_상품의_수량이_양수가_아닌_경우_예외를_발생_시킨다() {
 		// given
 		final int zeroOrderQuantity = 0;
+		final String idempotencyKey = "ORD_250930_AOMEWD";
+		LocalDateTime now = LocalDateTime.now();
+		BigDecimal paymentAmount = BigDecimal.valueOf(20_000);
+
 		List<OrderLineCommand> orderLineCommands = List.of(new OrderLineCommand(1L, zeroOrderQuantity));
-		Command command = new Command(1L, orderLineCommands);
+		Command command = new Command(idempotencyKey, 1L, null, paymentAmount, now, orderLineCommands);
 
 		// when & then
 		assertThatThrownBy(() -> {
@@ -177,4 +215,25 @@ class OrderPlaceProcessorUnitTest {
 			.hasMessage("주문 수량은 1개 이상이어야 합니다.");
 	}
 
+	// 작성 이유: 결제 금액과 주문 금액이 일치하는지 검증하기 위해서 작성했습니다. [쿠폰 사용 X]
+	@Test
+	void 결제_금액과_주문_금액이_다를_경우_예외를_발생시킨다() {
+	}
+
+	// 작성 이유: 존재하지 않는 쿠폰을 사용하려고 할 때 예외를 발생시키는지 검증하기 위해 작성했습니다.
+	@Test
+	void 존재하지_않는_사용자_쿠폰을_사용할_경우_예외를_발생시킨다() {
+
+	}
+
+	// 작성 이유: 다른 사용자의 쿠폰을 사용하려고할 때 예외를 발생시키는지 검증하기 위해 작성했습니다.
+	@Test
+	void 다른_사용자의_쿠폰을_사용할_경우에_예외를_발생시킨다() {
+	}
+
+	// 작성 이유: 사용자의 잔액이 부족할 때 예외를 발생시키는지 검증하기 위해 작성했습니다.
+	@Test
+	void 결제할_잔액이_부족한_경우_예외를_발생시킨다() {
+
+	}
 }

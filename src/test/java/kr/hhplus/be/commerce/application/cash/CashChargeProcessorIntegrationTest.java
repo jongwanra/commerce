@@ -9,14 +9,17 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
+import kr.hhplus.be.commerce.domain.cash.model.Cash;
+import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
+import kr.hhplus.be.commerce.domain.cash.model.enums.CashHistoryAction;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.IntegrationTest;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryJpaRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashJpaRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.enums.CashHistoryAction;
+import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.UserJpaRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.UserEntity;
+import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
 
 public class CashChargeProcessorIntegrationTest extends AbstractIntegrationTestSupport {
 	private CashChargeProcessor cashChargeProcessor;
@@ -25,23 +28,27 @@ public class CashChargeProcessorIntegrationTest extends AbstractIntegrationTestS
 	private UserJpaRepository userJpaRepository;
 
 	@Autowired
-	private CashJpaRepository cashJpaRepository;
+	private CashRepository cashRepository;
 
 	@Autowired
-	private CashHistoryJpaRepository cashHistoryJpaRepository;
+	private CashHistoryRepository cashHistoryRepository;
 
 	@BeforeEach
 	void setUp() {
-		cashChargeProcessor = new CashChargeProcessor(cashJpaRepository, cashHistoryJpaRepository);
+		cashChargeProcessor = new CashChargeProcessor(cashRepository, cashHistoryRepository);
 	}
 
 	// 작성 이유: CashChargeProcessor의 정상 충전 여부를 확인하기 위해 작성했습니다.
 	@IntegrationTest
 	void 잔액이_없는_회원이_1_000원을_충전할_수_있다() {
 		// given
-		Long userId = userJpaRepository.findByEmail("user.a@gmail.com")
-			.orElseThrow(() -> new CommerceException("테스트에 필요한 회원이 존재하지 않습니다. setup.sql을 확인해주세요."))
-			.getId();
+		UserEntity user = userJpaRepository.save(UserEntity.builder()
+			.email("user@gmail.com")
+			.encryptedPassword("encrypted_password")
+			.status(UserStatus.ACTIVE)
+			.build());
+		Long userId = user.getId();
+		cashJpaRepository.save(CashEntity.fromDomain(Cash.restore(null, userId, BigDecimal.ZERO)));
 
 		BigDecimal amount = BigDecimal.valueOf(1_000);
 
@@ -55,12 +62,12 @@ public class CashChargeProcessorIntegrationTest extends AbstractIntegrationTestS
 		assertThat(output.originalBalance().compareTo(BigDecimal.ZERO)).isZero();
 		assertThat(output.newBalance().compareTo(amount)).isZero();
 
-		List<CashHistoryEntity> cashHistories = cashHistoryJpaRepository.findAllByUserId(userId);
+		List<CashHistory> cashHistories = cashHistoryRepository.findAllByUserId(userId);
 		assertThat(cashHistories).hasSize(1);
-		CashHistoryEntity cashHistory = cashHistories.get(0);
-		assertThat(cashHistory.getUserId()).isEqualTo(userId);
-		assertThat(cashHistory.getAction()).isEqualTo(CashHistoryAction.CHARGE);
-		assertThat(cashHistory.getAmount().compareTo(BigDecimal.valueOf(1_000))).isZero().as("충전 금액");
-		assertThat(cashHistory.getBalanceAfter().compareTo(BigDecimal.valueOf(1_000))).isZero().as("충전 이후 잔액");
+		CashHistory cashHistory = cashHistories.get(0);
+		assertThat(cashHistory.userId()).isEqualTo(userId);
+		assertThat(cashHistory.action()).isEqualTo(CashHistoryAction.CHARGE);
+		assertThat(cashHistory.amount().compareTo(BigDecimal.valueOf(1_000))).isZero().as("충전 금액");
+		assertThat(cashHistory.balanceAfter().compareTo(BigDecimal.valueOf(1_000))).isZero().as("충전 이후 잔액");
 	}
 }

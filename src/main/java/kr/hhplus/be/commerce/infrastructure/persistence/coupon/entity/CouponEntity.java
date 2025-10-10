@@ -9,11 +9,11 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
-import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
-import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.enums.CouponDiscountType;
+import kr.hhplus.be.commerce.domain.coupon.model.Coupon;
+import kr.hhplus.be.commerce.domain.coupon.model.enums.CouponDiscountType;
 import kr.hhplus.be.commerce.infrastructure.persistence.global.entity.BaseTimeEntity;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,6 +21,8 @@ import lombok.NoArgsConstructor;
 @Entity(name = "coupon")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(access = AccessLevel.PRIVATE)
 public class CouponEntity extends BaseTimeEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,36 +38,25 @@ public class CouponEntity extends BaseTimeEntity {
 	private CouponDiscountType discountType;
 	private BigDecimal discountAmount;
 
-	@Builder
-	private CouponEntity(String name, Integer stock, LocalDateTime expiredAt, CouponDiscountType discountType,
-		BigDecimal discountAmount) {
-		this.name = name;
-		this.stock = stock;
-		this.expiredAt = expiredAt;
-		this.discountType = discountType;
-		this.discountAmount = discountAmount;
+	public static CouponEntity fromDomain(Coupon coupon) {
+		return CouponEntity.builder()
+			.id(coupon.id())
+			.name(coupon.name())
+			.stock(coupon.stock())
+			.expiredAt(coupon.expiredAt())
+			.discountType(coupon.discountType())
+			.discountAmount(coupon.discountAmount())
+			.build();
 	}
 
-	public void issue(LocalDateTime now) {
-		validateIssuable(now);
-		this.stock -= 1;
-	}
-
-	private void validateIssuable(LocalDateTime now) {
-		validateExpired(now);
-		validateStockIsRemaining();
-	}
-
-	private void validateStockIsRemaining() {
-		if (this.stock <= 0) {
-			throw new CommerceException(CommerceCode.OUT_OF_STOCK_COUPON);
-		}
-	}
-
-	// 경계값 검증: 만료 시간과 현재 시간이 같은 경우도 만료된 것으로 간주 합니다.
-	private void validateExpired(LocalDateTime now) {
-		if (this.expiredAt.isBefore(now) || this.expiredAt.isEqual(now)) {
-			throw new CommerceException(CommerceCode.EXPIRED_COUPON);
-		}
+	public Coupon toDomain() {
+		return Coupon.restore(
+			id,
+			name,
+			stock,
+			expiredAt,
+			discountType,
+			discountAmount
+		);
 	}
 }

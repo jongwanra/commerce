@@ -1,7 +1,5 @@
 package kr.hhplus.be.commerce.infrastructure.persistence.order;
 
-import static java.util.Objects.*;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -19,7 +17,7 @@ public class OrderRepositoryImpl implements OrderRepository {
 	@Override
 	public Order save(Order order) {
 		OrderEntity orderEntity = orderJpaRepository.save(OrderEntity.fromDomain(order));
-		List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.saveAll(order.getOrderLines()
+		List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.saveAll(order.orderLines()
 			.stream()
 			.map(orderLine -> OrderLineEntity.fromDomain(orderEntity.getId(), orderLine))
 			.toList()
@@ -28,13 +26,23 @@ public class OrderRepositoryImpl implements OrderRepository {
 		return orderEntity.toDomain(orderLineEntities);
 
 	}
-
+	
 	@Override
-	public Optional<Order> findByIdWithLock(Long orderId) {
-		if (isNull(orderId)) {
+	public Optional<Order> findByIdempotencyKeyWithLock(String idempotencyKey) {
+		if (idempotencyKey.isBlank()) {
 			return Optional.empty();
 		}
-		return orderJpaRepository.findByIdWithLock(orderId)
+		return orderJpaRepository.findByIdempotencyKeyWithLock(idempotencyKey)
+			.map((orderEntity) -> {
+				List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.findAllByOrderId(orderEntity.getId());
+				return orderEntity.toDomain(orderLineEntities);
+			});
+
+	}
+
+	@Override
+	public Optional<Order> findById(Long id) {
+		return orderJpaRepository.findById(id)
 			.map((orderEntity) -> {
 				List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.findAllByOrderId(orderEntity.getId());
 				return orderEntity.toDomain(orderLineEntities);

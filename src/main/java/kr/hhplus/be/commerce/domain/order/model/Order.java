@@ -6,65 +6,71 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import kr.hhplus.be.commerce.domain.global.annotation.ImmutableObject;
 import kr.hhplus.be.commerce.domain.global.annotation.InfrastructureOnly;
-import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
-import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
-import kr.hhplus.be.commerce.domain.order.policy.DiscountAmountCalculable;
+import kr.hhplus.be.commerce.domain.order.model.input.OrderPlaceInput;
 import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 
-@ImmutableObject
-@Getter
-@EqualsAndHashCode(of = "id")
-public final class Order {
-	private final Long id;
-	private final Long userId;
-	private final OrderStatus status;
+@Builder(access = AccessLevel.PRIVATE)
+public record Order(
+	Long id,
+	Long userId,
+	OrderStatus status,
 	// 주문가, 주문 라인의 상품 가격 * 주문 수량을 전부 더한 가격
-	private final BigDecimal amount;
+	BigDecimal amount,
 	// 할인 가격(쿠폰 등)
-	private final BigDecimal discountAmount;
+	BigDecimal discountAmount,
 	// 최종 결제 가격(= amount - discountAmount)
-	private final BigDecimal finalAmount;
-	private final List<OrderLine> orderLines;
-	private final LocalDateTime confirmedAt;
+	BigDecimal finalAmount,
+	List<OrderLine> orderLines,
+	LocalDateTime confirmedAt,
+	String idempotencyKey
+) {
 
-	@Builder(access = AccessLevel.PRIVATE)
-	private Order(Long id, Long userId, OrderStatus status, BigDecimal amount, BigDecimal discountAmount,
-		BigDecimal finalAmount, List<OrderLine> orderLines, LocalDateTime confirmedAt) {
-		this.id = isNull(id) ? 0L : id;
-		this.userId = userId;
-		this.status = status;
-		this.amount = amount;
-		this.discountAmount = discountAmount;
-		this.finalAmount = finalAmount;
-		this.orderLines = isNull(orderLines) ? List.of() : orderLines;
-		this.confirmedAt = confirmedAt;
-	}
-
-	public static Order place(Long userId, List<OrderLine> orderLines) {
-		BigDecimal amount = orderLines.stream()
-			.map(OrderLine::getTotalAmount)
-			.reduce(BigDecimal.ZERO, BigDecimal::add);
-
+	public static Order ofPending(Long userId) {
 		return Order.builder()
 			.userId(userId)
 			.status(OrderStatus.PENDING)
-			.amount(amount)
+			.amount(BigDecimal.ZERO)
 			.discountAmount(BigDecimal.ZERO)
 			.finalAmount(BigDecimal.ZERO)
+			.orderLines(List.of())
+			.idempotencyKey("")
+			.build();
+	}
+
+	public Order place(OrderPlaceInput input) {
+		List<OrderLine> orderLines = input.orderLineInputs()
+			.stream()
+			.map((orderLineInput) -> OrderLine.place(orderLineInput.productId(), orderLineInput.productName(),
+				orderLineInput.productPrice(), orderLineInput.orderQuantity()))
+			.toList();
+
+		BigDecimal amount = orderLines.stream()
+			.map(OrderLine::totalAmount)
+			.reduce(BigDecimal.ZERO, BigDecimal::add);
+
+		BigDecimal discountAmount = nonNull(input.discountAmountCalculable()) ?
+			input.discountAmountCalculable().calculateDiscountAmount(amount) : BigDecimal.valueOf(0, 2);
+
+		return Order.builder()
+			.id(id)
+			.userId(input.userId())
+			.status(OrderStatus.CONFIRMED)
+			.amount(amount)
+			.discountAmount(discountAmount)
+			.finalAmount(amount.subtract(discountAmount))
 			.orderLines(orderLines)
-			.confirmedAt(null)
+			.confirmedAt(input.now())
+			.idempotencyKey(input.idempotencyKey())
 			.build();
 	}
 
 	@InfrastructureOnly
 	public static Order restore(Long id, Long userId, OrderStatus orderStatus, BigDecimal amount,
-		BigDecimal discountAmount, BigDecimal finalAmount, List<OrderLine> orderLines, LocalDateTime confirmedAt) {
+		BigDecimal discountAmount, BigDecimal finalAmount, List<OrderLine> orderLines, LocalDateTime confirmedAt,
+		String idempotencyKey) {
 		return Order.builder()
 			.id(id)
 			.userId(userId)
@@ -74,49 +80,7 @@ public final class Order {
 			.finalAmount(finalAmount)
 			.orderLines(orderLines)
 			.confirmedAt(confirmedAt)
-			.build();
-	}
-
-	public void authorize(Long userId) {
-		if (this.userId.equals(userId)) {
-			return;
-		}
-		throw new CommerceException(CommerceCode.UNAUTHORIZED_USER);
-	}
-
-	public Order confirm(LocalDateTime now, DiscountAmountCalculable discountAmountCalculable) {
-		if (status.isConfirmed()) {
-			throw new CommerceException(CommerceCode.ALREADY_CONFIRMED_ORDER);
-		}
-
-		BigDecimal discountAmount = discountAmountCalculable.calculateDiscountAmount(this.amount);
-		return Order.builder()
-			.id(this.id)
-			.userId(this.userId)
-			.status(OrderStatus.CONFIRMED)
-			.amount(this.amount)
-			.discountAmount(discountAmount)
-			.finalAmount(this.amount.subtract(discountAmount))
-			.orderLines(this.orderLines)
-			.confirmedAt(now)
-			.build();
-
-	}
-
-	public Order confirm(LocalDateTime now) {
-		if (status.isConfirmed()) {
-			throw new CommerceException(CommerceCode.ALREADY_CONFIRMED_ORDER);
-		}
-		BigDecimal discountAmount = BigDecimal.ZERO;
-		return Order.builder()
-			.id(this.id)
-			.userId(this.userId)
-			.status(OrderStatus.CONFIRMED)
-			.amount(this.amount)
-			.discountAmount(discountAmount)
-			.finalAmount(this.amount.subtract(this.discountAmount))
-			.orderLines(this.orderLines)
-			.confirmedAt(now)
+			.idempotencyKey(idempotencyKey)
 			.build();
 	}
 
