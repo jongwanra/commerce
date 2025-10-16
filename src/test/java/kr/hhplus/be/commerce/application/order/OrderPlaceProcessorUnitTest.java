@@ -64,7 +64,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 			List.of(new OrderLineCommand(notExistProductId, 1)));
 
 		// mock
-		given(productRepository.findAllByIdInWithLock(List.of(notExistProductId)))
+		given(productRepository.findAllByIdInForUpdate(List.of(notExistProductId)))
 			.willReturn(List.of());
 
 		// when & then
@@ -96,7 +96,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 			List.of(new OrderLineCommand(productId, orderQuantity)));
 
 		// mock
-		given(productRepository.findAllByIdInWithLock(List.of(productId)))
+		given(productRepository.findAllByIdInForUpdate(List.of(productId)))
 			.willReturn(List.of(product));
 
 		// when & then
@@ -132,7 +132,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		Command command = new Command(idempotencyKey, userId, null, paymentAmount, now,
 			List.of(new OrderLineCommand(productId, orderQuantity)));
 		// mock
-		given(productRepository.findAllByIdInWithLock(List.of(productId)))
+		given(productRepository.findAllByIdInForUpdate(List.of(productId)))
 			.willReturn(List.of(product));
 
 		Product savedProduct = Product.restore(productId, "product name", stock - orderQuantity,

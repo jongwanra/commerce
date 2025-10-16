@@ -62,13 +62,13 @@ public class OrderPlaceProcessor {
 		 *
 		 * 중복 호출인 경우 반환합니다.
 		 */
-		Optional<Order> alreadyPlacedOrderOpt = orderRepository.findByIdempotencyKeyWithLock(command.idempotencyKey);
+		Optional<Order> alreadyPlacedOrderOpt = orderRepository.findByIdempotencyKeyForUpdate(command.idempotencyKey);
 		if (alreadyPlacedOrderOpt.isPresent()) {
 			return Output.empty();
 		}
 
 		// 상품의 비관적 잠금을 획득한 상태로 조회 및 재고를 감소시킵니다.
-		List<Product> productsWithDecreasedStock = decreaseStock(command, fetchProductsWithLock(command));
+		List<Product> productsWithDecreasedStock = decreaseStock(command, fetchProductsForUpdate(command));
 
 		Cash cash = cashRepository.findByUserId(command.userId)
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_CASH));
@@ -89,9 +89,9 @@ public class OrderPlaceProcessor {
 			executeWithCoupon(command, order, cash, productsWithDecreasedStock);
 	}
 
-	private List<Product> fetchProductsWithLock(Command command) {
+	private List<Product> fetchProductsForUpdate(Command command) {
 		List<Long> productIds = command.toProductIds();
-		List<Product> products = productRepository.findAllByIdInWithLock(productIds);
+		List<Product> products = productRepository.findAllByIdInForUpdate(productIds);
 		if (products.size() != productIds.size()) {
 			throw new CommerceException(CommerceCode.NOT_FOUND_PRODUCT);
 		}

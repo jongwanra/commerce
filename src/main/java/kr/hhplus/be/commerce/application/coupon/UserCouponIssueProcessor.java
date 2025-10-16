@@ -2,6 +2,7 @@ package kr.hhplus.be.commerce.application.coupon;
 
 import java.time.LocalDateTime;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.hhplus.be.commerce.domain.coupon.model.Coupon;
@@ -21,20 +22,22 @@ public class UserCouponIssueProcessor {
 
 	@Transactional
 	public Output execute(Command command) {
-		// coupon의 Pessimistic Lock을 획득하여 동시성 이슈를 제어합니다.
-		Coupon coupon = couponRepository.findByIdWithLock(command.couponId)
-			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_COUPON));
-
-		Coupon issuedCoupon = coupon.issue(command.now);
+		Coupon issuedCoupon = couponRepository.findByIdForUpdate(command.couponId)
+			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_COUPON))
+			.issue(command.now);
 
 		if (userCouponRepository.existsByUserIdAndCouponId(command.userId, command.couponId)) {
 			throw new CommerceException(CommerceCode.ALREADY_ISSUED_COUPON);
 		}
 
-		return new Output(
-			couponRepository.save(issuedCoupon),
-			userCouponRepository.save(UserCoupon.of(command.userId, coupon, command.now))
-		);
+		try {
+			return new Output(
+				couponRepository.save(issuedCoupon),
+				userCouponRepository.save(UserCoupon.of(command.userId, issuedCoupon, command.now))
+			);
+		} catch (DataIntegrityViolationException e) {
+			throw new CommerceException(CommerceCode.ALREADY_ISSUED_COUPON);
+		}
 	}
 
 	public record Command(

@@ -82,7 +82,8 @@ class UserCouponIssueProcessorIntegrationTest extends AbstractIntegrationTestSup
 		IntStream.range(0, userCount).forEach(index -> executorService.execute(() -> {
 			{
 				UserEntity user = users.get(index);
-				Command command = new Command(user.getId(), coupon.getId(), now);
+				Command command = new Command(
+					user.getId(), coupon.getId(), now);
 				try {
 					userCouponIssueProcessor.execute(command);
 				} catch (CommerceException e) {
@@ -101,8 +102,9 @@ class UserCouponIssueProcessorIntegrationTest extends AbstractIntegrationTestSup
 			.orElseThrow();
 		assertThat(outOfStockCoupon.getStock()).isZero().as("쿠폰의 잔여 재고는 없습니다.");
 
+		log.info("outOfStockCoupon = {}", outOfStockCoupon.getStock());
 		List<UserCouponEntity> userCoupons = userCouponJpaRepository.findAll();
-		assertThat(userCoupons.size()).isEqualTo(couponQuantity).as("총 10명의 사용자만 쿠폰이 발급되었습니다.");
+		assertThat(userCoupons.size()).isEqualTo(10).as("총 10명의 사용자만 쿠폰이 발급되었습니다.");
 	}
 
 }
