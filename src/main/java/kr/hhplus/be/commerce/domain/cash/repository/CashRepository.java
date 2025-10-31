@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.infrastructure.persistence.cash;
+package kr.hhplus.be.commerce.domain.cash.repository;
 
 import java.util.Optional;
 
