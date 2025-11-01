@@ -15,7 +15,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import net.bytebuddy.utility.RandomString;
+
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
+import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
+import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
 import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
@@ -26,9 +30,10 @@ import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
+import kr.hhplus.be.commerce.domain.user.model.User;
+import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import kr.hhplus.be.commerce.global.AbstractUnitTestSupport;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
 
 @ExtendWith(MockitoExtension.class)
 class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
@@ -53,6 +58,9 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 	@Mock
 	private MessageRepository messageRepository;
 
+	@Mock
+	private UserRepository userRepository;
+
 	// 작성 이유: 주문하고자 하는 상품이 존재하지 않는 상품인 경우 예외를 발생시키는지 검증하기 위해 작성했습니다.
 	@Test
 	void 주문할_상품이_존재하지_않는_경우_예외를_발생_시킨다() {
@@ -64,6 +72,13 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 			List.of(new OrderLineCommand(notExistProductId, 1)));
 
 		// mock
+		given(userRepository.findByIdForUpdate(anyLong()))
+			.willReturn(Optional.of(User.restore(
+				1L,
+				UserStatus.ACTIVE,
+				"userA@gmail.com",
+				RandomString.make(15)
+			)));
 		given(productRepository.findAllByIdInForUpdate(List.of(notExistProductId)))
 			.willReturn(List.of());
 
@@ -99,6 +114,14 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		given(productRepository.findAllByIdInForUpdate(List.of(productId)))
 			.willReturn(List.of(product));
 
+		given(userRepository.findByIdForUpdate(anyLong()))
+			.willReturn(Optional.of(User.restore(
+				1L,
+				UserStatus.ACTIVE,
+				"userA@gmail.com",
+				RandomString.make(15)
+			)));
+
 		// when & then
 		assertThatThrownBy(() -> orderPlaceProcessor.execute(command))
 			.isInstanceOf(CommerceException.class)
@@ -122,7 +145,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 
 		Long cashId = 233L;
 		Cash cash = Cash.restore(
-			cashId, userId, BigDecimal.valueOf(200_000)
+			cashId, userId, BigDecimal.valueOf(200_000), 0L
 		);
 
 		final String idempotencyKey = "ORD_250930_AOMEWD";
@@ -132,6 +155,14 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		Command command = new Command(idempotencyKey, userId, null, paymentAmount, now,
 			List.of(new OrderLineCommand(productId, orderQuantity)));
 		// mock
+		given(userRepository.findByIdForUpdate(anyLong()))
+			.willReturn(Optional.of(User.restore(
+				1L,
+				UserStatus.ACTIVE,
+				"userA@gmail.com",
+				RandomString.make(15)
+			)));
+
 		given(productRepository.findAllByIdInForUpdate(List.of(productId)))
 			.willReturn(List.of(product));
 

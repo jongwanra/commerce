@@ -11,10 +11,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
+import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
+import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
 import kr.hhplus.be.commerce.domain.coupon.model.UserCoupon;
 import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
@@ -30,8 +36,7 @@ import kr.hhplus.be.commerce.domain.payment.model.Payment;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
+import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,17 +57,21 @@ public class OrderPlaceProcessor {
 	private final CashRepository cashRepository;
 	private final CashHistoryRepository cashHistoryRepository;
 	private final MessageRepository messageRepository;
+	private final UserRepository userRepository;
 
+	@Retryable(
+		retryFor = OptimisticLockingFailureException.class,
+		maxAttempts = 3,
+		backoff = @Backoff(delay = 100)
+	)
 	@Transactional
 	public Output execute(Command command) {
 		command.validate();
+		
+		userRepository.findByIdForUpdate(command.userId)
+			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER));
 
-		/**
-		 * TODO IdempotencyKey가 존재하지 않은 경우에는 Pessimistic Lock의 범위는 어떻게 잡힐까?
-		 *
-		 * 중복 호출인 경우 반환합니다.
-		 */
-		Optional<Order> alreadyPlacedOrderOpt = orderRepository.findByIdempotencyKeyForUpdate(command.idempotencyKey);
+		Optional<Order> alreadyPlacedOrderOpt = orderRepository.findByIdempotencyKey(command.idempotencyKey);
 		if (alreadyPlacedOrderOpt.isPresent()) {
 			return Output.empty();
 		}
@@ -87,6 +96,15 @@ public class OrderPlaceProcessor {
 		return isNull(command.userCouponId) ?
 			executeWithoutCoupon(command, order, cash, productsWithDecreasedStock) :
 			executeWithCoupon(command, order, cash, productsWithDecreasedStock);
+	}
+
+	@Recover
+	public Output recover(RuntimeException e, Command command) {
+		if (e instanceof OptimisticLockingFailureException) {
+			log.error("Exceeded retry count for optimistic lock, userId={}", command.userId, e);
+			throw new CommerceException(CommerceCode.EXCEEDED_RETRY_COUNT_FOR_OPTIMISTIC_LOCK);
+		}
+		throw e;
 	}
 
 	private List<Product> fetchProductsForUpdate(Command command) {

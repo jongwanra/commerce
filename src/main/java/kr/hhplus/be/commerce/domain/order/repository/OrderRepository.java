@@ -6,7 +6,6 @@ import kr.hhplus.be.commerce.domain.order.model.Order;
 
 public interface OrderRepository {
 	Order save(Order order);
-
-	Optional<Order> findByIdempotencyKeyForUpdate(String idempotencyKey);
 	
+	Optional<Order> findByIdempotencyKey(String idempotencyKey);
 }

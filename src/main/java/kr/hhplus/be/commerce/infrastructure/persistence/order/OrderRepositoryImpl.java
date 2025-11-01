@@ -28,11 +28,11 @@ public class OrderRepositoryImpl implements OrderRepository {
 	}
 
 	@Override
-	public Optional<Order> findByIdempotencyKeyForUpdate(String idempotencyKey) {
+	public Optional<Order> findByIdempotencyKey(String idempotencyKey) {
 		if (idempotencyKey.isBlank()) {
 			return Optional.empty();
 		}
-		return orderJpaRepository.findByIdempotencyKeyForUpdate(idempotencyKey)
+		return orderJpaRepository.findByIdempotencyKey(idempotencyKey)
 			.map((orderEntity) -> {
 				List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.findAllByOrderId(orderEntity.getId());
 				return orderEntity.toDomain(orderLineEntities);
