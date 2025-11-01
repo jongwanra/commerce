@@ -43,7 +43,7 @@ class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 		Command command = new Command(userId, couponId, now);
 
 		// mock
-		given(couponRepository.findByIdWithLock(couponId))
+		given(couponRepository.findByIdForUpdate(couponId))
 			.willThrow(new CommerceException(CommerceCode.NOT_FOUND_COUPON));
 
 		// when & then
@@ -76,7 +76,7 @@ class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 		);
 
 		// mock
-		given(couponRepository.findByIdWithLock(couponId))
+		given(couponRepository.findByIdForUpdate(couponId))
 			.willReturn(Optional.of(expiredCoupon));
 
 		// when & then
@@ -102,7 +102,7 @@ class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 			BigDecimal.valueOf(5_000));
 
 		// mock
-		given(couponRepository.findByIdWithLock(couponId))
+		given(couponRepository.findByIdForUpdate(couponId))
 			.willReturn(Optional.of(outOfStockCoupon));
 
 		// when & then
@@ -127,7 +127,7 @@ class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 			BigDecimal.valueOf(5_000));
 
 		// mock
-		given(couponRepository.findByIdWithLock(couponId))
+		given(couponRepository.findByIdForUpdate(couponId))
 			.willReturn(Optional.of(alreadyIssuedCoupon));
 
 		given(userCouponRepository.existsByUserIdAndCouponId(userId, couponId))
@@ -170,7 +170,7 @@ class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 		);
 
 		// mock
-		given(couponRepository.findByIdWithLock(couponId))
+		given(couponRepository.findByIdForUpdate(couponId))
 			.willReturn(Optional.of(coupon));
 
 		given(userCouponRepository.save(any(UserCoupon.class)))

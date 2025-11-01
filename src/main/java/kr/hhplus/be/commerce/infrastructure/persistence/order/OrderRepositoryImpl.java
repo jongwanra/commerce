@@ -26,27 +26,18 @@ public class OrderRepositoryImpl implements OrderRepository {
 		return orderEntity.toDomain(orderLineEntities);
 
 	}
-	
+
 	@Override
-	public Optional<Order> findByIdempotencyKeyWithLock(String idempotencyKey) {
+	public Optional<Order> findByIdempotencyKey(String idempotencyKey) {
 		if (idempotencyKey.isBlank()) {
 			return Optional.empty();
 		}
-		return orderJpaRepository.findByIdempotencyKeyWithLock(idempotencyKey)
+		return orderJpaRepository.findByIdempotencyKey(idempotencyKey)
 			.map((orderEntity) -> {
 				List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.findAllByOrderId(orderEntity.getId());
 				return orderEntity.toDomain(orderLineEntities);
 			});
 
-	}
-
-	@Override
-	public Optional<Order> findById(Long id) {
-		return orderJpaRepository.findById(id)
-			.map((orderEntity) -> {
-				List<OrderLineEntity> orderLineEntities = orderLineJpaRepository.findAllByOrderId(orderEntity.getId());
-				return orderEntity.toDomain(orderLineEntities);
-			});
 	}
 
 }

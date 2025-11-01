@@ -13,16 +13,18 @@ import lombok.Builder;
 public record Cash(
 	Long id,
 	Long userId,
-	BigDecimal balance
+	BigDecimal balance,
+	Long version
 ) {
 	private static final BigDecimal MAX_ONCE_CHARGE_AMOUNT = BigDecimal.valueOf(10_000_000);
 
 	@InfrastructureOnly
-	public static Cash restore(Long id, Long userId, BigDecimal balance) {
+	public static Cash restore(Long id, Long userId, BigDecimal balance, Long version) {
 		return Cash.builder()
 			.id(id)
 			.userId(userId)
 			.balance(balance)
+			.version(version)
 			.build();
 	}
 
@@ -34,6 +36,7 @@ public record Cash(
 			.id(this.id)
 			.userId(this.userId)
 			.balance(this.balance.add(amount))
+			.version(this.version)
 			.build();
 	}
 
@@ -45,6 +48,7 @@ public record Cash(
 			.id(this.id)
 			.userId(this.userId)
 			.balance(this.balance.subtract(amount))
+			.version(this.version)
 			.build();
 
 	}
@@ -67,4 +71,5 @@ public record Cash(
 			throw new CommerceException(AMOUNT_MUST_BE_POSITIVE);
 		}
 	}
+
 }

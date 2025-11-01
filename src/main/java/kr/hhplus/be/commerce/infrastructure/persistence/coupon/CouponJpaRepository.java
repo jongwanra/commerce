@@ -13,5 +13,5 @@ import kr.hhplus.be.commerce.infrastructure.persistence.coupon.entity.CouponEnti
 public interface CouponJpaRepository extends JpaRepository<CouponEntity, Long> {
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("SELECT c FROM coupon c WHERE c.id = :couponId")
-	Optional<CouponEntity> findByIdWithLock(@Param("couponId") Long couponId);
+	Optional<CouponEntity> findByIdForUpdate(@Param("couponId") Long couponId);
 }

@@ -12,10 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
 import kr.hhplus.be.commerce.domain.cash.model.enums.CashHistoryAction;
+import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
+import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.IntegrationTest;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.UserJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.UserEntity;
@@ -48,7 +48,7 @@ public class CashChargeProcessorIntegrationTest extends AbstractIntegrationTestS
 			.status(UserStatus.ACTIVE)
 			.build());
 		Long userId = user.getId();
-		cashJpaRepository.save(CashEntity.fromDomain(Cash.restore(null, userId, BigDecimal.ZERO)));
+		cashJpaRepository.save(CashEntity.fromDomain(Cash.restore(null, userId, BigDecimal.ZERO, 0L)));
 
 		BigDecimal amount = BigDecimal.valueOf(1_000);
 

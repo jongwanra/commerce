@@ -3,6 +3,7 @@ create table cash
     id          bigint auto_increment comment '고유 식별자' primary key,
     user_id     bigint                                   not null comment '사용자 고유 식별자',
     balance     decimal(12, 2) default 0.00              not null comment '현금 잔액',
+    version     bigint                                   not null default 0 comment '동시성 제어 용도',
     created_at  timestamp      default CURRENT_TIMESTAMP not null comment '생성 일시',
     modified_at timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시',
     constraint uidx_cash_user_id unique (user_id)
@@ -63,8 +64,6 @@ create table orders
     constraint uidx_orders_idempotency_key
         unique (idempotency_key)
 );
-
-
 
 create table payment
 (

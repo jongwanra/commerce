@@ -1,7 +1,6 @@
 package kr.hhplus.be.commerce.infrastructure.persistence.product;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
@@ -16,8 +15,8 @@ public class ProductRepositoryImpl implements ProductRepository {
 	private final ProductJpaRepository productJpaRepository;
 
 	@Override
-	public List<Product> findAllByIdInWithLock(List<Long> productIds) {
-		return productJpaRepository.findAllByIdInWithLock(productIds)
+	public List<Product> findAllByIdInForUpdate(List<Long> productIds) {
+		return productJpaRepository.findAllByIdInForUpdate(productIds)
 			.stream()
 			.map(ProductEntity::toDomain)
 			.toList();
@@ -33,12 +32,6 @@ public class ProductRepositoryImpl implements ProductRepository {
 			.stream()
 			.map(ProductEntity::toDomain)
 			.toList();
-	}
-
-	@Override
-	public Optional<Product> findByName(String name) {
-		return productJpaRepository.findByName(name)
-			.map(ProductEntity::toDomain);
 	}
 
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
+import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashHistoryEntity;
 import lombok.RequiredArgsConstructor;
 

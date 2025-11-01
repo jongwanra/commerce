@@ -15,7 +15,7 @@ sequenceDiagram
     participant UserCouponRepo as UserCouponRepository
     Client ->> Processor: execute(Command)
     activate Processor
-    Processor ->> CouponRepo: findByIdWithLock(couponId)
+    Processor ->> CouponRepo: findByIdForUpdate(couponId)
     Note right of CouponRepo: 쿠폰 비관적 잠금 획득
     CouponRepo -->> Processor: CouponEntity
     Note over Processor: coupon.issue(LocalDateTime now)<br/>1. 발급 기간 검증<br/>2. 재고(발급 가능 수량) 확인<br/>3. 재고 감소<br/>※ 실패 시 예외 발생
@@ -52,13 +52,13 @@ sequenceDiagram
     participant ExtPublisher as MessagePublisher
     participant Slack as SlackSendMessageClient
     Client ->> Processor: execute(Command)
-    Processor ->> OrderRepo: findByIdempotencyKeyWithLock(idempotencyKey)
+    Processor ->> OrderRepo: findByIdempotencyKeyForUpdate(idempotencyKey)
     alt 중복 호출인 경우
         OrderRepo -->> Processor: Order(found)
         Processor -->> Client: Output.empty()
     else 최초 호출인 경우
         OrderRepo -->> Processor: null
-        Processor ->> ProductRepo: findAllByIdInWithLock(productIds)
+        Processor ->> ProductRepo: findAllByIdInForUpdate(productIds)
         Note right of ProductRepo: productIds의 비관적 잠금 획득 및 재고 차감
         Processor ->> CashRepo: findByUserId(userId)
         Note over Processor: 사용할 쿠폰이 존재한다고 가정
@@ -105,13 +105,13 @@ sequenceDiagram
     participant ExtPublisher as MessagePublisher
     participant Slack as SlackSendMessageClient
     Client ->> Processor: execute(Command)
-    Processor ->> OrderRepo: findByIdempotencyKeyWithLock(idempotencyKey)
+    Processor ->> OrderRepo: findByIdempotencyKeyForUpdate(idempotencyKey)
     alt 중복 호출인 경우
         OrderRepo -->> Processor: Order(found)
         Processor -->> Client: Output.empty()
     else 최초 호출인 경우
         OrderRepo -->> Processor: null
-        Processor ->> ProductRepo: findAllByIdInWithLock(productIds)
+        Processor ->> ProductRepo: findAllByIdInForUpdate(productIds)
         Note right of ProductRepo: productIds 비관적 잠금 획득 및 재고 차감
         Processor ->> CashRepo: findByUserId(userId)
         Note over Processor: 총액 계산 및 결제 금액 검증 (쿠폰 미사용)

@@ -38,6 +38,17 @@ public record CashHistory(
 			.build();
 	}
 
+	public static CashHistory recordOfDeduct(
+		Long userId, BigDecimal balanceAfter, BigDecimal amount
+	) {
+		return CashHistory.builder()
+			.userId(userId)
+			.action(CashHistoryAction.DEDUCT_BY_ADMIN)
+			.balanceAfter(balanceAfter)
+			.amount(amount)
+			.build();
+	}
+
 	@InfrastructureOnly
 	public static CashHistory restore(Long id, Long userId, CashHistoryAction action, BigDecimal balanceAfter,
 		BigDecimal amount) {

@@ -15,10 +15,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
+import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
+import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.global.AbstractUnitTestSupport;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
 
 @ExtendWith(MockitoExtension.class)
 class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
@@ -40,7 +40,8 @@ class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
 		Cash cash = Cash.restore(
 			1L,
 			userId,
-			currentBalance
+			currentBalance,
+			0L
 		);
 
 		// mock
@@ -70,7 +71,7 @@ class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
 		BigDecimal currentBalance = BigDecimal.valueOf(1_000);
 		BigDecimal chargeAmount = BigDecimal.ZERO;
 
-		Cash cash = Cash.restore(1L, userId, currentBalance);
+		Cash cash = Cash.restore(1L, userId, currentBalance, 0L);
 
 		// mock
 		given(cashRepository.findByUserId(userId))
@@ -100,7 +101,7 @@ class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
 		BigDecimal currentBalance = BigDecimal.valueOf(1_000);
 		BigDecimal chargeAmount = BigDecimal.valueOf(10_000_000);
 
-		Cash cash = Cash.restore(1L, userId, currentBalance);
+		Cash cash = Cash.restore(1L, userId, currentBalance, 0L);
 
 		// mock
 		given(cashRepository.findByUserId(userId))
@@ -129,7 +130,7 @@ class CashChargeProcessorUnitTest extends AbstractUnitTestSupport {
 		BigDecimal currentBalance = BigDecimal.valueOf(1_000);
 		BigDecimal chargeAmount = BigDecimal.valueOf(10_000_001);
 
-		Cash cash = Cash.restore(1L, userId, currentBalance);
+		Cash cash = Cash.restore(1L, userId, currentBalance, 0L);
 
 		// mock
 		given(cashRepository.findByUserId(userId))

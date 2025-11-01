@@ -17,6 +17,8 @@ import kr.hhplus.be.commerce.application.cash.CashChargeProcessor;
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
 import kr.hhplus.be.commerce.domain.cash.model.enums.CashHistoryAction;
+import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
+import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
 import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.commerce.domain.message.enums.MessageStatus;
 import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
@@ -29,10 +31,9 @@ import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
+import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.ScenarioIntegrationTest;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.message.entity.MessageEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.product.entity.ProductEntity;
@@ -66,6 +67,9 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 	@Autowired
 	private MessageRepository messageRepository;
 
+	@Autowired
+	private UserRepository userRepository;
+
 	@BeforeEach
 	void setUp() {
 		cashChargeProcessor = new CashChargeProcessor(cashRepository, cashHistoryRepository);
@@ -75,7 +79,7 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 			userCouponRepository,
 			cashRepository,
 			cashHistoryRepository,
-			messageRepository);
+			messageRepository, userRepository);
 	}
 
 	/**
@@ -98,7 +102,7 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 			.build());
 		Long userId = user.getId();
 
-		cashJpaRepository.save(CashEntity.fromDomain(Cash.restore(null, userId, BigDecimal.ZERO)));
+		cashJpaRepository.save(CashEntity.fromDomain(Cash.restore(null, userId, BigDecimal.ZERO, 0L)));
 
 		Product product = productJpaRepository.save(ProductEntity.builder()
 			.name("오뚜기 진라면 매운맛 120g")
@@ -190,16 +194,6 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 				assertThat(messageEntity.getTargetId()).isEqualTo(order.id());
 				assertThat(messageEntity.getTargetType()).isEqualTo(MessageTargetType.ORDER);
 				assertThat(messageEntity.getType()).isEqualTo(MessageType.ORDER_CONFIRMED);
-
-				// 비동기 처리가 완료될 때까지 대기합니다.
-				// await()
-				// 	.atMost(5, TimeUnit.SECONDS)
-				// 	.untilAsserted(() -> verify(slackSendMessageClient, times(1)).send(anyString()));
-				//
-				// List<MessageEntity> messages = messageJpaRepository.findAll();
-				// assertThat(messages)
-				// 	.as("비동기 처리가 성공적이었기 때문에, Message Entity는 비워 있어야 합니다.")
-				// 	.isEmpty();
 			})
 		);
 	}

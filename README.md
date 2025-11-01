@@ -10,7 +10,9 @@
 4. [Entity Relational Diagram](#4-entity-relational-diagram)
 5. [Convention](#5-convention)
 6. [Sequence Diagram](#6-sequence-diagram)
-7. [Guides](#7-guides)
+7. [Guide](#7-guide)
+8. [Report](#8-report)
+9. [Troubleshooting](#9-troubleshooting)
 
 ---
 
@@ -125,7 +127,15 @@ cat docs/api-spec.json | head -n 5
 
 ---
 
-## 7. Guides
+## 7. Guide
 
 - [메세지 기반 외부 시스템 연동 가이드](/docs/guide/external_system_integration_guide.md)
+
+## 8. Report
+
+- [동시성 이슈 분석 및 MySQL 잠금을 활용한 해결 보고서](/docs/report/concurrency_issue_analysis_mysql_solution.md)
+
+## 9. Troubleshooting
+
+- [동일 사용자가 다른 상품 동시 주문시 데드락 발생](/docs/troubleshooting/동일_사용자가_다른_상품_동시_주문시_데드락_발생.md)
 

@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.infrastructure.persistence.global.entity.BaseTimeEntity;
 import lombok.AccessLevel;
@@ -32,11 +33,15 @@ public class CashEntity extends BaseTimeEntity {
 
 	private BigDecimal balance;
 
+	@Version
+	private Long version;
+
 	public static CashEntity fromDomain(Cash cash) {
 		return CashEntity.builder()
 			.id(cash.id())
 			.userId(cash.userId())
 			.balance(cash.balance())
+			.version(cash.version())
 			.build();
 	}
 
@@ -44,7 +49,8 @@ public class CashEntity extends BaseTimeEntity {
 		return Cash.restore(
 			id,
 			userId,
-			balance
+			balance,
+			version
 		);
 	}
 }
