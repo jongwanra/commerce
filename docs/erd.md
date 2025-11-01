@@ -1,8 +1,8 @@
 # Entity Relational Diagram (ERD)
 
-updatedAt: 2025.09.26
+updatedAt: 2025.11.01
 
-![erd](media/erd_251005.png)
+![erd](media/erd_251101.png)
 
 ## Script
 
@@ -12,10 +12,14 @@ create table hhplus.cash
     id          bigint auto_increment comment '고유 식별자' primary key,
     user_id     bigint                                   not null comment '사용자 고유 식별자',
     balance     decimal(12, 2) default 0.00              not null comment '현금 잔액',
+    version     bigint         default 0                 not null comment '동시성 제어 용도',
     created_at  timestamp      default CURRENT_TIMESTAMP not null comment '생성 일시',
     modified_at timestamp      default CURRENT_TIMESTAMP not null comment '수정 일시',
-    constraint uidx_cash_user_id unique (user_id)
+    constraint uidx_cash_user_id
+        unique (user_id)
 );
+
+
 
 create table hhplus.cash_history
 (
