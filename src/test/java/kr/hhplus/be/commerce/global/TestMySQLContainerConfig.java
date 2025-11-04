@@ -7,9 +7,8 @@ import org.testcontainers.utility.DockerImageName;
 import jakarta.annotation.PreDestroy;
 
 @Configuration
-class TestContainersConfiguration {
-
-	public static final MySQLContainer<?> MYSQL_CONTAINER;
+class TestMySQLContainerConfig {
+	public final static MySQLContainer<?> MYSQL_CONTAINER;
 
 	static {
 		MYSQL_CONTAINER = new MySQLContainer<>(DockerImageName.parse("mysql:8.0"))
@@ -23,7 +22,6 @@ class TestContainersConfiguration {
 			MYSQL_CONTAINER.getJdbcUrl() + "?characterEncoding=UTF-8&serverTimezone=UTC");
 		System.setProperty("spring.datasource.username", MYSQL_CONTAINER.getUsername());
 		System.setProperty("spring.datasource.password", MYSQL_CONTAINER.getPassword());
-
 	}
 
 	@PreDestroy
@@ -32,4 +30,5 @@ class TestContainersConfiguration {
 			MYSQL_CONTAINER.stop();
 		}
 	}
+
 }
