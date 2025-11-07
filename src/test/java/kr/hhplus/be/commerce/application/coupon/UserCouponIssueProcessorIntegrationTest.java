@@ -1,6 +1,6 @@
 package kr.hhplus.be.commerce.application.coupon;
 
-import static kr.hhplus.be.commerce.application.coupon.UserCouponIssueProcessor.*;
+import static kr.hhplus.be.commerce.application.coupon.UserCouponIssueWithDatabaseLockProcessor.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;

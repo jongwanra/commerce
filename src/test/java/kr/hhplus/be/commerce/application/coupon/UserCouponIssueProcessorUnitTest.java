@@ -1,6 +1,6 @@
 package kr.hhplus.be.commerce.application.coupon;
 
-import static kr.hhplus.be.commerce.application.coupon.UserCouponIssueProcessor.*;
+import static kr.hhplus.be.commerce.application.coupon.UserCouponIssueWithDatabaseLockProcessor.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
@@ -27,7 +27,7 @@ import kr.hhplus.be.commerce.global.AbstractUnitTestSupport;
 @ExtendWith(MockitoExtension.class)
 class UserCouponIssueProcessorUnitTest extends AbstractUnitTestSupport {
 	@InjectMocks
-	private UserCouponIssueProcessor userCouponIssueProcessor;
+	private UserCouponIssueWithDatabaseLockProcessor userCouponIssueProcessor;
 	@Mock
 	private CouponRepository couponRepository;
 	@Mock
