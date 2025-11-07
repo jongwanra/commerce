@@ -40,6 +40,9 @@ dependencies {
     implementation("org.springframework.retry:spring-retry")
     implementation("org.springframework:spring-aspects")
 
+    // Redisson
+    implementation("org.redisson:redisson-spring-boot-starter:3.18.0")
+
 
     // Lombok
     compileOnly("org.projectlombok:lombok:1.18.30")
