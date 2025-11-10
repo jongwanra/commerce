@@ -22,6 +22,7 @@ public interface OrderPlaceApi {
 			"""
 	)
 	@ApiResponseErrorCodes({
+		@ApiResponseErrorCode(CommerceCode.NOT_FOUND_USER),
 		@ApiResponseErrorCode(CommerceCode.IDEMPOTENCY_KEY_IS_REQUIRED),
 		@ApiResponseErrorCode(CommerceCode.UNAUTHENTICATED_USER),
 		@ApiResponseErrorCode(CommerceCode.INSUFFICIENT_CASH),

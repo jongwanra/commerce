@@ -61,7 +61,7 @@ class OrderPlaceControllerIntegrationTest extends AbstractIntegrationTestSupport
 			.status(UserStatus.ACTIVE)
 			.build());
 		Long userId = user.getId();
-		cashJpaRepository.save(CashEntity.fromDomain(Cash.restore(null, userId, BigDecimal.valueOf(15_000))));
+		cashJpaRepository.save(CashEntity.fromDomain(Cash.restore(null, userId, BigDecimal.valueOf(15_000), 0L)));
 
 		Product product = productJpaRepository.save(ProductEntity.builder()
 			.name("오뚜기 진라면 매운맛 120g")

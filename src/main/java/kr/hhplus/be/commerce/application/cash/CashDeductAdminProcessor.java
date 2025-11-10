@@ -22,10 +22,13 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CashChargeProcessor {
+public class CashDeductAdminProcessor {
 	private final CashRepository cashRepository;
 	private final CashHistoryRepository cashHistoryRepository;
 
+	/**
+	 * 어드민에 의해서 사용자의 잔액을 차감시키는 프로세서입니다.
+	 */
 	@Retryable(
 		retryFor = {
 			// 낙관적 락 충돌 시 발생합니다.
@@ -38,24 +41,15 @@ public class CashChargeProcessor {
 	)
 	@Transactional
 	public Output execute(Command command) {
-		Cash originalCash = cashRepository.findByUserId(command.userId())
-			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_CASH));
-
-		Cash chargedCash = originalCash.charge(command.amount);
-
-		cashRepository.save(chargedCash);
-		cashHistoryRepository.save(
-			CashHistory.recordOfCharge(
-				chargedCash.userId(),
-				chargedCash.balance(),
-				command.amount()
-			)
-		);
+		Cash deductedCash = cashRepository.findByUserId(command.userId)
+			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER))
+			.use(command.deductionBalance);
 
 		return new Output(
-			chargedCash.userId(),
-			originalCash.balance(),
-			chargedCash.balance()
+			cashRepository.save(deductedCash),
+			cashHistoryRepository.save(
+				CashHistory.recordOfDeduct(command.userId, deductedCash.balance(), command.deductionBalance)
+			)
 		);
 	}
 
@@ -74,14 +68,13 @@ public class CashChargeProcessor {
 
 	public record Command(
 		Long userId,
-		BigDecimal amount
+		BigDecimal deductionBalance
 	) {
 	}
 
 	public record Output(
-		Long userId,
-		BigDecimal originalBalance,
-		BigDecimal newBalance
+		Cash cash,
+		CashHistory cashHistory
 	) {
 	}
 }

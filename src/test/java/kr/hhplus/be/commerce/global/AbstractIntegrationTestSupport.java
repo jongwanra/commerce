@@ -7,8 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.message.MessageJpaRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.payment.PaymentJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.product.ProductJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.UserJpaRepository;
@@ -22,11 +24,17 @@ public abstract class AbstractIntegrationTestSupport {
 	protected ProductJpaRepository productJpaRepository;
 	@Autowired
 	protected CashJpaRepository cashJpaRepository;
+
+	@Autowired
+	protected CashHistoryJpaRepository cashHistoryJpaRepository;
 	@Autowired
 	protected MessageJpaRepository messageJpaRepository;
 
 	@Autowired
 	protected PaymentJpaRepository paymentJpaRepository;
+
+	@Autowired
+	protected OrderJpaRepository orderJpaRepository;
 
 	@BeforeEach
 	void setUp() {

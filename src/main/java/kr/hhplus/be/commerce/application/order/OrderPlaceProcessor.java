@@ -11,10 +11,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
+import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
+import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
 import kr.hhplus.be.commerce.domain.coupon.model.UserCoupon;
 import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
@@ -30,8 +37,7 @@ import kr.hhplus.be.commerce.domain.payment.model.Payment;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryRepository;
-import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashRepository;
+import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,23 +58,32 @@ public class OrderPlaceProcessor {
 	private final CashRepository cashRepository;
 	private final CashHistoryRepository cashHistoryRepository;
 	private final MessageRepository messageRepository;
+	private final UserRepository userRepository;
 
+	@Retryable(
+		retryFor = {
+			// 낙관적 락 충돌 시 발생합니다.
+			OptimisticLockingFailureException.class,
+			// 비관적 락 획득 실패 시 발생합니다. (Deadlock 발생 포함)
+			PessimisticLockingFailureException.class
+		},
+		maxAttempts = 3,
+		backoff = @Backoff(delay = 100)
+	)
 	@Transactional
 	public Output execute(Command command) {
 		command.validate();
 
-		/**
-		 * TODO IdempotencyKey가 존재하지 않은 경우에는 Pessimistic Lock의 범위는 어떻게 잡힐까?
-		 *
-		 * 중복 호출인 경우 반환합니다.
-		 */
-		Optional<Order> alreadyPlacedOrderOpt = orderRepository.findByIdempotencyKeyWithLock(command.idempotencyKey);
+		userRepository.findByIdForUpdate(command.userId)
+			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER));
+
+		Optional<Order> alreadyPlacedOrderOpt = orderRepository.findByIdempotencyKey(command.idempotencyKey);
 		if (alreadyPlacedOrderOpt.isPresent()) {
 			return Output.empty();
 		}
 
 		// 상품의 비관적 잠금을 획득한 상태로 조회 및 재고를 감소시킵니다.
-		List<Product> productsWithDecreasedStock = decreaseStock(command, fetchProductsWithLock(command));
+		List<Product> productsWithDecreasedStock = decreaseStock(command, fetchProductsForUpdate(command));
 
 		Cash cash = cashRepository.findByUserId(command.userId)
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_CASH));
@@ -89,9 +104,22 @@ public class OrderPlaceProcessor {
 			executeWithCoupon(command, order, cash, productsWithDecreasedStock);
 	}
 
-	private List<Product> fetchProductsWithLock(Command command) {
+	@Recover
+	public Output recover(RuntimeException e, Command command) {
+		if (e instanceof OptimisticLockingFailureException) {
+			log.error("Exceeded retry count for optimistic lock, command={}", command, e);
+			throw new CommerceException(CommerceCode.EXCEEDED_RETRY_COUNT_FOR_LOCK);
+		}
+		if (e instanceof PessimisticLockingFailureException) {
+			log.error("Exceeded retry count for pessimistic lock, command={}", command, e);
+			throw new CommerceException(CommerceCode.EXCEEDED_RETRY_COUNT_FOR_LOCK);
+		}
+		throw e;
+	}
+
+	private List<Product> fetchProductsForUpdate(Command command) {
 		List<Long> productIds = command.toProductIds();
-		List<Product> products = productRepository.findAllByIdInWithLock(productIds);
+		List<Product> products = productRepository.findAllByIdInForUpdate(productIds);
 		if (products.size() != productIds.size()) {
 			throw new CommerceException(CommerceCode.NOT_FOUND_PRODUCT);
 		}

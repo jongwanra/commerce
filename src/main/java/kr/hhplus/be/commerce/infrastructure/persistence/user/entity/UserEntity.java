@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import kr.hhplus.be.commerce.domain.user.model.User;
 import kr.hhplus.be.commerce.infrastructure.persistence.global.entity.BaseTimeEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
 import lombok.AccessLevel;
@@ -36,5 +37,9 @@ public class UserEntity extends BaseTimeEntity {
 		this.status = status;
 		this.email = email;
 		this.encryptedPassword = encryptedPassword;
+	}
+
+	public User toDomain() {
+		return User.restore(id, status, email, encryptedPassword);
 	}
 }
