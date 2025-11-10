@@ -301,7 +301,12 @@ public class CashDeductAdminProcessor {
 	 * 어드민에 의해서 사용자의 잔액을 차감시키는 프로세서입니다.
 	 */
 	@Retryable(
-		retryFor = OptimisticLockingFailureException.class,
+		retryFor = {
+			// 낙관적 락 충돌 시 발생합니다.
+			OptimisticLockingFailureException.class,
+			// 비관적 락 획득 실패 시 발생합니다.
+			PessimisticLockingFailureException.class
+		},
 		maxAttempts = 3,
 		backoff = @Backoff(delay = 100)
 	)
@@ -322,8 +327,12 @@ public class CashDeductAdminProcessor {
 	@Recover
 	public Output recover(RuntimeException e, Command command) {
 		if (e instanceof OptimisticLockingFailureException) {
-			log.error("Exceeded retry count for optimistic lock, userId={}", command.userId, e);
-			throw new CommerceException(CommerceCode.EXCEEDED_RETRY_COUNT_FOR_OPTIMISTIC_LOCK);
+			log.error("Exceeded retry count for optimistic lock, command={}", command, e);
+			throw new CommerceException(CommerceCode.EXCEEDED_RETRY_COUNT_FOR_LOCK);
+		}
+		if (e instanceof PessimisticLockingFailureException) {
+			log.error("Exceeded retry count for pessimistic lock, command={}", command, e);
+			throw new CommerceException(CommerceCode.EXCEEDED_RETRY_COUNT_FOR_LOCK);
 		}
 		throw e;
 	}
@@ -340,6 +349,7 @@ public class CashDeductAdminProcessor {
 	) {
 	}
 }
+
 ```
 
 ##### `OrderPlaceProcessor`에 동시성 이슈 발생 시, @Retryable + @Recover
@@ -352,7 +362,10 @@ public class OrderPlaceProcessor {
 	// ...
 
 	@Retryable(
-		retryFor = OptimisticLockingFailureException.class,
+		retryFor = {
+			OptimisticLockingFailureException.class,
+			PessimisticLockingFailureException.class
+		},
 		maxAttempts = 3,
 		backoff = @Backoff(delay = 100)
 	)
@@ -364,8 +377,12 @@ public class OrderPlaceProcessor {
 	@Recover
 	public Output recover(RuntimeException e, Command command) {
 		if (e instanceof OptimisticLockingFailureException) {
-			log.error("Exceeded retry count for optimistic lock, userId={}", command.userId, e);
-			throw new CommerceException(CommerceCode.EXCEEDED_RETRY_COUNT_FOR_OPTIMISTIC_LOCK);
+			log.error("Exceeded retry count for optimistic lock, command={}", command, e);
+			throw new CommerceException(CommerceCode.EXCEEDED_RETRY_COUNT_FOR_LOCK);
+		}
+		if (e instanceof PessimisticLockingFailureException) {
+			log.error("Exceeded retry count for pessimistic lock, command={}", command, e);
+			throw new CommerceException(CommerceCode.EXCEEDED_RETRY_COUNT_FOR_LOCK);
 		}
 		throw e;
 	}
