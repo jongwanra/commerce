@@ -6,10 +6,21 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @see DistributedLockAspect
+ */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DistributedLock {
 	String key();
+
+	/**
+	 * SpEL(Spring Expression Language)를 사용하여
+	 * 동적으로 공유 자원의 아이디값을 추출합니다.
+	 *
+	 * @see CommerceSpringELParser
+	 */
+	String keyExpression();
 
 	TimeUnit timeUnit() default TimeUnit.SECONDS;
 

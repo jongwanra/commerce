@@ -13,17 +13,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CommerceSpringELParser {
 
-	public static Object parse(String[] parameterNames, Object[] args, String key) {
-		log.info("parameterNames = {}", parameterNames);
-		log.info("args = {}", args);
-		log.info("key = {}", key);
+	public static String parse(String[] parameterNames, Object[] args, String key) {
 		SpelExpressionParser parser = new SpelExpressionParser();
 		StandardEvaluationContext context = new StandardEvaluationContext();
 
 		IntStream.range(0, parameterNames.length)
 			.forEach((index) -> context.setVariable(parameterNames[index], args[index]));
 
-		return parser.parseExpression(key).getValue(context, Object.class);
+		return parser.parseExpression(key).getValue(context, String.class);
 	}
 
 }

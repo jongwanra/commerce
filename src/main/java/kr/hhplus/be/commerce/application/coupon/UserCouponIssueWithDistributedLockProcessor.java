@@ -33,7 +33,8 @@ public class UserCouponIssueWithDistributedLockProcessor implements UserCouponIs
 	 * [Redis가 다운될 경우]
 	 * 진입 중, coupon record에 비관적 잠금이 걸려있기 때문에 동시성 제어함에 있어 안전합니다.
 	 */
-	@DistributedLock(key = "'coupon:' + #command.couponId()")
+	@DistributedLock(key = "coupon", keyExpression = "#command.couponId()")
+
 	@Transactional
 	public Output execute(Command command) {
 		Coupon issuedCoupon = couponRepository.findByIdForUpdate(command.couponId())

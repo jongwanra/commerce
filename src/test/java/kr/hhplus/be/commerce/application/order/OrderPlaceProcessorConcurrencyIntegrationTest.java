@@ -1,6 +1,6 @@
 package kr.hhplus.be.commerce.application.order;
 
-import static kr.hhplus.be.commerce.application.order.OrderPlaceProcessor.*;
+import static kr.hhplus.be.commerce.application.order.OrderPlaceV1Processor.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
@@ -67,7 +67,7 @@ class OrderPlaceProcessorConcurrencyIntegrationTest extends AbstractIntegrationT
 
 	@BeforeEach
 	void setUp() {
-		orderPlaceProcessor = new OrderPlaceProcessor(orderRepository,
+		orderPlaceProcessor = new OrderPlaceV1Processor(orderRepository,
 			paymentRepository,
 			productRepository,
 			userCouponRepository,
@@ -76,7 +76,7 @@ class OrderPlaceProcessorConcurrencyIntegrationTest extends AbstractIntegrationT
 			messageRepository,
 			userRepository
 		);
-		
+
 	}
 
 	/**

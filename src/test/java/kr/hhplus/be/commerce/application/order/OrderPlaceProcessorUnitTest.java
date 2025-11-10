@@ -1,6 +1,6 @@
 package kr.hhplus.be.commerce.application.order;
 
-import static kr.hhplus.be.commerce.application.order.OrderPlaceProcessor.*;
+import static kr.hhplus.be.commerce.application.order.OrderPlaceV1Processor.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
@@ -38,7 +38,7 @@ import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserSt
 @ExtendWith(MockitoExtension.class)
 class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 	@InjectMocks
-	private OrderPlaceProcessor orderPlaceProcessor;
+	private OrderPlaceV1Processor orderPlaceV1Processor;
 
 	@Mock
 	private OrderRepository orderRepository;
@@ -83,7 +83,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 			.willReturn(List.of());
 
 		// when & then
-		assertThatThrownBy(() -> orderPlaceProcessor.execute(command))
+		assertThatThrownBy(() -> orderPlaceV1Processor.execute(command))
 			.isInstanceOf(CommerceException.class)
 			.hasMessage("존재하지 않는 상품입니다.");
 	}
@@ -123,7 +123,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 			)));
 
 		// when & then
-		assertThatThrownBy(() -> orderPlaceProcessor.execute(command))
+		assertThatThrownBy(() -> orderPlaceV1Processor.execute(command))
 			.isInstanceOf(CommerceException.class)
 			.hasMessage("상품의 재고가 부족합니다.");
 	}
@@ -200,7 +200,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		given(orderRepository.save(any()))
 			.willReturn(savedOrder);
 		// when
-		Output output = orderPlaceProcessor.execute(command);
+		Output output = orderPlaceV1Processor.execute(command);
 
 		// then
 		List<Product> products = output.products();
@@ -240,7 +240,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 
 		// when & then
 		assertThatThrownBy(() -> {
-			orderPlaceProcessor.execute(command);
+			orderPlaceV1Processor.execute(command);
 		})
 			.isInstanceOf(CommerceException.class)
 			.hasMessage("주문 수량은 1개 이상이어야 합니다.");
