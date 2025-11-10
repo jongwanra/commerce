@@ -11,7 +11,7 @@ public enum CommerceCode {
 	UNKNOWN_ERROR(500, "CM-0002", "알 수 없는 오류가 발생했습니다. 관리자에게 문의하세요."),
 	BAD_REQUEST(400, "CM-0003", "%s"),
 	IDEMPOTENCY_KEY_IS_REQUIRED(400, "CM-0004", "멱등키는 필수값입니다."),
-	EXCEEDED_RETRY_COUNT_FOR_OPTIMISTIC_LOCK(400, "CM-0005",
+	EXCEEDED_RETRY_COUNT_FOR_LOCK(400, "CM-0005",
 		"처리 중 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주시고, 문제가 지속되면 고객센터로 문의해주세요."),
 	EXCEEDED_WAIT_TIME_FOR_DISTRIBUTED_LOCK(400, "CM-0005",
 		"처리 중 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주시고, 문제가 지속되면 고객센터로 문의해주세요."),
