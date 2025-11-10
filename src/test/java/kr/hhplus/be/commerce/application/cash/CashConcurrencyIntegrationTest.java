@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import kr.hhplus.be.commerce.application.order.OrderPlaceProcessor;
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
+import kr.hhplus.be.commerce.domain.cash.model.enums.CashHistoryAction;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
@@ -32,6 +33,8 @@ public class CashConcurrencyIntegrationTest extends AbstractIntegrationTestSuppo
 	private OrderPlaceProcessor orderPlaceProcessor;
 	@Autowired
 	private CashDeductAdminProcessor cashDeductAdminProcessor;
+	@Autowired
+	private CashChargeProcessor cashChargeProcessor;
 
 	/**
 	 * 작성 이유: 동일 사용자의 여러 주문 요청이 동시에 발생할 때,
@@ -183,6 +186,75 @@ public class CashConcurrencyIntegrationTest extends AbstractIntegrationTestSuppo
 		assertThat(cash.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(4_900))
 			.as("사용자 주문 혹은 어드민 잔액 차감 중에 하나만 성공하여 잔액은 4,900원이 남아야 한다.");
 		assertThat(cashHistories.size()).isEqualTo(1);
+	}
+
+	@IntegrationTest
+	void 사용자_100명이_동시에_잔액을_5_000원씩_충전합니다() throws InterruptedException {
+		// given
+		final int userCount = 100;
+		// 잔액이 없는 100명의 사용자를 생성합니다.
+		List<Long> userIds = new ArrayList<>(userCount);
+		for (int index = 0; index < userCount; index++) {
+			UserEntity user = userJpaRepository.save(UserEntity.builder()
+				.email("user" + index + "@gmail.com")
+				.encryptedPassword("encrypted_password")
+				.status(UserStatus.ACTIVE)
+				.build());
+
+			Long userId = user.getId();
+			cashJpaRepository.save(
+				CashEntity.fromDomain(Cash.restore(
+					null,
+					userId,
+					BigDecimal.ZERO,
+					0L
+				)));
+
+			userIds.add(userId);
+		}
+
+		assertThat(userIds.size()).isEqualTo(userCount);
+
+		CountDownLatch countDownLatch = new CountDownLatch(userCount);
+		ExecutorService executorService = Executors.newFixedThreadPool(userCount);
+
+		IntStream.range(0, userCount).forEach((index) -> executorService.execute(() -> {
+			try {
+				final Long userId = userIds.get(index);
+				BigDecimal balanceToCharge = BigDecimal.valueOf(5_000);
+				cashChargeProcessor.execute(new CashChargeProcessor.Command(
+					userId,
+					balanceToCharge
+				));
+
+			} catch (Exception e) {
+				System.out.println("예외가 발생했습니다. = " + e);
+			} finally {
+				countDownLatch.countDown();
+			}
+		}));
+
+		countDownLatch.await();
+		executorService.shutdown();
+
+		// then
+		// Cash
+		List<CashEntity> cashes = cashJpaRepository.findAll();
+		assertThat(cashes.size()).isEqualTo(userCount);
+		assertThat(cashes)
+			.extracting(CashEntity::getBalance)
+			.allMatch((balance) -> balance.compareTo(BigDecimal.valueOf(5_000)) == 0);
+
+		// CashHistory
+		List<CashHistoryEntity> cashHistories = cashHistoryJpaRepository.findAll();
+		assertThat(cashHistories.size()).isEqualTo(100);
+		assertThat(cashHistories)
+			.extracting(CashHistoryEntity::getAction)
+			.containsOnly(CashHistoryAction.CHARGE);
+		assertThat(cashHistories)
+			.extracting(CashHistoryEntity::getAmount)
+			.allMatch((amount) -> amount.compareTo(BigDecimal.valueOf(5_000)) == 0);
+
 	}
 
 	private OrderPlaceProcessor.Command generateCommand(Long userId, Product product) {
