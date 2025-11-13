@@ -1,6 +1,6 @@
 package kr.hhplus.be.commerce.application.order;
 
-import static kr.hhplus.be.commerce.application.order.OrderPlaceV1Processor.*;
+import static kr.hhplus.be.commerce.application.order.OrderPlaceWithDatabaseLockProcessor.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
@@ -9,9 +9,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -37,8 +37,7 @@ import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserSt
 
 @ExtendWith(MockitoExtension.class)
 class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
-	@InjectMocks
-	private OrderPlaceV1Processor orderPlaceV1Processor;
+	private OrderPlaceProcessor orderPlaceProcessor;
 
 	@Mock
 	private OrderRepository orderRepository;
@@ -60,6 +59,20 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 
 	@Mock
 	private UserRepository userRepository;
+
+	@BeforeEach
+	void setUp() {
+		orderPlaceProcessor = new OrderPlaceWithDatabaseLockProcessor(
+			orderRepository,
+			paymentRepository,
+			productRepository,
+			userCouponRepository,
+			cashRepository,
+			cashHistoryRepository,
+			messageRepository,
+			userRepository
+		);
+	}
 
 	// 작성 이유: 주문하고자 하는 상품이 존재하지 않는 상품인 경우 예외를 발생시키는지 검증하기 위해 작성했습니다.
 	@Test
@@ -83,7 +96,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 			.willReturn(List.of());
 
 		// when & then
-		assertThatThrownBy(() -> orderPlaceV1Processor.execute(command))
+		assertThatThrownBy(() -> orderPlaceProcessor.execute(command))
 			.isInstanceOf(CommerceException.class)
 			.hasMessage("존재하지 않는 상품입니다.");
 	}
@@ -123,7 +136,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 			)));
 
 		// when & then
-		assertThatThrownBy(() -> orderPlaceV1Processor.execute(command))
+		assertThatThrownBy(() -> orderPlaceProcessor.execute(command))
 			.isInstanceOf(CommerceException.class)
 			.hasMessage("상품의 재고가 부족합니다.");
 	}
@@ -200,7 +213,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		given(orderRepository.save(any()))
 			.willReturn(savedOrder);
 		// when
-		Output output = orderPlaceV1Processor.execute(command);
+		Output output = orderPlaceProcessor.execute(command);
 
 		// then
 		List<Product> products = output.products();
@@ -240,7 +253,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 
 		// when & then
 		assertThatThrownBy(() -> {
-			orderPlaceV1Processor.execute(command);
+			orderPlaceProcessor.execute(command);
 		})
 			.isInstanceOf(CommerceException.class)
 			.hasMessage("주문 수량은 1개 이상이어야 합니다.");

@@ -2,6 +2,7 @@ package kr.hhplus.be.commerce.infrastructure.global.lock;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Stream;
 
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -19,16 +20,23 @@ import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ *
+ * {@link DistributedLock}이 붙은 메서드에 대해 분산락을 적용합니다.
+ *
+ * <p>Example: {@link kr.hhplus.be.commerce.application.coupon.UserCouponIssueWithDistributedLockProcessor}</p>
+ */
 @Aspect
 @Component
 @RequiredArgsConstructor
 // @Transactional 보다 먼저 실행할 수 있도록 순서를 설정합니다.
-@Order(Ordered.LOWEST_PRECEDENCE - 1)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @Slf4j
 public class DistributedLockAspect {
 	private static final String REDISSON_LOCK_PREFIX = "lock";
 	private static final String KEY_DELIMITER = ":";
 	private static final String ID_DELIMITER = ",";
+
 	private final RedissonClient redissonClient;
 
 	@Around("@annotation(DistributedLock)")
@@ -40,12 +48,11 @@ public class DistributedLockAspect {
 		String[] ids = CommerceSpringELParser.parse(methodSignature.getParameterNames(), joinPoint.getArgs(),
 			distributedLock.keyExpression()).split(ID_DELIMITER);
 
-		final List<String> keys = Stream.of(ids)
-			.map(id -> generateKey(id, distributedLock.key()))
-			.peek(key -> log.info("key: {}", key))
+		final List<String> lockKeys = Stream.of(ids)
+			.map(id -> generateLockKey(id, distributedLock.key()))
 			.toList();
 
-		RLock[] rLocks = keys.stream()
+		RLock[] rLocks = lockKeys.stream()
 			.map(redissonClient::getLock)
 			.toArray(RLock[]::new);
 
@@ -60,15 +67,34 @@ public class DistributedLockAspect {
 			}
 			return joinPoint.proceed();
 		} catch (Exception e) {
-			log.error("[DistributedLock] error occurred: key={}, method={}", keys, method, e);
+			log.error("[DistributedLock] error occurred: key={}, method={}", lockKeys, method, e);
 			throw e;
 		} finally {
-			multiLock.unlock();
+			unlock(multiLock, lockKeys);
+
 		}
 
 	}
 
-	private static String generateKey(String id, String key) {
+	/**
+	 * 잠금을 획득하지 못한 상황해서 unlock을 수행할 경우 {@link CompletionException}이 발생합니다.
+	 *
+	 * <p>{@link org.redisson.RedissonBaseLock}:330을 참고해주세요.</p>
+	 * <ol>
+	 * 	<li>leaseTime이 지나 자동으로 잠금 해제됨</li>
+	 * 	<li>잠금을 획득하지 못한 채 waitTime이 지남</li>
+	 * </ol>
+	 */
+	private void unlock(RLock multiLock, List<String> lockKeys) {
+		try {
+			multiLock.unlock();
+		} catch (CompletionException e) {
+			log.warn("[DistributedLock] lock already released: key={}", lockKeys);
+		}
+
+	}
+
+	private String generateLockKey(String id, String key) {
 		return REDISSON_LOCK_PREFIX
 			+ KEY_DELIMITER
 			+ key

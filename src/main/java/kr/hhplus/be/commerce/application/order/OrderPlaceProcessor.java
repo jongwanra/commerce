@@ -50,6 +50,8 @@ public interface OrderPlaceProcessor {
 		public List<Long> toProductIds() {
 			return orderLineCommands.stream()
 				.map(OrderLineCommand::productId)
+				// 오름차순으로 정렬하여, 데드락이 발생하지 않도록 대처했습니다.
+				.sorted()
 				.toList();
 		}
 	}

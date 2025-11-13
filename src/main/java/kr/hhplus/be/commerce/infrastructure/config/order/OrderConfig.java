@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import kr.hhplus.be.commerce.application.order.OrderPlaceProcessor;
-import kr.hhplus.be.commerce.application.order.OrderPlaceV2Processor;
+import kr.hhplus.be.commerce.application.order.OrderPlaceWithDistributedLockProcessor;
 import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
 import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
 import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
@@ -41,7 +41,7 @@ public class OrderConfig {
 		MessageRepository messageRepository,
 		UserRepository userRepository
 	) {
-		return new OrderPlaceV2Processor(
+		return new OrderPlaceWithDistributedLockProcessor(
 			orderRepository,
 			paymentRepository,
 			productRepository,

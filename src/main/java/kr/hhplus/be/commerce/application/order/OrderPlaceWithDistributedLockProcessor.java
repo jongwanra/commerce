@@ -35,6 +35,7 @@ import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
+import kr.hhplus.be.commerce.infrastructure.global.lock.DistributedLock;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class OrderPlaceV1Processor implements OrderPlaceProcessor {
+public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcessor {
 	private final OrderRepository orderRepository;
 	private final PaymentRepository paymentRepository;
 	private final ProductRepository productRepository;
@@ -68,6 +69,10 @@ public class OrderPlaceV1Processor implements OrderPlaceProcessor {
 		backoff = @Backoff(delay = 100)
 	)
 	@Transactional
+	@DistributedLock(
+		key = "product",
+		keyExpression = "#command.toProductIds()"
+	)
 	public Output execute(Command command) {
 		command.validate();
 

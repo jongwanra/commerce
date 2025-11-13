@@ -35,7 +35,6 @@ import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
-import kr.hhplus.be.commerce.infrastructure.global.lock.DistributedLock;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class OrderPlaceV2Processor implements OrderPlaceProcessor {
+public class OrderPlaceWithDatabaseLockProcessor implements OrderPlaceProcessor {
 	private final OrderRepository orderRepository;
 	private final PaymentRepository paymentRepository;
 	private final ProductRepository productRepository;
@@ -58,10 +57,6 @@ public class OrderPlaceV2Processor implements OrderPlaceProcessor {
 	private final MessageRepository messageRepository;
 	private final UserRepository userRepository;
 
-	@DistributedLock(
-		key = "product",
-		keyExpression = "#command.toProductIds()"
-	)
 	@Retryable(
 		retryFor = {
 			// 낙관적 락 충돌 시 발생합니다.
