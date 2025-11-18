@@ -41,7 +41,7 @@ dependencies {
     implementation("org.springframework:spring-aspects")
 
     // Redisson
-    implementation("org.redisson:redisson-spring-boot-starter:3.18.0")
+    implementation("org.redisson:redisson-spring-boot-starter:3.35.0")
 
 
     // Lombok
