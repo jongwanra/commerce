@@ -2,9 +2,11 @@ package kr.hhplus.be.commerce.global;
 
 import java.util.TimeZone;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashHistoryJpaRepository;
@@ -35,6 +37,18 @@ public abstract class AbstractIntegrationTestSupport {
 
 	@Autowired
 	protected OrderJpaRepository orderJpaRepository;
+
+	@Autowired
+	protected RedisTemplate<String, String> redisTemplate;
+
+	@AfterEach
+	void tearDown() {
+		// Test method 실행 종료 마다, 레디스의 데이터 전체를 삭제합니다.
+		redisTemplate.getConnectionFactory()
+			.getConnection()
+			.serverCommands()
+			.flushDb();
+	}
 
 	@BeforeEach
 	void setUp() {

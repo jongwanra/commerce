@@ -12,6 +12,7 @@ import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
+import kr.hhplus.be.commerce.domain.product.store.ProductRankingStore;
 import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderLineJpaRepository;
@@ -39,7 +40,8 @@ public class OrderConfig {
 		CashRepository cashRepository,
 		CashHistoryRepository cashHistoryRepository,
 		MessageRepository messageRepository,
-		UserRepository userRepository
+		UserRepository userRepository,
+		ProductRankingStore productRankingStore
 	) {
 		return new OrderPlaceWithDistributedLockProcessor(
 			orderRepository,
@@ -49,7 +51,8 @@ public class OrderConfig {
 			cashRepository,
 			cashHistoryRepository,
 			messageRepository,
-			userRepository
+			userRepository,
+			productRankingStore
 		);
 	}
 

@@ -4,6 +4,8 @@ import static java.util.Objects.*;
 import static java.util.stream.Collectors.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +36,7 @@ import kr.hhplus.be.commerce.domain.payment.model.Payment;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
+import kr.hhplus.be.commerce.domain.product.store.ProductRankingStore;
 import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import kr.hhplus.be.commerce.infrastructure.global.lock.DistributedLock;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +60,7 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 	private final CashHistoryRepository cashHistoryRepository;
 	private final MessageRepository messageRepository;
 	private final UserRepository userRepository;
+	private final ProductRankingStore productRankingStore;
 
 	@Retryable(
 		retryFor = {
@@ -100,6 +104,13 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 			MessageTargetType.ORDER,
 			OrderConfirmedMessagePayload.from(order.id())
 		));
+
+		List<Long> productIds = command.toProductIds();
+		LocalDate today = LocalDate.now();
+
+		// FIXME: 25.11.19 단일 트랜잭션에 묶일 필요가 없는 로직입니다.
+		// 	비동기 처리를 진행해도 됩니다.
+		productRankingStore.increment(productIds, today, LocalDateTime.now());
 
 		return isNull(command.userCouponId()) ?
 			executeWithoutCoupon(command, order, cash, productsWithDecreasedStock) :
