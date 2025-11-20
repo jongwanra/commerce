@@ -11,4 +11,6 @@ public interface ProductRankingStore {
 	void increment(List<Long> productIds, LocalDate rankingDate, LocalDateTime now);
 
 	List<ProductRankingView> readAllByRankingDate(LocalDate rankingDate, int limit);
+
+	List<ProductRankingView> readAllByRankingDate(LocalDate today);
 }

@@ -40,6 +40,11 @@ public class ProductRankingStoreImpl implements ProductRankingStore {
 	}
 
 	@Override
+	public List<ProductRankingView> readAllByRankingDate(LocalDate rankingDate) {
+		return readAllByRankingDate(rankingDate, -1);
+	}
+
+	@Override
 	public List<ProductRankingView> readAllByRankingDate(LocalDate rankingDate, int limit) {
 		final String key = productRankingKeyGenerator.generate(rankingDate);
 

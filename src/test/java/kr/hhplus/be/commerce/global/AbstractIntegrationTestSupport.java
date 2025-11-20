@@ -15,6 +15,7 @@ import kr.hhplus.be.commerce.infrastructure.persistence.message.MessageJpaReposi
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.payment.PaymentJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.product.ProductJpaRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.product_ranking.ProductRankingJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.UserJpaRepository;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -37,6 +38,9 @@ public abstract class AbstractIntegrationTestSupport {
 
 	@Autowired
 	protected OrderJpaRepository orderJpaRepository;
+
+	@Autowired
+	protected ProductRankingJpaRepository productRankingJpaRepository;
 
 	@Autowired
 	protected RedisTemplate<String, String> redisTemplate;
