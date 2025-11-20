@@ -22,6 +22,5 @@ class ProductRankingKeyGeneratorTest {
 		// when & then
 		assertThat(productRankingKeyGenerator.generate(today)).isEqualTo(
 			"product_ranking:daily:251119");
-
 	}
 }

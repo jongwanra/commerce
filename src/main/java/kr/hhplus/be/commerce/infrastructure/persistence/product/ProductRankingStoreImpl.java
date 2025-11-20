@@ -13,8 +13,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
-import kr.hhplus.be.commerce.domain.product.model.ProductRanking;
-import kr.hhplus.be.commerce.domain.product.store.ProductRankingStore;
+import kr.hhplus.be.commerce.domain.product_ranking.model.ProductRankingView;
+import kr.hhplus.be.commerce.domain.product_ranking.store.ProductRankingStore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,7 +40,7 @@ public class ProductRankingStoreImpl implements ProductRankingStore {
 	}
 
 	@Override
-	public List<ProductRanking> readAllByRankingDate(LocalDate rankingDate, int limit) {
+	public List<ProductRankingView> readAllByRankingDate(LocalDate rankingDate, int limit) {
 		final String key = productRankingKeyGenerator.generate(rankingDate);
 
 		Set<ZSetOperations.TypedTuple<String>> typeTuples = redisTemplate.opsForZSet()
@@ -50,7 +50,7 @@ public class ProductRankingStoreImpl implements ProductRankingStore {
 			.map((tuple) -> {
 				final int salesCount = tuple.getScore().intValue();
 				final Long productId = Long.parseLong(tuple.getValue());
-				ProductRanking productRanking = new ProductRanking(productId, rankingDate, salesCount);
+				ProductRankingView productRanking = new ProductRankingView(rankingDate, productId, salesCount);
 				log.debug("productRanking = {}", productRanking);
 				return productRanking;
 			})

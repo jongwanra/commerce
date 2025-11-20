@@ -8,7 +8,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import kr.hhplus.be.commerce.domain.product.model.ProductRanking;
+import kr.hhplus.be.commerce.domain.product_ranking.model.ProductRankingView;
+import kr.hhplus.be.commerce.domain.product_ranking.store.ProductRankingStore;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.IntegrationTest;
 import kr.hhplus.be.commerce.infrastructure.persistence.product.ProductRankingKeyGenerator;
@@ -62,7 +63,7 @@ class ProductRankingStoreIntegrationTest extends AbstractIntegrationTestSupport 
 		}
 
 		// when
-		List<ProductRanking> productRankings = productRankingStore.readAllByRankingDate(rankingDate, 4);
+		List<ProductRankingView> productRankings = productRankingStore.readAllByRankingDate(rankingDate, 4);
 		// then
 		assertThat(productRankings.size()).isEqualTo(3);
 		assertThat(productRankings)
