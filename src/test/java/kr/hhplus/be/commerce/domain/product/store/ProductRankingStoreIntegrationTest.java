@@ -63,7 +63,7 @@ class ProductRankingStoreIntegrationTest extends AbstractIntegrationTestSupport 
 		}
 
 		// when
-		List<ProductRankingView> productRankings = productRankingStore.readAllByRankingDate(rankingDate, 4);
+		List<ProductRankingView> productRankings = productRankingStore.readProductIdsDailyTopSelling(rankingDate, 4);
 		// then
 		assertThat(productRankings.size()).isEqualTo(3);
 		assertThat(productRankings)

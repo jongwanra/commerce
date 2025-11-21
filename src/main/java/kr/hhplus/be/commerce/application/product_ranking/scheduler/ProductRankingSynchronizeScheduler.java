@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Profile({"local"})
-public class ProductRankingSyncScheduler {
+public class ProductRankingSynchronizeScheduler {
 	private static final int FIVE_MINUTES = 5 * 60 * 1000;
 
 	private final ProductRankingRepository productRankingRepository;
@@ -41,7 +41,7 @@ public class ProductRankingSyncScheduler {
 			log.debug("레디스 -> 데이터베이스의 상품 판매량 랭킹 동기화 작업을 시작합니다.");
 			LocalDate today = timeProvider.today();
 			log.debug("today = {}", today);
-			List<ProductRankingView> currentRankings = productRankingStore.readAllByRankingDate(today);
+			List<ProductRankingView> currentRankings = productRankingStore.readProductIdsDailyTopSelling(today);
 
 			Map<Long, ProductRanking> previousRankingMap = productRankingRepository.findAllByRankingDate(today)
 				.stream()
@@ -52,7 +52,7 @@ public class ProductRankingSyncScheduler {
 		} catch (RedisConnectionFailureException e) {
 			log.error("[레디스 시스템 다운] 상품 판매량 랭킹 동기화 작업을 실패했습니다.", e);
 		} catch (Exception e) {
-			log.error("Redis의 상품 판매량 랭킹을 데이터베이스에 동기화 하는데 실패했습니다.", e);
+			log.error("예상하지 못한 이유로, Redis의 상품 판매량 랭킹을 데이터베이스에 동기화 하는데 실패했습니다.", e);
 		}
 	}
 

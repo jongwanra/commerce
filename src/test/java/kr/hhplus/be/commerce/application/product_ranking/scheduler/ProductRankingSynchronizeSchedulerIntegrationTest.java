@@ -17,8 +17,8 @@ import kr.hhplus.be.commerce.global.time.FixedTimeProvider;
 import kr.hhplus.be.commerce.global.time.TimeProvider;
 import kr.hhplus.be.commerce.infrastructure.persistence.product_ranking.ProductRankingEntity;
 
-class ProductRankingSyncSchedulerIntegrationTest extends AbstractIntegrationTestSupport {
-	private ProductRankingSyncScheduler productRankingSyncScheduler;
+class ProductRankingSynchronizeSchedulerIntegrationTest extends AbstractIntegrationTestSupport {
+	private ProductRankingSynchronizeScheduler productRankingSynchronizeScheduler;
 
 	@Autowired
 	private ProductRankingRepository productRankingRepository;
@@ -31,7 +31,8 @@ class ProductRankingSyncSchedulerIntegrationTest extends AbstractIntegrationTest
 	@BeforeEach
 	void setUp() {
 		timeProvider = FixedTimeProvider.of(LocalDate.of(2025, 11, 19));
-		productRankingSyncScheduler = new ProductRankingSyncScheduler(productRankingRepository, productRankingStore,
+		productRankingSynchronizeScheduler = new ProductRankingSynchronizeScheduler(productRankingRepository,
+			productRankingStore,
 			timeProvider);
 	}
 
@@ -57,7 +58,7 @@ class ProductRankingSyncSchedulerIntegrationTest extends AbstractIntegrationTest
 		}
 
 		// when
-		productRankingSyncScheduler.execute();
+		productRankingSynchronizeScheduler.execute();
 
 		// then
 		List<ProductRankingEntity> productRankingEntities = productRankingJpaRepository.findAll();
