@@ -80,24 +80,23 @@ public class ProductRankingStoreImpl implements ProductRankingStore {
 			.toList();
 	}
 
-	private void increment(String key, Long productId) {
-		redisTemplate.opsForZSet()
-			.incrementScore(key, String.valueOf(productId), 1);
-
-	}
-
 	private void setTtlIfAbsent(String key, LocalDate rankingDate, LocalDateTime now) {
 		final Long currentTtl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
 		if (isNull(currentTtl) || currentTtl == 0) {
-			final long newTtl = calculateSecondsUntilMidnight(rankingDate, now);
+			final long newTtl = calculateSecondsUntilOneAm(rankingDate, now);
 			log.debug("Ttl을 설정합니다. key={}, ttl={}", key, newTtl);
 			redisTemplate.expire(key, newTtl, TimeUnit.SECONDS);
 		}
 	}
 
-	private long calculateSecondsUntilMidnight(LocalDate date, LocalDateTime now) {
-		LocalDateTime midnight = date.plusDays(1).atStartOfDay();
-		return Math.max(0, Duration.between(now, midnight).getSeconds());
+	/**
+	 * TTL을 다음날 01:00로 설정합니다.
+	 * Redis -> Database(product_ranking)으로 전날 스케줄러가 매일 00:01분에 동작합니다.
+	 * @see kr.hhplus.be.commerce.application.product_ranking.ProductRankingSynchronizeScheduler
+	 */
+	private long calculateSecondsUntilOneAm(LocalDate date, LocalDateTime now) {
+		LocalDateTime oneAm = date.plusDays(1).atStartOfDay().plusHours(1);
+		return Math.max(0, Duration.between(now, oneAm).getSeconds());
 	}
 
 }

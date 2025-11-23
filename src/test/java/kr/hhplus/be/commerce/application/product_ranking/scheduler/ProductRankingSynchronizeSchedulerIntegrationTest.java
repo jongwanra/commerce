@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import kr.hhplus.be.commerce.application.product_ranking.ProductRankingSynchronizeScheduler;
+import kr.hhplus.be.commerce.domain.product_ranking.model.ProductRanking;
 import kr.hhplus.be.commerce.domain.product_ranking.repository.ProductRankingRepository;
 import kr.hhplus.be.commerce.domain.product_ranking.store.ProductRankingStore;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
@@ -50,8 +51,13 @@ class ProductRankingSynchronizeSchedulerIntegrationTest extends AbstractIntegrat
 		// 상품 3L의 판매량: 10
 		productRankingStore.increment(3L, 10, rankingDate, now);
 
+		// 기존 동기화 때, 상품 3L의 판매량은 3개였다고 가정합니다.
+		productRankingJpaRepository.save(
+			ProductRankingEntity.fromDomain(ProductRanking.empty(3L, rankingDate).renewSalesCount(3))
+		);
+
 		// when
-		productRankingSynchronizeScheduler.execute();
+		productRankingSynchronizeScheduler.synchronizeToday();
 
 		// then
 		List<ProductRankingEntity> productRankingEntities = productRankingJpaRepository.findAll();
@@ -63,7 +69,7 @@ class ProductRankingSynchronizeSchedulerIntegrationTest extends AbstractIntegrat
 		assertThat(productRankingEntities)
 			.extracting("salesCount")
 			.containsExactlyInAnyOrder(1, 5, 10);
-		
+
 		assertThat(productRankingEntities)
 			.extracting("rankingDate")
 			.containsOnly(LocalDate.of(2025, 11, 10));

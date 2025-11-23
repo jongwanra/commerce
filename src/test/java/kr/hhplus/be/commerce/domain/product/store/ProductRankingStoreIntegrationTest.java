@@ -37,7 +37,10 @@ class ProductRankingStoreIntegrationTest extends AbstractIntegrationTestSupport 
 		Long ttl = redisTemplate.getExpire(key);
 
 		assertThat(score).isEqualTo(1.0);
-		assertThat(ttl).isEqualTo(86_400L).as("86,400s -> 1 day");
+
+		final long oneDayInSeconds = 86_400L;
+		final long oneHourInSeconds = 3_600L;
+		assertThat(ttl).isEqualTo(oneDayInSeconds + oneHourInSeconds).as("다음날 01:00에 TTL이 만료합니다.");
 
 	}
 

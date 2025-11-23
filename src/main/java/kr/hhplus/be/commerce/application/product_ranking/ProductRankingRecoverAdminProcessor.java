@@ -33,29 +33,26 @@ public class ProductRankingRecoverAdminProcessor {
 
 	@Transactional
 	public void execute(Command command) {
-		List<Order> orders = orderRepository.findAllDailyConfirmed(command.today);
+		List<Order> orders = orderRepository.findAllDailyConfirmed(command.rankingDate);
 		List<Long> productIds = orders.stream()
 			.map(Order::orderLines)
 			.flatMap(List::stream)
 			.map(OrderLine::productId)
 			.toList();
 
-		// 판매량은, orderLines의 orderQuantity를 보고 알 수 있다.
-		// TODO 판매량 증가 로직에서 orderQuantity가 아니라, 1로 증가시키고 있습니다.
-		// 	고쳐야합니다.
 		Map<Long, Integer> productIdToSalesCountMap = orders.stream()
 			.map(Order::orderLines)
 			.flatMap(List::stream)
 			.collect(Collectors.toMap(OrderLine::productId, OrderLine::orderQuantity, Integer::sum));
 
 		Map<Long, ProductRanking> originProductIdToRankingMap = productRankingRepository.findAllByRankingDate(
-				command.today)
+				command.rankingDate)
 			.stream()
 			.collect(Collectors.toMap(ProductRanking::productId, it -> it));
 
 		List<ProductRanking> recoveredRankings = productIds.stream()
 			.map((productId) -> originProductIdToRankingMap.getOrDefault(productId,
-				ProductRanking.empty(productId, command.today())))
+				ProductRanking.empty(productId, command.rankingDate())))
 			.map((ranking) -> {
 				final int salesCount = productIdToSalesCountMap.getOrDefault(ranking.productId(), 0);
 				return ranking.renewSalesCount(salesCount);
@@ -66,14 +63,14 @@ public class ProductRankingRecoverAdminProcessor {
 		messageRepository.save(Message.ofPending(
 				0L,
 				MessageTargetType.PRODUCT_RANKING,
-				ProductRankingRecoveredMessagePayload.from(command.today)
+				ProductRankingRecoveredMessagePayload.from(command.rankingDate)
 			)
 		);
 
 	}
 
 	public record Command(
-		LocalDate today
+		LocalDate rankingDate
 	) {
 	}
 }
