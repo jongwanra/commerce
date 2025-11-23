@@ -7,17 +7,15 @@ import lombok.AccessLevel;
 import lombok.Builder;
 
 @Builder(access = AccessLevel.PRIVATE)
-public record OrderConfirmedMessagePayload(
+public record ProductRankingRecoveredMessagePayload(
 	MessageType type,
-	Long orderId,
-	LocalDate today
+	LocalDate rankingDate
 ) implements MessagePayload {
-	public static OrderConfirmedMessagePayload from(Long orderId) {
-		return OrderConfirmedMessagePayload.builder()
-			.type(MessageType.ORDER_CONFIRMED)
-			.orderId(orderId)
-			.today(LocalDate.now())
+
+	public static MessagePayload from(LocalDate rankingDate) {
+		return ProductRankingRecoveredMessagePayload.builder()
+			.type(MessageType.PRODUCT_RANKING_RECOVERED)
+			.rankingDate(rankingDate)
 			.build();
 	}
-
 }

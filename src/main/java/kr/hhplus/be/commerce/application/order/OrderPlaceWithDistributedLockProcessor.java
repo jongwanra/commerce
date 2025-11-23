@@ -4,8 +4,6 @@ import static java.util.Objects.*;
 import static java.util.stream.Collectors.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,7 +34,6 @@ import kr.hhplus.be.commerce.domain.payment.model.Payment;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
-import kr.hhplus.be.commerce.domain.product_ranking.store.ProductRankingStore;
 import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import kr.hhplus.be.commerce.infrastructure.global.lock.DistributedLock;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +44,8 @@ import lombok.extern.slf4j.Slf4j;
  * 실무에서는 주문과 결제를 분리 하는 것이 상품의 재고를 미리 선점하고 결제를 이후에 진행할 수 있기 때문에 나은 방향이라고 생각합니다.
  * 하지만, 요구사항은  주문 + 결제 API를 통합 하는 방식으로 구현을 권장하고 있으며
  * 결제 시, 포인트 차감으로 외부 PG사에 의존하지 않기 때문에 주문과 결제를 통합하기로 결정했습니다.
+ *
+ * @see kr.hhplus.be.commerce.application.message.publisher.OrderConfirmedMessagePublisher
  */
 
 @Slf4j
@@ -60,7 +59,6 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 	private final CashHistoryRepository cashHistoryRepository;
 	private final MessageRepository messageRepository;
 	private final UserRepository userRepository;
-	private final ProductRankingStore productRankingStore;
 
 	@Retryable(
 		retryFor = {
@@ -104,13 +102,6 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 			MessageTargetType.ORDER,
 			OrderConfirmedMessagePayload.from(order.id())
 		));
-
-		List<Long> productIds = command.toProductIds();
-		LocalDate today = LocalDate.now();
-
-		// FIXME: 25.11.19 단일 트랜잭션에 묶일 필요가 없는 로직입니다.
-		// 	비동기 처리를 진행해도 됩니다.
-		productRankingStore.increment(productIds, today, LocalDateTime.now());
 
 		return isNull(command.userCouponId()) ?
 			executeWithoutCoupon(command, order, cash, productsWithDecreasedStock) :

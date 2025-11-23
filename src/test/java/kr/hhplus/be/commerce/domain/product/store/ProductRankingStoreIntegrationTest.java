@@ -30,7 +30,7 @@ class ProductRankingStoreIntegrationTest extends AbstractIntegrationTestSupport 
 		final String key = productRankingKeyGenerator.generate(rankingDate);
 
 		// when
-		productRankingStore.increment(List.of(productId), rankingDate, now);
+		productRankingStore.increment(productId, 1, rankingDate, now);
 
 		// then
 		Double score = redisTemplate.opsForZSet().score(key, String.valueOf(productId));
@@ -48,19 +48,11 @@ class ProductRankingStoreIntegrationTest extends AbstractIntegrationTestSupport 
 		final LocalDateTime now = rankingDate.atStartOfDay();
 
 		// 상품 1L의 판매량: 3
-		for (int index = 0; index < 3; index++) {
-			productRankingStore.increment(List.of(1L), rankingDate, now);
-		}
-
+		productRankingStore.increment(1L, 3, rankingDate, now);
 		// 상품 2L의 판매량: 5
-		for (int index = 0; index < 5; index++) {
-			productRankingStore.increment(List.of(2L), rankingDate, now);
-		}
-
+		productRankingStore.increment(2L, 5, rankingDate, now);
 		// 상품 3L의 판매량: 1
-		for (int index = 0; index < 1; index++) {
-			productRankingStore.increment(List.of(3L), rankingDate, now);
-		}
+		productRankingStore.increment(3L, 1, rankingDate, now);
 
 		// when
 		List<ProductRankingView> productRankings = productRankingStore.readProductIdsDailyTopSelling(rankingDate, 4);

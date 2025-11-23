@@ -1,4 +1,4 @@
-package kr.hhplus.be.commerce.application.product_ranking.scheduler;
+package kr.hhplus.be.commerce.application.product_ranking;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -62,8 +62,9 @@ public class ProductRankingSynchronizeScheduler {
 			.stream()
 			.map((currentRanking) -> {
 				ProductRanking productRanking = previousRankingMap.getOrDefault(currentRanking.productId(),
-					ProductRanking.empty(currentRanking.productId()));
+					ProductRanking.empty(currentRanking.productId(), timeProvider.today()));
 
+				log.debug("[동기화 중] productRanking = {}", productRanking);
 				return productRanking.renewSalesCount(currentRanking.salesCount());
 			})
 			.toList();

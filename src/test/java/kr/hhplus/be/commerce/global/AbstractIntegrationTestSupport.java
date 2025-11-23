@@ -3,7 +3,6 @@ package kr.hhplus.be.commerce.global;
 import java.util.TimeZone;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -54,12 +53,11 @@ public abstract class AbstractIntegrationTestSupport {
 			.flushDb();
 	}
 
-	@BeforeEach
-	void setUp() {
+	static {
 		setUpTimeZone();
 	}
-
-	private void setUpTimeZone() {
+	
+	private static void setUpTimeZone() {
 		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 	}
 }

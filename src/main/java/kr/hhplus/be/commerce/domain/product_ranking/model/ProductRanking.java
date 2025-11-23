@@ -26,11 +26,11 @@ public record ProductRanking(
 			.build();
 	}
 
-	public static ProductRanking empty(Long productId) {
+	public static ProductRanking empty(Long productId, LocalDate rankingDate) {
 		return ProductRanking.builder()
 			.productId(productId)
 			.salesCount(0)
-			.rankingDate(LocalDate.now())
+			.rankingDate(rankingDate)
 			.build();
 	}
 
@@ -45,4 +45,5 @@ public record ProductRanking(
 			.rankingDate(this.rankingDate)
 			.build();
 	}
+
 }

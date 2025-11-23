@@ -9,10 +9,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
+import kr.hhplus.be.commerce.domain.product_ranking.model.ProductRanking;
 import kr.hhplus.be.commerce.domain.product_ranking.model.ProductRankingView;
 import kr.hhplus.be.commerce.domain.product_ranking.store.ProductRankingStore;
 import lombok.RequiredArgsConstructor;
@@ -26,22 +28,38 @@ public class ProductRankingStoreImpl implements ProductRankingStore {
 	private final RedisTemplate<String, String> redisTemplate;
 	private final ProductRankingKeyGenerator productRankingKeyGenerator;
 
-	// TODO: 11/18/25 Redis에 대한 예외 처리가 필요합니다. Network delay, System down, Connection failure, etc.
 	@Override
-	public void increment(List<Long> productIds, LocalDate rankingDate, LocalDateTime now) {
+	public void increment(Long productId, Integer salesCount, LocalDate rankingDate, LocalDateTime now) {
 		final String key = productRankingKeyGenerator.generate(rankingDate);
 
-		productIds
-			.forEach((productId) -> increment(key, productId));
+		redisTemplate.opsForZSet()
+			.incrementScore(key, String.valueOf(productId), salesCount);
 
 		// FIXME: 11/18/25 increment method 호출 시마다 setIfAbsent method를 호출해 레디스 커넥션을 하나 더 사용하는 비용이 불필요한 것 같습니다.
 		//  다른 방법은 없는지 고민이 됩니다.
 		setTtlIfAbsent(key, rankingDate, now);
+
 	}
 
 	@Override
 	public List<ProductRankingView> readProductIdsDailyTopSelling(LocalDate rankingDate) {
 		return readProductIdsDailyTopSelling(rankingDate, -1);
+	}
+
+	@Override
+	public void bulkInsert(List<ProductRanking> productRankings, LocalDate rankingDate, LocalDateTime now) {
+
+		redisTemplate.executePipelined(((RedisCallback<Object>)connection -> {
+			final String key = productRankingKeyGenerator.generate(rankingDate);
+			productRankings.forEach((ranking) -> connection.zSetCommands().zAdd(
+				key.getBytes(),
+				ranking.salesCount(),
+				String.valueOf(ranking.productId()).getBytes()
+			));
+			setTtlIfAbsent(key, rankingDate, now);
+			return null;
+		}));
+
 	}
 
 	@Override
