@@ -1,6 +1,6 @@
 package kr.hhplus.be.commerce.application.coupon;
 
-import static kr.hhplus.be.commerce.application.coupon.UserCouponIssueProcessor.*;
+import static kr.hhplus.be.commerce.application.coupon.UserCouponIssueWithDatabaseLockProcessor.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
@@ -104,7 +104,7 @@ class UserCouponIssueProcessorIntegrationTest extends AbstractIntegrationTestSup
 
 		log.info("outOfStockCoupon = {}", outOfStockCoupon.getStock());
 		List<UserCouponEntity> userCoupons = userCouponJpaRepository.findAll();
-		assertThat(userCoupons.size()).isEqualTo(10).as("총 10명의 사용자만 쿠폰이 발급되었습니다.");
+		assertThat(userCoupons.size()).isEqualTo(couponQuantity).as("총 10명의 사용자만 쿠폰이 발급되었습니다.");
 	}
 
 }

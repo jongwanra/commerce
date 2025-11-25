@@ -1,6 +1,6 @@
 package kr.hhplus.be.commerce.application.order;
 
-import static kr.hhplus.be.commerce.application.order.OrderPlaceProcessor.*;
+import static kr.hhplus.be.commerce.application.order.OrderPlaceWithDatabaseLockProcessor.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
@@ -13,21 +13,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.IntStream;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
-import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
-import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
-import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
-import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
-import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
-import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
-import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
-import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.IntegrationTest;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
@@ -37,47 +27,8 @@ import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.UserEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
 
 class OrderPlaceProcessorConcurrencyIntegrationTest extends AbstractIntegrationTestSupport {
+	@Autowired
 	private OrderPlaceProcessor orderPlaceProcessor;
-
-	@Autowired
-	private OrderRepository orderRepository;
-	@Autowired
-	private ProductRepository productRepository;
-
-	@Autowired
-	private PaymentRepository paymentRepository;
-
-	@Autowired
-	private UserCouponRepository userCouponRepository;
-
-	@Autowired
-	private CashRepository cashRepository;
-
-	@Autowired
-	private CashHistoryRepository cashHistoryRepository;
-
-	@Autowired
-	private TransactionTemplate transactionTemplate;
-
-	@Autowired
-	private MessageRepository messageRepository;
-
-	@Autowired
-	private UserRepository userRepository;
-
-	@BeforeEach
-	void setUp() {
-		orderPlaceProcessor = new OrderPlaceProcessor(orderRepository,
-			paymentRepository,
-			productRepository,
-			userCouponRepository,
-			cashRepository,
-			cashHistoryRepository,
-			messageRepository,
-			userRepository
-		);
-		
-	}
 
 	/**
 	 * [재고 감소 동시성 제어]
@@ -125,8 +76,7 @@ class OrderPlaceProcessorConcurrencyIntegrationTest extends AbstractIntegrationT
 		IntStream.range(0, userCount)
 			.forEach(index -> executorService.execute(() -> {
 				try {
-					transactionTemplate.executeWithoutResult(
-						status -> orderPlaceProcessor.execute(generateCommand(index, userIds, product)));
+					orderPlaceProcessor.execute(generateCommand(index, userIds, product));
 				} catch (CommerceException e) {
 
 				} finally {

@@ -1,6 +1,6 @@
 package kr.hhplus.be.commerce.application.order;
 
-import static kr.hhplus.be.commerce.application.order.OrderPlaceProcessor.*;
+import static kr.hhplus.be.commerce.application.order.OrderPlaceWithDatabaseLockProcessor.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
@@ -9,9 +9,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -37,7 +37,6 @@ import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserSt
 
 @ExtendWith(MockitoExtension.class)
 class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
-	@InjectMocks
 	private OrderPlaceProcessor orderPlaceProcessor;
 
 	@Mock
@@ -60,6 +59,20 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 
 	@Mock
 	private UserRepository userRepository;
+
+	@BeforeEach
+	void setUp() {
+		orderPlaceProcessor = new OrderPlaceWithDatabaseLockProcessor(
+			orderRepository,
+			paymentRepository,
+			productRepository,
+			userCouponRepository,
+			cashRepository,
+			cashHistoryRepository,
+			messageRepository,
+			userRepository
+		);
+	}
 
 	// 작성 이유: 주문하고자 하는 상품이 존재하지 않는 상품인 경우 예외를 발생시키는지 검증하기 위해 작성했습니다.
 	@Test

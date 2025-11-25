@@ -1,6 +1,6 @@
 package kr.hhplus.be.commerce.application.order;
 
-import static kr.hhplus.be.commerce.application.order.OrderPlaceProcessor.*;
+import static kr.hhplus.be.commerce.application.order.OrderPlaceWithDatabaseLockProcessor.*;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
@@ -18,8 +18,6 @@ import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
 import kr.hhplus.be.commerce.domain.cash.model.enums.CashHistoryAction;
 import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
-import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
-import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.commerce.domain.message.enums.MessageStatus;
 import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
 import kr.hhplus.be.commerce.domain.message.enums.MessageType;
@@ -27,10 +25,7 @@ import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.OrderLine;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
-import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
-import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
-import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.ScenarioIntegrationTest;
@@ -41,22 +36,10 @@ import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.UserEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
 
 class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport {
+	@Autowired
 	private CashChargeProcessor cashChargeProcessor;
+	@Autowired
 	private OrderPlaceProcessor orderPlaceProcessor;
-
-	@Autowired
-	private OrderRepository orderRepository;
-	@Autowired
-	private ProductRepository productRepository;
-
-	@Autowired
-	private PaymentRepository paymentRepository;
-
-	@Autowired
-	private UserCouponRepository userCouponRepository;
-
-	@Autowired
-	private CashRepository cashRepository;
 
 	@Autowired
 	private CashHistoryRepository cashHistoryRepository;
@@ -72,14 +55,14 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 
 	@BeforeEach
 	void setUp() {
-		cashChargeProcessor = new CashChargeProcessor(cashRepository, cashHistoryRepository);
-		orderPlaceProcessor = new OrderPlaceProcessor(orderRepository,
-			paymentRepository,
-			productRepository,
-			userCouponRepository,
-			cashRepository,
-			cashHistoryRepository,
-			messageRepository, userRepository);
+		// cashChargeProcessor = new CashChargeProcessor(cashRepository, cashHistoryRepository);
+		// orderPlaceProcessor = new OrderPlaceV1Processor(orderRepository,
+		// 	paymentRepository,
+		// 	productRepository,
+		// 	userCouponRepository,
+		// 	cashRepository,
+		// 	cashHistoryRepository,
+		// 	messageRepository, userRepository);
 	}
 
 	/**

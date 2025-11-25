@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 
 import jakarta.persistence.EntityManager;
 import kr.hhplus.be.commerce.application.coupon.UserCouponIssueProcessor;
+import kr.hhplus.be.commerce.application.coupon.UserCouponIssueWithDistributedLockProcessor;
 import kr.hhplus.be.commerce.domain.coupon.repository.CouponRepository;
 import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.CouponJpaRepository;
@@ -28,7 +29,7 @@ public class CouponConfig {
 	@Bean
 	public UserCouponIssueProcessor userCouponIssueProcessor(CouponRepository couponRepository,
 		UserCouponRepository userCouponRepository) {
-		return new UserCouponIssueProcessor(couponRepository, userCouponRepository);
+		return new UserCouponIssueWithDistributedLockProcessor(couponRepository, userCouponRepository);
 	}
 
 }

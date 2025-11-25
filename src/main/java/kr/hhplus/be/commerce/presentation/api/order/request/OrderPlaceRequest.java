@@ -7,6 +7,7 @@ import java.util.List;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import kr.hhplus.be.commerce.application.order.OrderPlaceProcessor;
+import kr.hhplus.be.commerce.application.order.OrderPlaceWithDatabaseLockProcessor;
 
 public record OrderPlaceRequest(
 	@Schema(description = "사용자 쿠폰 고유 식별자", nullable = true, example = "789")
@@ -33,8 +34,8 @@ public record OrderPlaceRequest(
 	}
 
 	public OrderPlaceProcessor.Command toCommand(Long userId, String idempotencyKey) {
-		List<OrderPlaceProcessor.OrderLineCommand> orderLineCommands = orderLines.stream()
-			.map(orderLine -> new OrderPlaceProcessor.OrderLineCommand(
+		List<OrderPlaceWithDatabaseLockProcessor.OrderLineCommand> orderLineCommands = orderLines.stream()
+			.map(orderLine -> new OrderPlaceWithDatabaseLockProcessor.OrderLineCommand(
 				orderLine.productId(),
 				orderLine.orderQuantity()
 			))
