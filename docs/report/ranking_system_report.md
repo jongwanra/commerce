@@ -8,7 +8,7 @@
 
 ### 1.2 요구사항
 
-- 주문이 확정될 때마다 실시간으로 상품 판매량을 집계
+- 주문이 확정될 때마다 상품 판매량을 집계
 - 일간 판매량 기준 TOP 5 상품 조회 API 제공
 - 대용량 트래픽에서도 빠른 응답 속도 보장
 - Redis 장애 시에도 서비스 지속 가능 (Fallback 전략)
@@ -45,6 +45,7 @@ sequenceDiagram
 **OrderConfirmedMessagePublisher.java**
 
 ```java
+
 @Override
 public void publish(OrderConfirmedMessagePayload messagePayload) {
 	// 1. 외부 시스템 연동 (Slack 알림)
@@ -128,7 +129,7 @@ private List<Long> readProductIdsDailyTopSelling(Query query) {
 
 #### 핵심 포인트
 
-- **정상 상황**: Redis에서 빠른 조회 (< 10ms)
+- **정상 상황**: Redis에서 빠른 조회 (< 50ms)
 - **장애 상황**: Database Fallback으로 서비스 지속 (약간 느림)
 - **높은 가용성**: Redis 장애 시에도 무중단 서비스 가능
 
@@ -137,18 +138,19 @@ private List<Long> readProductIdsDailyTopSelling(Query query) {
 **ProductRankingStoreImpl.java**
 
 ```java
+
 @Override
-	public void increment(Long productId, Integer salesCount, LocalDate rankingDate, LocalDateTime now) {
-		final String key = productRankingKeyGenerator.generate(rankingDate);
+public void increment(Long productId, Integer salesCount, LocalDate rankingDate, LocalDateTime now) {
+	final String key = productRankingKeyGenerator.generate(rankingDate);
 
-		redisTemplate.opsForZSet()
-			.incrementScore(key, String.valueOf(productId), salesCount);
+	redisTemplate.opsForZSet()
+		.incrementScore(key, String.valueOf(productId), salesCount);
 
-		// FIXME: 11/18/25 increment method 호출 시마다 setIfAbsent method를 호출해 레디스 커넥션을 하나 더 사용하는 비용이 불필요한 것 같습니다.
-		//  다른 방법은 없는지 고민이 됩니다.
-		setTtlIfAbsent(key, rankingDate, now);
+	// FIXME: 11/18/25 increment method 호출 시마다 setIfAbsent method를 호출해 레디스 커넥션을 하나 더 사용하는 비용이 불필요한 것 같습니다.
+	//  다른 방법은 없는지 고민이 됩니다.
+	setTtlIfAbsent(key, rankingDate, now);
 
-	}
+}
 
 ```
 
@@ -218,6 +220,7 @@ private void synchronize(LocalDate rankingDate) {
 **ProductRankingRecoverAdminProcessor.java**
 
 ```java
+
 @Transactional
 public void execute(Command command) {
 	// 1. Database에서 당일 주문 전체 조회
@@ -257,13 +260,13 @@ public void execute(Command command) {
 
 ### 3.1 Redis Sorted Set 선택 이유
 
-| 비교 항목   | Redis Sorted Set       | Database                     |
-| ----------- | ---------------------- | ---------------------------- |
-| 조회 성능   | O(log N) - 매우 빠름   | O(N log N) - 상대적으로 느림 |
-| 쓰기 성능   | O(log N) - 원자적 증가 | O(1) + Lock 대기 시간        |
-| 동시성 처리 | 원자적 연산 지원       | Lock 필요 (경합 발생)        |
-| 메모리 효율 | TTL로 자동 관리        | 지속적 증가                  |
-| 가용성      | 장애 시 Fallback 필요  | 높은 안정성                  |
+| 비교 항목  | Redis Sorted Set  | Database              |
+|--------|-------------------|-----------------------|
+| 조회 성능  | O(log N) - 매우 빠름  | O(N log N) - 상대적으로 느림 |
+| 쓰기 성능  | O(log N) - 원자적 증가 | O(1) + Lock 대기 시간     |
+| 동시성 처리 | 원자적 연산 지원         | Lock 필요 (경합 발생)       |
+| 메모리 효율 | TTL로 자동 관리        | 지속적 증가                |
+| 가용성    | 장애 시 Fallback 필요  | 높은 안정성                |
 
 **결론**: 실시간성과 성능이 중요한 랭킹 시스템에 적합
 
@@ -365,9 +368,9 @@ public void increment(Long productId, Integer salesCount, LocalDate rankingDate,
 
 Redis 기반 일간 상품 랭킹 시스템을 통해 다음과 같은 목표를 달성했습니다:
 
-✅ **실시간성**: Redis Sorted Set을 활용하여 빠른 랭킹 조회 (< 10ms)  
+✅ **실시간성**: Redis Sorted Set을 활용하여 빠른 랭킹 조회 (< 50ms)  
 ✅ **확장성**: 비동기 메시징 패턴으로 주문 처리 성능 향상  
 ✅ **안정성**: Fallback 전략으로 Redis 장애 시에도 서비스 지속  
 ✅ **운영 효율**: 주기적 동기화 및 관리자 수동 복구 프로세스 구현
 
-향후 트래픽 증가 및 비즈니스 요구사항 변화에 따라 Lua Script 활용, 샤딩 전략, 자동 복구 프로세스 등을 점진적으로 개선해 나갈 예정입니다.
+향후 트래픽 증가 및 비즈니스 요구사항 변화에 따라 Lua Script 활용, 자동 복구 프로세스 등을 점진적으로 개선해 나갈 예정입니다.
