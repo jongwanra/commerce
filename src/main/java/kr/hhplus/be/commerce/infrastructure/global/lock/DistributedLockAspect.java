@@ -1,5 +1,7 @@
 package kr.hhplus.be.commerce.infrastructure.global.lock;
 
+import static java.util.Objects.*;
+
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.CompletionException;
@@ -86,10 +88,23 @@ public class DistributedLockAspect {
 	 * </ol>
 	 */
 	private void unlock(RLock multiLock, List<String> lockKeys) {
+		if (isNull(multiLock)) {
+			return;
+		}
+
 		try {
+			// 현재 스레드가 실제 락을 점유하고 있는지 확인합니다.
+			if (!multiLock.isHeldByCurrentThread()) {
+				log.warn("[DistributedLock] Cannot unlock: current thread does not hold the lock. keys={}", lockKeys);
+				return;
+			}
 			multiLock.unlock();
+		} catch (IllegalMonitorStateException e) {
+			log.warn("[DistributedLock] Lock already released or not held by current thread. keys={}", lockKeys);
 		} catch (CompletionException e) {
 			log.warn("[DistributedLock] lock already released: key={}", lockKeys);
+		} catch (Exception e) {
+			log.error("[DistributedLock] Unexpected error on unlock. keys={}", lockKeys, e);
 		}
 
 	}
