@@ -15,18 +15,17 @@ import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.transaction.annotation.Transactional;
 
+import kr.hhplus.be.commerce.application.event.OrderPlacedNotificationEventListener;
+import kr.hhplus.be.commerce.application.event.OrderPlacedProductRankingEventListener;
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
 import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
 import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
 import kr.hhplus.be.commerce.domain.coupon.model.UserCoupon;
 import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
+import kr.hhplus.be.commerce.domain.event.EventPublisher;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
-import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
-import kr.hhplus.be.commerce.domain.message.model.Message;
-import kr.hhplus.be.commerce.domain.message.model.message_payload.OrderConfirmedMessagePayload;
-import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.input.OrderPlaceInput;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
@@ -40,25 +39,22 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * ref: https://discord.com/channels/1288769861589270590/1406891766153744485/1421467275982012577
- * 실무에서는 주문과 결제를 분리 하는 것이 상품의 재고를 미리 선점하고 결제를 이후에 진행할 수 있기 때문에 나은 방향이라고 생각합니다.
- * 하지만, 요구사항은  주문 + 결제 API를 통합 하는 방식으로 구현을 권장하고 있으며
- * 결제 시, 포인트 차감으로 외부 PG사에 의존하지 않기 때문에 주문과 결제를 통합하기로 결정했습니다.
- *
- * @see kr.hhplus.be.commerce.application.message.publisher.OrderConfirmedMessagePublisher
+ * 주문 확정 이후, 후처리 로직입니다.
+ * @see OrderPlacedNotificationEventListener
+ * @see OrderPlacedProductRankingEventListener
  */
 
 @Slf4j
 @RequiredArgsConstructor
-public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcessor {
+public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 	private final OrderRepository orderRepository;
 	private final PaymentRepository paymentRepository;
 	private final ProductRepository productRepository;
 	private final UserCouponRepository userCouponRepository;
 	private final CashRepository cashRepository;
 	private final CashHistoryRepository cashHistoryRepository;
-	private final MessageRepository messageRepository;
 	private final UserRepository userRepository;
+	private final EventPublisher eventPublisher;
 
 	@Retryable(
 		retryFor = {
@@ -94,14 +90,12 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 
 		// 주문 및 잔액을 차감합니다.
 		// 주문 식별자를 미리 받기 위해서 save method를 호출합니다.
-		Order order = orderRepository.save(Order.ofPending(command.userId()))
-			.place(toOrderPlaceInput(command, productsWithDecreasedStock, command.idempotencyKey())).order();
+		Order pendingOrder = orderRepository.save(Order.ofPending(command.userId()));
+		Order.PlaceResult result = pendingOrder.place(
+			toOrderPlaceInput(command, productsWithDecreasedStock, command.idempotencyKey()));
 
-		messageRepository.save(Message.ofPending(
-			order.id(),
-			MessageTargetType.ORDER,
-			OrderConfirmedMessagePayload.from(order.id())
-		));
+		Order order = result.order();
+		eventPublisher.publish(result.events());
 
 		return isNull(command.userCouponId()) ?
 			executeWithoutCoupon(command, order, cash, productsWithDecreasedStock) :

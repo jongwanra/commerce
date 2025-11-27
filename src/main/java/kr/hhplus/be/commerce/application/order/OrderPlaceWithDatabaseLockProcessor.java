@@ -88,7 +88,7 @@ public class OrderPlaceWithDatabaseLockProcessor implements OrderPlaceProcessor 
 		// 주문 및 잔액을 차감합니다.
 		// 주문 식별자를 미리 받기 위해서 save method를 호출합니다.
 		Order order = orderRepository.save(Order.ofPending(command.userId()))
-			.place(toOrderPlaceInput(command, productsWithDecreasedStock, command.idempotencyKey()));
+			.place(toOrderPlaceInput(command, productsWithDecreasedStock, command.idempotencyKey())).order();
 
 		messageRepository.save(Message.ofPending(
 			order.id(),

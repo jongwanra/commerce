@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DynamicTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -18,32 +17,21 @@ import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
 import kr.hhplus.be.commerce.domain.cash.model.enums.CashHistoryAction;
 import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
-import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
-import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
-import kr.hhplus.be.commerce.domain.message.enums.MessageStatus;
-import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
-import kr.hhplus.be.commerce.domain.message.enums.MessageType;
-import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.OrderLine;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
-import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
-import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
-import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
-import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.ScenarioIntegrationTest;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
-import kr.hhplus.be.commerce.infrastructure.persistence.message.entity.MessageEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.product.entity.ProductEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.UserEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
 
-class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport {
+class OrderPlaceWithEventProcessorIntegrationTest extends AbstractIntegrationTestSupport {
 	@Autowired
 	private CashChargeProcessor cashChargeProcessor;
-
+	@Autowired
 	private OrderPlaceProcessor orderPlaceProcessor;
 
 	@Autowired
@@ -51,38 +39,6 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 
 	@Autowired
 	private TransactionTemplate transactionTemplate;
-
-	@Autowired
-	private MessageRepository messageRepository;
-
-	@Autowired
-	private UserRepository userRepository;
-
-	@Autowired
-	OrderRepository orderRepository;
-
-	@Autowired
-	PaymentRepository paymentRepository;
-	@Autowired
-	ProductRepository productRepository;
-	@Autowired
-	UserCouponRepository userCouponRepository;
-
-	@Autowired
-	CashRepository cashRepository;
-
-	@BeforeEach
-	void setUp() {
-		orderPlaceProcessor = new OrderPlaceWithDistributedLockProcessor(
-			orderRepository,
-			paymentRepository,
-			productRepository,
-			userCouponRepository,
-			cashRepository,
-			cashHistoryRepository,
-			messageRepository,
-			userRepository);
-	}
 
 	/**
 	 * 작성 이유: 상품을 주문하고 결제를 하는 전체 흐름이 정상 동작하는지 검증하기 위해 작성했습니다.
@@ -92,7 +48,8 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 	 * - 2-2. 재고를 차감한다.
 	 * - 2-3. 잔액을 차감한다.
 	 * - 2-4. 주문을 저장한다.
-	 * - 2-5. 외부 전송을 위한 Message를 저장한다.
+	 * - 2-5. 주문 확정 슬랙 메세지를 보낸다(비동기 처리)
+	 * - 2-6. Redis의 상품 판매량을 증가시킨다(비동기 처리)
 	 */
 	@ScenarioIntegrationTest
 	Stream<DynamicTest> 잔액을_충전하고_주문을_할_수_있다() {
@@ -187,15 +144,7 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 				assertThat(cash.userId()).isEqualTo(userId);
 				assertThat(cash.balance().compareTo(BigDecimal.valueOf(3_300))).isZero()
 					.as("기존 잔액 10,000원에서 주문 가격 6,700원을 뺀 잔액입니다.");
-
-				// (Message) 외부 전송을 위한 Message 저장 결과 확인
-				List<MessageEntity> messageEntities = messageJpaRepository.findAll();
-				assertThat(messageEntities).hasSize(1);
-				MessageEntity messageEntity = messageEntities.get(0);
-				assertThat(messageEntity.getStatus()).isEqualTo(MessageStatus.PENDING);
-				assertThat(messageEntity.getTargetId()).isEqualTo(order.id());
-				assertThat(messageEntity.getTargetType()).isEqualTo(MessageTargetType.ORDER);
-				assertThat(messageEntity.getType()).isEqualTo(MessageType.ORDER_CONFIRMED);
+				
 			})
 		);
 	}
