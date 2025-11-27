@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.PessimisticLockingFailureException;
@@ -77,16 +76,15 @@ public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 		userRepository.findByIdForUpdate(command.userId())
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER));
 
-		Optional<Order> alreadyPlacedOrderOpt = orderRepository.findByIdempotencyKey(command.idempotencyKey());
-		if (alreadyPlacedOrderOpt.isPresent()) {
+		if (isAlreadyPlacedOrder(command.idempotencyKey())) {
 			return Output.empty();
 		}
 
-		// 상품의 비관적 잠금을 획득한 상태로 조회 및 재고를 감소시킵니다.
-		List<Product> productsWithDecreasedStock = decreaseStock(command, fetchProductsForUpdate(command));
-
 		Cash cash = cashRepository.findByUserId(command.userId())
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_CASH));
+
+		// 상품의 비관적 잠금을 획득한 상태로 조회 및 재고를 감소시킵니다.
+		List<Product> productsWithDecreasedStock = decreaseStock(command, fetchProductsForUpdate(command));
 
 		// 주문 및 잔액을 차감합니다.
 		// 주문 식별자를 미리 받기 위해서 save method를 호출합니다.
@@ -100,6 +98,10 @@ public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 		return isNull(command.userCouponId()) ?
 			executeWithoutCoupon(command, order, cash, productsWithDecreasedStock) :
 			executeWithCoupon(command, order, cash, productsWithDecreasedStock);
+	}
+
+	private boolean isAlreadyPlacedOrder(String idempotencyKey) {
+		return orderRepository.findByIdempotencyKey(idempotencyKey).isPresent();
 	}
 
 	@Recover

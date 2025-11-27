@@ -30,7 +30,7 @@ public class OrderPlacedNotificationEventListener {
 				.append(" orderId=" + event.orderId())
 				.append(" 주문 확정 일시=" + event.occurredAt())
 				.toString();
-			
+
 			slackSendMessageClient.send(message);
 		} catch (Exception e) {
 			log.error("[알수 없는 에러 발생] 주문 확정 이후, 슬랙 메세지를 보내는데 에러가 발생했습니다.", e);
