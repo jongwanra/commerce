@@ -104,7 +104,7 @@ class OrderPlaceProcessorConcurrencyIntegrationTest extends AbstractIntegrationT
 		final LocalDateTime now = LocalDateTime.now();
 		List<OrderLineCommand> orderLineCommands = List.of(new OrderLineCommand(product.id(), 1));
 
-		return new Command(idempotencyKey, userId, null, paymentAmount, now, orderLineCommands);
+		return new Command(idempotencyKey, userId, null, paymentAmount, orderLineCommands);
 	}
 
 }

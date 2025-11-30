@@ -34,11 +34,7 @@ public class ProductRankingRecoverAdminProcessor {
 	@Transactional
 	public void execute(Command command) {
 		List<Order> orders = orderRepository.findAllDailyConfirmed(command.rankingDate);
-		List<Long> productIds = orders.stream()
-			.map(Order::orderLines)
-			.flatMap(List::stream)
-			.map(OrderLine::productId)
-			.toList();
+		List<Long> uniqueProductIds = toUniqueProductIds(orders);
 
 		Map<Long, Integer> productIdToSalesCountMap = orders.stream()
 			.map(Order::orderLines)
@@ -50,7 +46,7 @@ public class ProductRankingRecoverAdminProcessor {
 			.stream()
 			.collect(Collectors.toMap(ProductRanking::productId, it -> it));
 
-		List<ProductRanking> recoveredRankings = productIds.stream()
+		List<ProductRanking> recoveredRankings = uniqueProductIds.stream()
 			.map((productId) -> originProductIdToRankingMap.getOrDefault(productId,
 				ProductRanking.empty(productId, command.rankingDate())))
 			.map((ranking) -> {
@@ -67,6 +63,15 @@ public class ProductRankingRecoverAdminProcessor {
 			)
 		);
 
+	}
+
+	private static List<Long> toUniqueProductIds(List<Order> orders) {
+		return orders.stream()
+			.distinct()
+			.map(Order::orderLines)
+			.flatMap(List::stream)
+			.map(OrderLine::productId)
+			.toList();
 	}
 
 	public record Command(

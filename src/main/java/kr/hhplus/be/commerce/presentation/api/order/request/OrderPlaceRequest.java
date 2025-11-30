@@ -1,7 +1,6 @@
 package kr.hhplus.be.commerce.presentation.api.order.request;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -42,7 +41,6 @@ public record OrderPlaceRequest(
 			.toList();
 
 		return new OrderPlaceProcessor.Command(idempotencyKey, userId, userCouponId, expectedPaymentAmount,
-			LocalDateTime.now(),
 			orderLineCommands);
 	}
 }

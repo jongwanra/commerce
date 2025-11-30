@@ -33,6 +33,8 @@ import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.domain.user.model.User;
 import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import kr.hhplus.be.commerce.global.AbstractUnitTestSupport;
+import kr.hhplus.be.commerce.global.time.FixedTimeProvider;
+import kr.hhplus.be.commerce.global.time.TimeProvider;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,8 +62,11 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 	@Mock
 	private UserRepository userRepository;
 
+	private TimeProvider timeProvider;
+
 	@BeforeEach
 	void setUp() {
+		timeProvider = FixedTimeProvider.of(LocalDateTime.of(2025, 12, 1, 0, 0, 0));
 		orderPlaceProcessor = new OrderPlaceWithDatabaseLockProcessor(
 			orderRepository,
 			paymentRepository,
@@ -70,7 +75,8 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 			cashRepository,
 			cashHistoryRepository,
 			messageRepository,
-			userRepository
+			userRepository,
+			timeProvider
 		);
 	}
 
@@ -81,7 +87,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		Long notExistProductId = 999L;
 		final String idempotencyKey = "ORD_250930_AOMEWD";
 		LocalDateTime now = LocalDateTime.now();
-		Command command = new Command(idempotencyKey, 1L, 100L, BigDecimal.valueOf(3_000), now,
+		Command command = new Command(idempotencyKey, 1L, 100L, BigDecimal.valueOf(3_000),
 			List.of(new OrderLineCommand(notExistProductId, 1)));
 
 		// mock
@@ -112,7 +118,6 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		final int orderQuantity = 2; // 재고보다 많은 수량 주문
 
 		final String idempotencyKey = "ORD_250930_AOMEWD";
-		LocalDateTime now = LocalDateTime.now();
 
 		Product product = Product.restore(productId, "product name", remainingStock,
 			BigDecimal.valueOf(10_000),
@@ -120,7 +125,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 
 		BigDecimal paymentAmount = BigDecimal.valueOf(20_000);
 
-		Command command = new Command(idempotencyKey, userId, null, paymentAmount, now,
+		Command command = new Command(idempotencyKey, userId, null, paymentAmount,
 			List.of(new OrderLineCommand(productId, orderQuantity)));
 
 		// mock
@@ -165,7 +170,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		LocalDateTime now = LocalDateTime.now();
 		BigDecimal paymentAmount = BigDecimal.valueOf(10_000);
 
-		Command command = new Command(idempotencyKey, userId, null, paymentAmount, now,
+		Command command = new Command(idempotencyKey, userId, null, paymentAmount,
 			List.of(new OrderLineCommand(productId, orderQuantity)));
 		// mock
 		given(userRepository.findByIdForUpdate(anyLong()))
@@ -249,7 +254,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		BigDecimal paymentAmount = BigDecimal.valueOf(20_000);
 
 		List<OrderLineCommand> orderLineCommands = List.of(new OrderLineCommand(1L, zeroOrderQuantity));
-		Command command = new Command(idempotencyKey, 1L, null, paymentAmount, now, orderLineCommands);
+		Command command = new Command(idempotencyKey, 1L, null, paymentAmount, orderLineCommands);
 
 		// when & then
 		assertThatThrownBy(() -> {
