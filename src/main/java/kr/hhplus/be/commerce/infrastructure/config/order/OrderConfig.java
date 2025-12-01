@@ -53,8 +53,8 @@ public class OrderConfig {
 			userCouponRepository,
 			cashRepository,
 			cashHistoryRepository,
-			userRepository,
 			springEventPublisher,
+			userRepository,
 			timeProvider
 		);
 	}

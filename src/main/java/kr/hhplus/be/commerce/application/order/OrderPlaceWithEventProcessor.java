@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
@@ -54,8 +55,8 @@ public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 	private final UserCouponRepository userCouponRepository;
 	private final CashRepository cashRepository;
 	private final CashHistoryRepository cashHistoryRepository;
-	private final UserRepository userRepository;
 	private final EventPublisher eventPublisher;
+	private final UserRepository userRepository;
 	private final TimeProvider timeProvider;
 
 	@Retryable(
@@ -76,12 +77,13 @@ public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 	public Output execute(Command command) {
 		command.validate();
 		final LocalDateTime now = timeProvider.now();
-		userRepository.findByIdForUpdate(command.userId())
-			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER));
 
 		if (isAlreadyPlacedOrder(command.idempotencyKey())) {
 			return Output.empty();
 		}
+
+		userRepository.findById(command.userId())
+			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER));
 
 		Cash cash = cashRepository.findByUserId(command.userId())
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_CASH));
@@ -91,16 +93,27 @@ public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 
 		// 주문 및 잔액을 차감합니다.
 		// 주문 식별자를 미리 받기 위해서 save method를 호출합니다.
-		Order pendingOrder = orderRepository.save(Order.ofPending(command.userId()));
-		Order.PlaceResult result = pendingOrder.place(
-			toOrderPlaceInput(command, productsWithDecreasedStock, command.idempotencyKey()));
+		Order order;
+		try {
+			order = orderRepository.save(Order.ofPending(command.userId()));
+		} catch (DataIntegrityViolationException e) {
+			log.warn("중복 결제 건이 있어서 반환합니다. idempotencyKey={}", command.idempotencyKey());
+			return Output.empty();
+		}
+		Order.PlaceResult result = order.place(
+			buildOrderPlaceInput(command, productsWithDecreasedStock, command.idempotencyKey()));
 
-		Order order = result.order();
 		eventPublisher.publish(result.events());
 
+		return processPayment(command, result.order(), cash, productsWithDecreasedStock, now);
+	}
+
+	private Output processPayment(Command command, Order placedOrder, Cash cash,
+		List<Product> productsWithDecreasedStock,
+		LocalDateTime now) {
 		return isNull(command.userCouponId()) ?
-			executeWithoutCoupon(command, order, cash, productsWithDecreasedStock, now) :
-			executeWithCoupon(command, order, cash, productsWithDecreasedStock, now);
+			processPaymentWithoutCoupon(command, placedOrder, cash, productsWithDecreasedStock, now) :
+			processPaymentWithCoupon(command, placedOrder, cash, productsWithDecreasedStock, now);
 	}
 
 	private boolean isAlreadyPlacedOrder(String idempotencyKey) {
@@ -144,7 +157,7 @@ public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 			.toList();
 	}
 
-	private Output executeWithoutCoupon(Command command, Order order, Cash cash, List<Product> products,
+	private Output processPaymentWithoutCoupon(Command command, Order order, Cash cash, List<Product> products,
 		LocalDateTime now) {
 		validatePaymentAmountIsMatched(command.paymentAmount(), order);
 
@@ -154,11 +167,8 @@ public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 		Payment payment = Payment.fromOrder(command.userId(), order.id(), command.paymentAmount())
 			.succeed(now);
 
-		cashHistoryRepository.save(
-			CashHistory.recordOfPurchase(command.userId(), usedCash.balance(), originalBalance));
-
 		return new Output(
-			cashRepository.save(usedCash),
+			saveCashWithHistory(command, usedCash, originalBalance),
 			null,
 			productRepository.saveAll(products),
 			paymentRepository.save(payment),
@@ -166,7 +176,7 @@ public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 		);
 	}
 
-	private Output executeWithCoupon(Command command, Order order, Cash cash, List<Product> products,
+	private Output processPaymentWithCoupon(Command command, Order order, Cash cash, List<Product> products,
 		LocalDateTime now) {
 		UserCoupon userCoupon = userCouponRepository.findById(command.userCouponId())
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER_COUPON));
@@ -181,16 +191,20 @@ public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 				command.paymentAmount())
 			.succeed(now);
 
-		cashHistoryRepository.save(
-			CashHistory.recordOfPurchase(command.userId(), usedCash.balance(), originalBalance));
-
 		return new Output(
-			cashRepository.save(cash),
+			saveCashWithHistory(command, usedCash, originalBalance),
 			userCouponRepository.save(userCoupon),
 			productRepository.saveAll(products),
 			paymentRepository.save(payment),
 			orderRepository.save(order)
 		);
+	}
+
+	private Cash saveCashWithHistory(Command command, Cash usedCash, BigDecimal originalBalance) {
+		cashHistoryRepository.save(
+			CashHistory.recordOfPurchase(command.userId(), usedCash.balance(), originalBalance));
+
+		return cashRepository.save(usedCash);
 	}
 
 	private void validatePaymentAmountIsMatched(BigDecimal paymentAmount, UserCoupon userCoupon,
@@ -208,7 +222,7 @@ public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 		}
 	}
 
-	private OrderPlaceInput toOrderPlaceInput(Command command, List<Product> products, String idempotencyKey) {
+	private OrderPlaceInput buildOrderPlaceInput(Command command, List<Product> products, String idempotencyKey) {
 		Map<Long, Product> productIdToProductMap = products
 			.stream()
 			.collect(toMap(Product::id, product -> product));

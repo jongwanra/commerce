@@ -15,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import net.bytebuddy.utility.RandomString;
+
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
 import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
@@ -28,9 +30,12 @@ import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
+import kr.hhplus.be.commerce.domain.user.model.User;
+import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import kr.hhplus.be.commerce.global.AbstractUnitTestSupport;
 import kr.hhplus.be.commerce.global.time.FixedTimeProvider;
 import kr.hhplus.be.commerce.global.time.TimeProvider;
+import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
 
 @ExtendWith(MockitoExtension.class)
 class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
@@ -54,6 +59,9 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 	@Mock
 	private MessageRepository messageRepository;
 
+	@Mock
+	private UserRepository userRepository;
+
 	private TimeProvider timeProvider;
 
 	@BeforeEach
@@ -67,6 +75,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 			cashRepository,
 			cashHistoryRepository,
 			messageRepository,
+			userRepository,
 			timeProvider
 		);
 	}
@@ -77,11 +86,12 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		// given
 		Long notExistProductId = 999L;
 		final String idempotencyKey = "ORD_250930_AOMEWD";
-		LocalDateTime now = LocalDateTime.now();
 		Command command = new Command(idempotencyKey, 1L, 100L, BigDecimal.valueOf(3_000),
 			List.of(new OrderLineCommand(notExistProductId, 1)));
 
 		// mock
+		given(userRepository.findById(anyLong()))
+			.willReturn(Optional.of(User.restore(1L, UserStatus.ACTIVE, "jongwan.ra@gmail.com", RandomString.make())));
 		given(productRepository.findAllByIdInForUpdate(List.of(notExistProductId)))
 			.willReturn(List.of());
 
@@ -113,6 +123,8 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 			List.of(new OrderLineCommand(productId, orderQuantity)));
 
 		// mock
+		given(userRepository.findById(anyLong()))
+			.willReturn(Optional.of(User.restore(1L, UserStatus.ACTIVE, "jongwan.ra@gmail.com", RandomString.make())));
 		given(productRepository.findAllByIdInForUpdate(List.of(productId)))
 			.willReturn(List.of(product));
 
@@ -149,6 +161,8 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		Command command = new Command(idempotencyKey, userId, null, paymentAmount,
 			List.of(new OrderLineCommand(productId, orderQuantity)));
 		// mock
+		given(userRepository.findById(anyLong()))
+			.willReturn(Optional.of(User.restore(1L, UserStatus.ACTIVE, "jongwan.ra@gmail.com", RandomString.make())));
 		
 		given(productRepository.findAllByIdInForUpdate(List.of(productId)))
 			.willReturn(List.of(product));

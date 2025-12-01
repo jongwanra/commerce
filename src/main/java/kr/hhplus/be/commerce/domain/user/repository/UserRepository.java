@@ -5,5 +5,5 @@ import java.util.Optional;
 import kr.hhplus.be.commerce.domain.user.model.User;
 
 public interface UserRepository {
-	Optional<User> findByIdForUpdate(Long id);
+	Optional<User> findById(Long id);
 }
