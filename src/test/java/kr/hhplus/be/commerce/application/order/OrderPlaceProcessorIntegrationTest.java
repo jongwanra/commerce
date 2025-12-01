@@ -34,6 +34,8 @@ import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.ScenarioIntegrationTest;
+import kr.hhplus.be.commerce.global.time.FixedTimeProvider;
+import kr.hhplus.be.commerce.global.time.TimeProvider;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.message.entity.MessageEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.product.entity.ProductEntity;
@@ -59,20 +61,23 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 	private UserRepository userRepository;
 
 	@Autowired
-	OrderRepository orderRepository;
+	private OrderRepository orderRepository;
 
 	@Autowired
-	PaymentRepository paymentRepository;
+	private PaymentRepository paymentRepository;
 	@Autowired
-	ProductRepository productRepository;
+	private ProductRepository productRepository;
 	@Autowired
-	UserCouponRepository userCouponRepository;
+	private UserCouponRepository userCouponRepository;
 
 	@Autowired
-	CashRepository cashRepository;
+	private CashRepository cashRepository;
+
+	private TimeProvider timeProvider;
 
 	@BeforeEach
 	void setUp() {
+		timeProvider = FixedTimeProvider.of(LocalDateTime.of(2025, 12, 2, 0, 0, 0));
 		orderPlaceProcessor = new OrderPlaceWithDistributedLockProcessor(
 			orderRepository,
 			paymentRepository,
@@ -81,7 +86,9 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 			cashRepository,
 			cashHistoryRepository,
 			messageRepository,
-			userRepository);
+			userRepository,
+			timeProvider
+		);
 	}
 
 	/**
@@ -152,7 +159,6 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 							userId,
 							null,
 							expectedPaymentAmount,
-							now,
 							List.of(
 								new OrderLineCommand(product.id(), 1)
 							)

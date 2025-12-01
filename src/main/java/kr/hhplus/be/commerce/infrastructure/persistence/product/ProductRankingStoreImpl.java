@@ -43,7 +43,7 @@ public class ProductRankingStoreImpl implements ProductRankingStore {
 
 	@Override
 	public List<ProductRankingView> readProductIdsDailyTopSelling(LocalDate rankingDate) {
-		return readProductIdsDailyTopSelling(rankingDate, -1);
+		return readProductIdsDailyTopSelling(rankingDate, 0);
 	}
 
 	@Override
@@ -67,7 +67,7 @@ public class ProductRankingStoreImpl implements ProductRankingStore {
 		final String key = productRankingKeyGenerator.generate(rankingDate);
 
 		Set<ZSetOperations.TypedTuple<String>> typeTuples = redisTemplate.opsForZSet()
-			.reverseRangeWithScores(key, 0, limit);
+			.reverseRangeWithScores(key, 0, limit - 1);
 
 		return typeTuples.stream()
 			.map((tuple) -> {

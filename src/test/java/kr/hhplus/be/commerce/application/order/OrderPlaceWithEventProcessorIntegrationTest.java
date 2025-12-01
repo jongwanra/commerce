@@ -127,7 +127,6 @@ class OrderPlaceWithEventProcessorIntegrationTest extends AbstractIntegrationTes
 							userId,
 							null,
 							expectedPaymentAmount,
-							now,
 							List.of(
 								new OrderLineCommand(product.id(), 1)
 							)

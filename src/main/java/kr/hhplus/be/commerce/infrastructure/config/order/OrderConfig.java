@@ -13,6 +13,7 @@ import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
+import kr.hhplus.be.commerce.global.time.TimeProvider;
 import kr.hhplus.be.commerce.infrastructure.event.SpringEventPublisher;
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderLineJpaRepository;
@@ -42,7 +43,8 @@ public class OrderConfig {
 		CashRepository cashRepository,
 		CashHistoryRepository cashHistoryRepository,
 		UserRepository userRepository,
-		SpringEventPublisher springEventPublisher
+		SpringEventPublisher springEventPublisher,
+		TimeProvider timeProvider
 	) {
 		return new OrderPlaceWithEventProcessor(
 			orderRepository,
@@ -52,7 +54,8 @@ public class OrderConfig {
 			cashRepository,
 			cashHistoryRepository,
 			userRepository,
-			springEventPublisher
+			springEventPublisher,
+			timeProvider
 		);
 	}
 

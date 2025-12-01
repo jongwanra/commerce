@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +21,8 @@ import kr.hhplus.be.commerce.domain.message.model.message_payload.OrderConfirmed
 import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.IntegrationTest;
+import kr.hhplus.be.commerce.global.time.FixedTimeProvider;
+import kr.hhplus.be.commerce.global.time.TimeProvider;
 import kr.hhplus.be.commerce.infrastructure.client.slack.SlackException;
 import kr.hhplus.be.commerce.infrastructure.client.slack.SlackSendMessageClient;
 import kr.hhplus.be.commerce.infrastructure.persistence.message.entity.MessageEntity;
@@ -38,12 +42,16 @@ class MessagePublishSchedulerTest extends AbstractIntegrationTestSupport {
 	@MockitoBean
 	private SlackSendMessageClient slackSendMessageClient;
 
+	private TimeProvider timeProvider;
+
 	@BeforeEach
 	void setUp() {
+		timeProvider = FixedTimeProvider.of(LocalDateTime.of(2025, 12, 1, 0, 0, 0));
 		messagePublishScheduler = new MessagePublishScheduler(
 			messageRepository,
 			messagePublisherMapper,
-			transactionTemplate
+			transactionTemplate,
+			timeProvider
 		);
 	}
 
@@ -56,10 +64,12 @@ class MessagePublishSchedulerTest extends AbstractIntegrationTestSupport {
 	void Slack_전송_실패시_최대_3회까지_재시도_한다() {
 		// given
 		Long orderId = 3232L;
+		LocalDateTime now = timeProvider.now();
+		LocalDate today = timeProvider.today();
 		messageRepository.save(Message.ofPending(
 			orderId,
 			MessageTargetType.ORDER,
-			OrderConfirmedMessagePayload.from(3232L))
+			OrderConfirmedMessagePayload.from(3232L, today, now))
 		);
 
 		// mock

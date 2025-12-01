@@ -15,8 +15,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import net.bytebuddy.utility.RandomString;
-
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
 import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
@@ -30,10 +28,9 @@ import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
-import kr.hhplus.be.commerce.domain.user.model.User;
-import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import kr.hhplus.be.commerce.global.AbstractUnitTestSupport;
-import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
+import kr.hhplus.be.commerce.global.time.FixedTimeProvider;
+import kr.hhplus.be.commerce.global.time.TimeProvider;
 
 @ExtendWith(MockitoExtension.class)
 class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
@@ -57,11 +54,11 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 	@Mock
 	private MessageRepository messageRepository;
 
-	@Mock
-	private UserRepository userRepository;
+	private TimeProvider timeProvider;
 
 	@BeforeEach
 	void setUp() {
+		timeProvider = FixedTimeProvider.of(LocalDateTime.of(2025, 12, 1, 0, 0, 0));
 		orderPlaceProcessor = new OrderPlaceWithDatabaseLockProcessor(
 			orderRepository,
 			paymentRepository,
@@ -70,7 +67,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 			cashRepository,
 			cashHistoryRepository,
 			messageRepository,
-			userRepository
+			timeProvider
 		);
 	}
 
@@ -81,17 +78,10 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		Long notExistProductId = 999L;
 		final String idempotencyKey = "ORD_250930_AOMEWD";
 		LocalDateTime now = LocalDateTime.now();
-		Command command = new Command(idempotencyKey, 1L, 100L, BigDecimal.valueOf(3_000), now,
+		Command command = new Command(idempotencyKey, 1L, 100L, BigDecimal.valueOf(3_000),
 			List.of(new OrderLineCommand(notExistProductId, 1)));
 
 		// mock
-		given(userRepository.findByIdForUpdate(anyLong()))
-			.willReturn(Optional.of(User.restore(
-				1L,
-				UserStatus.ACTIVE,
-				"userA@gmail.com",
-				RandomString.make(15)
-			)));
 		given(productRepository.findAllByIdInForUpdate(List.of(notExistProductId)))
 			.willReturn(List.of());
 
@@ -112,7 +102,6 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		final int orderQuantity = 2; // 재고보다 많은 수량 주문
 
 		final String idempotencyKey = "ORD_250930_AOMEWD";
-		LocalDateTime now = LocalDateTime.now();
 
 		Product product = Product.restore(productId, "product name", remainingStock,
 			BigDecimal.valueOf(10_000),
@@ -120,20 +109,12 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 
 		BigDecimal paymentAmount = BigDecimal.valueOf(20_000);
 
-		Command command = new Command(idempotencyKey, userId, null, paymentAmount, now,
+		Command command = new Command(idempotencyKey, userId, null, paymentAmount,
 			List.of(new OrderLineCommand(productId, orderQuantity)));
 
 		// mock
 		given(productRepository.findAllByIdInForUpdate(List.of(productId)))
 			.willReturn(List.of(product));
-
-		given(userRepository.findByIdForUpdate(anyLong()))
-			.willReturn(Optional.of(User.restore(
-				1L,
-				UserStatus.ACTIVE,
-				"userA@gmail.com",
-				RandomString.make(15)
-			)));
 
 		// when & then
 		assertThatThrownBy(() -> orderPlaceProcessor.execute(command))
@@ -165,17 +146,10 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		LocalDateTime now = LocalDateTime.now();
 		BigDecimal paymentAmount = BigDecimal.valueOf(10_000);
 
-		Command command = new Command(idempotencyKey, userId, null, paymentAmount, now,
+		Command command = new Command(idempotencyKey, userId, null, paymentAmount,
 			List.of(new OrderLineCommand(productId, orderQuantity)));
 		// mock
-		given(userRepository.findByIdForUpdate(anyLong()))
-			.willReturn(Optional.of(User.restore(
-				1L,
-				UserStatus.ACTIVE,
-				"userA@gmail.com",
-				RandomString.make(15)
-			)));
-
+		
 		given(productRepository.findAllByIdInForUpdate(List.of(productId)))
 			.willReturn(List.of(product));
 
@@ -249,7 +223,7 @@ class OrderPlaceProcessorUnitTest extends AbstractUnitTestSupport {
 		BigDecimal paymentAmount = BigDecimal.valueOf(20_000);
 
 		List<OrderLineCommand> orderLineCommands = List.of(new OrderLineCommand(1L, zeroOrderQuantity));
-		Command command = new Command(idempotencyKey, 1L, null, paymentAmount, now, orderLineCommands);
+		Command command = new Command(idempotencyKey, 1L, null, paymentAmount, orderLineCommands);
 
 		// when & then
 		assertThatThrownBy(() -> {

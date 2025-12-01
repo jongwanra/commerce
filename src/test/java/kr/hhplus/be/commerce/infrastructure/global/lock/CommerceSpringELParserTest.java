@@ -40,7 +40,6 @@ class CommerceSpringELParserTest {
 			1L,
 			null,
 			BigDecimal.valueOf(10_000),
-			LocalDateTime.now(),
 			List.of(
 				new OrderPlaceProcessor.OrderLineCommand(
 					1L,

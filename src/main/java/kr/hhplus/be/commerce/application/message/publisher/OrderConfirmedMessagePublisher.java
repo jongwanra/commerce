@@ -1,7 +1,5 @@
 package kr.hhplus.be.commerce.application.message.publisher;
 
-import java.time.LocalDateTime;
-
 import org.springframework.stereotype.Component;
 
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
@@ -39,10 +37,9 @@ public class OrderConfirmedMessagePublisher implements MessagePublisher<OrderCon
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_ORDER));
 
 		// Redis에 상품 판매량을 증가시킵니다.
-		LocalDateTime now = LocalDateTime.now();
 		order.orderLines()
 			.forEach((orderLine) -> productRankingStore.increment(orderLine.productId(), orderLine.orderQuantity(),
-				messagePayload.today(), now));
+				messagePayload.today(), messagePayload.now()));
 	}
 
 }

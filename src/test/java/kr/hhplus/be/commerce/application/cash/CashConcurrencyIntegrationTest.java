@@ -264,6 +264,6 @@ public class CashConcurrencyIntegrationTest extends AbstractIntegrationTestSuppo
 		List<OrderPlaceProcessor.OrderLineCommand> orderLineCommands = List.of(
 			new OrderPlaceProcessor.OrderLineCommand(product.id(), 1));
 
-		return new OrderPlaceProcessor.Command(idempotencyKey, userId, null, paymentAmount, now, orderLineCommands);
+		return new OrderPlaceProcessor.Command(idempotencyKey, userId, null, paymentAmount, orderLineCommands);
 	}
 }

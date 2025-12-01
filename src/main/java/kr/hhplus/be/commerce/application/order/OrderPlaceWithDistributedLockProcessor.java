@@ -4,6 +4,8 @@ import static java.util.Objects.*;
 import static java.util.stream.Collectors.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +37,7 @@ import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
+import kr.hhplus.be.commerce.global.time.TimeProvider;
 import kr.hhplus.be.commerce.infrastructure.global.lock.DistributedLock;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +62,7 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 	private final CashHistoryRepository cashHistoryRepository;
 	private final MessageRepository messageRepository;
 	private final UserRepository userRepository;
+	private final TimeProvider timeProvider;
 
 	@Retryable(
 		retryFor = {
@@ -77,7 +81,8 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 	)
 	public Output execute(Command command) {
 		command.validate();
-
+		LocalDateTime now = timeProvider.now();
+		LocalDate today = timeProvider.today();
 		userRepository.findByIdForUpdate(command.userId())
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER));
 
@@ -100,12 +105,12 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 		messageRepository.save(Message.ofPending(
 			order.id(),
 			MessageTargetType.ORDER,
-			OrderConfirmedMessagePayload.from(order.id())
+			OrderConfirmedMessagePayload.from(order.id(), today, now)
 		));
 
 		return isNull(command.userCouponId()) ?
-			executeWithoutCoupon(command, order, cash, productsWithDecreasedStock) :
-			executeWithCoupon(command, order, cash, productsWithDecreasedStock);
+			executeWithoutCoupon(command, order, cash, productsWithDecreasedStock, now) :
+			executeWithCoupon(command, order, cash, productsWithDecreasedStock, now);
 	}
 
 	@Recover
@@ -145,14 +150,15 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 			.toList();
 	}
 
-	private Output executeWithoutCoupon(Command command, Order order, Cash cash, List<Product> products) {
+	private Output executeWithoutCoupon(Command command, Order order, Cash cash, List<Product> products,
+		LocalDateTime now) {
 		validatePaymentAmountIsMatched(command.paymentAmount(), order);
 
 		BigDecimal originalBalance = cash.balance();
 		Cash usedCash = cash.use(command.paymentAmount());
 
 		Payment payment = Payment.fromOrder(command.userId(), order.id(), command.paymentAmount())
-			.succeed(command.now());
+			.succeed(now);
 
 		cashHistoryRepository.save(
 			CashHistory.recordOfPurchase(command.userId(), usedCash.balance(), originalBalance));
@@ -166,19 +172,20 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 		);
 	}
 
-	private Output executeWithCoupon(Command command, Order order, Cash cash, List<Product> products) {
+	private Output executeWithCoupon(Command command, Order order, Cash cash, List<Product> products,
+		LocalDateTime now) {
 		UserCoupon userCoupon = userCouponRepository.findById(command.userCouponId())
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER_COUPON));
 
 		validatePaymentAmountIsMatched(command.paymentAmount(), userCoupon, order);
-		userCoupon.use(command.userId(), command.now(), order.id());
+		userCoupon.use(command.userId(), now, order.id());
 
 		BigDecimal originalBalance = cash.balance();
 		Cash usedCash = cash.use(command.paymentAmount());
 
 		Payment payment = Payment.fromOrder(command.userId(), order.id(),
 				command.paymentAmount())
-			.succeed(command.now());
+			.succeed(now);
 
 		cashHistoryRepository.save(
 			CashHistory.recordOfPurchase(command.userId(), usedCash.balance(), originalBalance));

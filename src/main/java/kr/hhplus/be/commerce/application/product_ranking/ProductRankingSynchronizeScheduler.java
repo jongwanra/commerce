@@ -80,7 +80,7 @@ public class ProductRankingSynchronizeScheduler {
 			.stream()
 			.map((currentRanking) -> {
 				ProductRanking productRanking = previousRankingMap.getOrDefault(currentRanking.productId(),
-					ProductRanking.empty(currentRanking.productId(), timeProvider.today()));
+					ProductRanking.empty(currentRanking.productId(), currentRanking.rankingDate()));
 
 				log.debug("[동기화 중] productRanking = {}", productRanking);
 				return productRanking.renewSalesCount(currentRanking.salesCount());
