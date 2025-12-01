@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 
 import jakarta.persistence.EntityManager;
 import kr.hhplus.be.commerce.application.order.OrderPlaceProcessor;
-import kr.hhplus.be.commerce.application.order.OrderPlaceWithDistributedLockProcessor;
+import kr.hhplus.be.commerce.application.order.OrderPlaceWithDatabaseLockProcessor;
 import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
 import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
 import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
@@ -46,7 +46,7 @@ public class OrderConfig {
 		UserRepository userRepository,
 		TimeProvider timeProvider
 	) {
-		return new OrderPlaceWithDistributedLockProcessor(
+		return new OrderPlaceWithDatabaseLockProcessor(
 			orderRepository,
 			paymentRepository,
 			productRepository,

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
@@ -73,38 +74,45 @@ public class OrderPlaceWithDatabaseLockProcessor implements OrderPlaceProcessor 
 	)
 	@Transactional
 	public Output execute(Command command) {
+		log.debug("[+{}] 진입합니다.", Thread.currentThread().getName());
 		command.validate();
 		LocalDateTime now = timeProvider.now();
 		LocalDate today = timeProvider.today();
 
-		userRepository.findByIdForUpdate(command.userId())
-			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER));
-
 		Optional<Order> alreadyPlacedOrderOpt = orderRepository.findByIdempotencyKey(command.idempotencyKey());
 		if (alreadyPlacedOrderOpt.isPresent()) {
+			log.debug("[+{}] 이미 처리된 주문건입니다..", Thread.currentThread().getName());
 			return Output.empty();
 		}
 
 		// 상품의 비관적 잠금을 획득한 상태로 조회 및 재고를 감소시킵니다.
 		List<Product> productsWithDecreasedStock = decreaseStock(command, fetchProductsForUpdate(command));
-
+		log.debug("[+{}] 상품의 재고를 감소시켰습니다.", Thread.currentThread().getName());
 		Cash cash = cashRepository.findByUserId(command.userId())
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_CASH));
 
 		// 주문 및 잔액을 차감합니다.
 		// 주문 식별자를 미리 받기 위해서 save method를 호출합니다.
-		Order order = orderRepository.save(Order.ofPending(command.userId()))
-			.place(toOrderPlaceInput(command, productsWithDecreasedStock, command.idempotencyKey()));
+		try {
+			Order order = orderRepository.save(Order.ofPending(command.userId()))
+				.place(toOrderPlaceInput(command, productsWithDecreasedStock, command.idempotencyKey()));
+			log.debug("[+{}] 주문을 처리했습니다.", Thread.currentThread().getName());
 
-		messageRepository.save(Message.ofPending(
-			order.id(),
-			MessageTargetType.ORDER,
-			OrderConfirmedMessagePayload.from(order.id(), today, now)
-		));
+			messageRepository.save(Message.ofPending(
+				order.id(), // 여기에서 주문 아이디 값을 받기 위해서, 영속화 시키는 작업이 들어갑니다.
+				MessageTargetType.ORDER,
+				OrderConfirmedMessagePayload.from(order.id(), today, now)
+			));
+			log.debug("[+{}] 메세지를 저장했습니다.", Thread.currentThread().getName());
 
-		return isNull(command.userCouponId()) ?
-			executeWithoutCoupon(command, order, cash, productsWithDecreasedStock, now) :
-			executeWithCoupon(command, order, cash, productsWithDecreasedStock, now);
+			return isNull(command.userCouponId()) ?
+				executeWithoutCoupon(command, order, cash, productsWithDecreasedStock, now) :
+				executeWithCoupon(command, order, cash, productsWithDecreasedStock, now);
+		} catch (DataIntegrityViolationException e) {
+			log.debug("[+{}] 중복 결제건이 존재하여 반환합니다.", Thread.currentThread().getName());
+			return Output.empty();
+		}
+
 	}
 
 	@Recover
