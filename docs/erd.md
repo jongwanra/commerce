@@ -1,8 +1,8 @@
 # Entity Relational Diagram (ERD)
 
-updatedAt: 2025.11.01
+updatedAt: 2025.11.25
 
-![erd](media/erd_251101.png)
+![erd](media/erd_251125.png)
 
 ## Script
 
@@ -103,6 +103,20 @@ create table hhplus.product
 
 create index idx_product_created_at
     on hhplus.product (created_at desc);
+
+create table hhplus.product_ranking
+(
+    id           bigint auto_increment comment '고유 식별자' primary key,
+    ranking_date date                                not null comment '기준일',
+    product_id   bigint                              not null comment '상품 고유 식별자',
+    sales_count  int       default 0                 not null comment '판매량',
+    created_at   timestamp default CURRENT_TIMESTAMP not null comment '생성 일시',
+    modified_at  timestamp default CURRENT_TIMESTAMP not null comment '수정 일시'
+);
+
+create index idx_product_ranking_ranking_date
+    on hhplus.product_ranking (ranking_date);
+
 
 create table hhplus.user
 (

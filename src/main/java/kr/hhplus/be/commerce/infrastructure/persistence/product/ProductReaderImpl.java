@@ -69,6 +69,19 @@ public class ProductReaderImpl implements ProductReader {
 		);
 	}
 
+	@Override
+	public List<ProductSummaryView> readAllByIdIn(List<Long> productIds) {
+		if (productIds.isEmpty()) {
+			return List.of();
+		}
+
+		return queryFactory
+			.select(constructorOfProductSummaryView())
+			.from(productEntity)
+			.where(productEntity.id.in(productIds))
+			.fetch();
+	}
+
 	private BooleanExpression buildWhereCondition(ProductReadPageInput input) {
 		return switch (input.sortType()) {
 			case OLDEST -> buildWhereConditionForOldest(input);

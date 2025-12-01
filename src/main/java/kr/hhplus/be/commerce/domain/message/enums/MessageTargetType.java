@@ -6,5 +6,5 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum MessageTargetType {
-	ORDER, PAYMENT
+	ORDER, PAYMENT, PRODUCT_RANKING
 }

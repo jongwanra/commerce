@@ -3,6 +3,7 @@ package kr.hhplus.be.commerce.domain.message.model;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,6 +24,8 @@ class MessageTest {
 	void 외부에_전송할_메세지를_대기_상태로_생성할_수_있다() {
 		// given
 		Long orderId = 1L;
+		LocalDateTime now = LocalDateTime.now();
+		LocalDate today = now.toLocalDate();
 		Order order = Order.restore(
 			orderId,
 			234L,
@@ -38,7 +41,7 @@ class MessageTest {
 				BigDecimal.valueOf(20_000),
 				1
 			)),
-			LocalDateTime.now(),
+			now,
 			"ORD_ALSLMQ_OWNINSD"
 		);
 
@@ -46,7 +49,7 @@ class MessageTest {
 		Message message = Message.ofPending(
 			orderId,
 			MessageTargetType.ORDER,
-			OrderConfirmedMessagePayload.from(orderId)
+			OrderConfirmedMessagePayload.from(orderId, today, now)
 		);
 
 		// then
@@ -91,7 +94,7 @@ class MessageTest {
 		Message message = Message.ofPending(
 				orderId,
 				MessageTargetType.ORDER,
-				OrderConfirmedMessagePayload.from(orderId)
+				OrderConfirmedMessagePayload.from(orderId, now.toLocalDate(), now)
 			)
 			.published(now);
 
@@ -136,7 +139,7 @@ class MessageTest {
 		Message message = Message.ofPending(
 				orderId,
 				MessageTargetType.ORDER,
-				OrderConfirmedMessagePayload.from(orderId)
+				OrderConfirmedMessagePayload.from(orderId, now.toLocalDate(), now)
 			)
 			.failed("Timeout Exceed", now);
 
@@ -183,7 +186,7 @@ class MessageTest {
 		Message message = Message.ofPending(
 			orderId,
 			MessageTargetType.ORDER,
-			OrderConfirmedMessagePayload.from(orderId)
+			OrderConfirmedMessagePayload.from(orderId, now.toLocalDate(), now)
 		);
 
 		// when

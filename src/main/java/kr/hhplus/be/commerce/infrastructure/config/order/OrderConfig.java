@@ -3,8 +3,9 @@ package kr.hhplus.be.commerce.infrastructure.config.order;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import jakarta.persistence.EntityManager;
 import kr.hhplus.be.commerce.application.order.OrderPlaceProcessor;
-import kr.hhplus.be.commerce.application.order.OrderPlaceWithDistributedLockProcessor;
+import kr.hhplus.be.commerce.application.order.OrderPlaceWithDatabaseLockProcessor;
 import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
 import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
 import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
@@ -13,6 +14,7 @@ import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
+import kr.hhplus.be.commerce.global.time.TimeProvider;
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderLineJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderRepositoryImpl;
@@ -22,11 +24,13 @@ public class OrderConfig {
 	@Bean
 	public OrderRepository orderRepository(
 		OrderJpaRepository orderJpaRepository,
-		OrderLineJpaRepository orderLineJpaRepository
+		OrderLineJpaRepository orderLineJpaRepository,
+		EntityManager entityManager
 	) {
 		return new OrderRepositoryImpl(
 			orderJpaRepository,
-			orderLineJpaRepository
+			orderLineJpaRepository,
+			entityManager
 		);
 	}
 
@@ -39,9 +43,10 @@ public class OrderConfig {
 		CashRepository cashRepository,
 		CashHistoryRepository cashHistoryRepository,
 		MessageRepository messageRepository,
-		UserRepository userRepository
+		UserRepository userRepository,
+		TimeProvider timeProvider
 	) {
-		return new OrderPlaceWithDistributedLockProcessor(
+		return new OrderPlaceWithDatabaseLockProcessor(
 			orderRepository,
 			paymentRepository,
 			productRepository,
@@ -49,7 +54,9 @@ public class OrderConfig {
 			cashRepository,
 			cashHistoryRepository,
 			messageRepository,
-			userRepository
+			userRepository,
+			timeProvider
+
 		);
 	}
 

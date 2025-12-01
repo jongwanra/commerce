@@ -14,6 +14,7 @@ import kr.hhplus.be.commerce.domain.message.enums.MessageStatus;
 import kr.hhplus.be.commerce.domain.message.model.Message;
 import kr.hhplus.be.commerce.domain.message.model.message_payload.MessagePayload;
 import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
+import kr.hhplus.be.commerce.global.time.TimeProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,9 +29,11 @@ public class MessagePublishScheduler {
 	private final MessageRepository messageRepository;
 	private final MessagePublisherMapper messagePublisherMapper;
 	private final TransactionTemplate transactionTemplate;
+	private final TimeProvider timeProvider;
 
 	@Scheduled(fixedDelay = FIVE_SECONDS)
 	public void execute() {
+		LocalDateTime now = timeProvider.now();
 		List<Message> messages = messageRepository.findAllByStatusInOrderByCreatedAtAscLimit(
 			MessageStatus.PUBLISHABLE_STATUES, BATCH_SIZE);
 
@@ -39,11 +42,10 @@ public class MessagePublishScheduler {
 				MessagePayload messagePayload = message.payload();
 				MessagePublisher messagePublisher = messagePublisherMapper.get(message.type());
 				messagePublisher.publish(messagePayload);
-				transactionTemplate.executeWithoutResult(status -> messageRepository.save(message.published(
-					LocalDateTime.now())));
+				transactionTemplate.executeWithoutResult(status -> messageRepository.save(message.published(now)));
 			} catch (Exception e) {
 				transactionTemplate.executeWithoutResult(
-					status -> messageRepository.save(message.failed(e.getMessage(), LocalDateTime.now())));
+					status -> messageRepository.save(message.failed(e.getMessage(), now)));
 				log.error("메세지 발행 중 실패 케이스가 발생했습니다. message: {} / error: {}", message, e.getMessage());
 				// 순서대로 처리를 보장하기 위해, 실패한 경우에는 멈추도록 구현했습니다.
 				break;

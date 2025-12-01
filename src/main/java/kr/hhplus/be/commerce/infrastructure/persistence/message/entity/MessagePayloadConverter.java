@@ -5,6 +5,7 @@ import static java.util.Objects.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
@@ -14,7 +15,8 @@ import kr.hhplus.be.commerce.domain.message.model.message_payload.MessagePayload
 
 @Converter
 public class MessagePayloadConverter implements AttributeConverter<MessagePayload, String> {
-	private static final ObjectMapper mapper = new ObjectMapper();
+	private static final ObjectMapper mapper = new ObjectMapper()
+		.registerModule(new JavaTimeModule()); // LocalDate JSON 직렬화를 위해 추가합니다.
 
 	@Override
 	public String convertToDatabaseColumn(MessagePayload messagePayload) {

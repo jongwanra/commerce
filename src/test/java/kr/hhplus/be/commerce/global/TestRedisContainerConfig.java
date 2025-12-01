@@ -26,5 +26,5 @@ public class TestRedisContainerConfig {
 			REDIS_CONTAINER.stop();
 		}
 	}
-
+	
 }

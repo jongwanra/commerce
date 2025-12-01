@@ -1,11 +1,10 @@
 package kr.hhplus.be.commerce.application.order;
 
 import static java.util.Objects.*;
-import static kr.hhplus.be.commerce.presentation.global.utils.Validator.*;
 import static kr.hhplus.be.commerce.presentation.global.utils.Validator.requireNonNull;
+import static kr.hhplus.be.commerce.presentation.global.utils.Validator.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
@@ -31,7 +30,6 @@ public interface OrderPlaceProcessor {
 		Long userId,
 		Long userCouponId,
 		BigDecimal paymentAmount,
-		LocalDateTime now,
 		List<OrderLineCommand> orderLineCommands
 	) {
 		public void validate() {

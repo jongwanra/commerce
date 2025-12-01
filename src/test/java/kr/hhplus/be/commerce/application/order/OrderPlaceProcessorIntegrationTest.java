@@ -133,7 +133,6 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 							userId,
 							null,
 							expectedPaymentAmount,
-							now,
 							List.of(
 								new OrderLineCommand(product.id(), 1)
 							)
