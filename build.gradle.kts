@@ -43,6 +43,9 @@ dependencies {
     // Redisson
     implementation("org.redisson:redisson-spring-boot-starter:3.35.0")
 
+    // Kafka
+    implementation("org.springframework.kafka:spring-kafka")
+
 
     // Lombok
     compileOnly("org.projectlombok:lombok:1.18.30")
@@ -58,8 +61,10 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:mysql")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    // 트랜잭션 이후 이벤트 처리를 테스트하기 위해 추가했습니다.
-    testImplementation("org.awaitility:awaitility:4.2.0")
+    testImplementation("org.testcontainers:kafka")
+    testImplementation("org.springframework.kafka:spring-kafka-test")
+    testImplementation("org.awaitility:awaitility:4.2.0") // 비동기 테스트 목적
+
 
     // Open API
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")

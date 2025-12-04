@@ -11,12 +11,13 @@ import lombok.Builder;
 @Builder(access = AccessLevel.PRIVATE)
 public record OrderPlacedEvent(
 	LocalDateTime occurredAt,
+	String key,
 	Long orderId,
 	List<OrderLineSummary> orderLines
 ) implements Event {
 	public static Event of(Order order) {
-		return OrderPlacedEvent
-			.builder()
+		return OrderPlacedEvent.builder()
+			.key(String.valueOf(order.id()))
 			.occurredAt(LocalDateTime.now())
 			.orderId(order.id())
 			.orderLines(order.orderLines().stream()

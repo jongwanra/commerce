@@ -30,6 +30,21 @@ spring:
       port: 6379
     cache:
       type: redis
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: test-group
+      auto-offset-reset: earliest
+      enable-auto-commit: true
+
+
 ---
 spring.config.activate.on-profile: local, test
 
@@ -47,3 +62,5 @@ springdoc:
   # 기본 Media Type 설정
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+
+
