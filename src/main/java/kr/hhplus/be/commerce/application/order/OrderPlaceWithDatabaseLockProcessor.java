@@ -198,10 +198,8 @@ public class OrderPlaceWithDatabaseLockProcessor implements OrderPlaceProcessor 
 				command.paymentAmount())
 			.succeed(now);
 
-		saveCashWithHistory(command, usedCash, originalBalance);
-
 		return new Output(
-			cashRepository.save(cash),
+			saveCashWithHistory(command, usedCash, originalBalance),
 			userCouponRepository.save(userCoupon),
 			productRepository.saveAll(products),
 			paymentRepository.save(payment),
@@ -239,6 +237,7 @@ public class OrderPlaceWithDatabaseLockProcessor implements OrderPlaceProcessor 
 		return OrderPlaceInput.builder()
 			.idempotencyKey(idempotencyKey)
 			.userId(command.userId())
+			.now(timeProvider.now())
 			.orderLineInputs(command.orderLineCommands()
 				.stream()
 				.map(orderLineCommand -> {

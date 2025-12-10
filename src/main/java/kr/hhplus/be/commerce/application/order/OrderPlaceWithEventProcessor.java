@@ -228,6 +228,7 @@ public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 		return OrderPlaceInput.builder()
 			.idempotencyKey(idempotencyKey)
 			.userId(command.userId())
+			.now(timeProvider.now())
 			.orderLineInputs(command.orderLineCommands()
 				.stream()
 				.map(orderLineCommand -> {

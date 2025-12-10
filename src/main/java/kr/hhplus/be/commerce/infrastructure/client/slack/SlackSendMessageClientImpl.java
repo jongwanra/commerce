@@ -10,6 +10,6 @@ public class SlackSendMessageClientImpl implements SlackSendMessageClient {
 	@Override
 	public void send(String message) {
 		// TODO Impl.
-		log.info("[슬랙 메세지 발송 성공: {}", message);
+		log.info("[슬랙 메시지 발송 성공]: {}", message);
 	}
 }

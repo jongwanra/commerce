@@ -15,10 +15,10 @@ public record OrderPlacedEvent(
 	Long orderId,
 	List<OrderLineSummary> orderLines
 ) implements Event {
-	public static Event of(Order order) {
+	public static Event of(Order order, LocalDateTime occurredAt) {
 		return OrderPlacedEvent.builder()
 			.key(String.valueOf(order.id()))
-			.occurredAt(LocalDateTime.now())
+			.occurredAt(occurredAt)
 			.orderId(order.id())
 			.orderLines(order.orderLines().stream()
 				.map((orderLine) -> new OrderLineSummary(orderLine.productId(), orderLine.orderQuantity()))

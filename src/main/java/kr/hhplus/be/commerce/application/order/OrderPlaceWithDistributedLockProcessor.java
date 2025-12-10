@@ -176,7 +176,7 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 
 		Payment payment = Payment.fromOrder(command.userId(), order.id(), command.paymentAmount())
 			.succeed(now);
-		
+
 		return new Output(
 			saveCashWithHistory(command, usedCash, originalBalance),
 			null,
@@ -240,6 +240,7 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 		return OrderPlaceInput.builder()
 			.idempotencyKey(idempotencyKey)
 			.userId(command.userId())
+			.now(timeProvider.now())
 			.orderLineInputs(command.orderLineCommands()
 				.stream()
 				.map(orderLineCommand -> {
