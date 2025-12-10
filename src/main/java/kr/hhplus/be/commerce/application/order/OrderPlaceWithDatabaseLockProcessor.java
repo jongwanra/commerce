@@ -197,11 +197,9 @@ public class OrderPlaceWithDatabaseLockProcessor implements OrderPlaceProcessor 
 		Payment payment = Payment.fromOrder(command.userId(), order.id(),
 				command.paymentAmount())
 			.succeed(now);
-
-		saveCashWithHistory(command, usedCash, originalBalance);
-
+		
 		return new Output(
-			cashRepository.save(cash),
+			saveCashWithHistory(command, usedCash, originalBalance),
 			userCouponRepository.save(userCoupon),
 			productRepository.saveAll(products),
 			paymentRepository.save(payment),
