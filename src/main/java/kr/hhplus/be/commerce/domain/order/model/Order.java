@@ -68,7 +68,7 @@ public record Order(
 			.idempotencyKey(input.idempotencyKey())
 			.build();
 
-		return new PlaceResult(order, List.of(OrderPlacedEvent.of(order)));
+		return new PlaceResult(order, List.of(OrderPlacedEvent.of(order, input.now())));
 	}
 
 	@InfrastructureOnly

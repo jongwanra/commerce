@@ -14,10 +14,9 @@ public record OrderPlacedEvent(
 	Long orderId,
 	List<OrderLineSummary> orderLines
 ) implements Event {
-	public static Event of(Order order) {
-		return OrderPlacedEvent
-			.builder()
-			.occurredAt(LocalDateTime.now())
+	public static Event of(Order order, LocalDateTime occurredAt) {
+		return OrderPlacedEvent.builder()
+			.occurredAt(occurredAt)
 			.orderId(order.id())
 			.orderLines(order.orderLines().stream()
 				.map((orderLine) -> new OrderLineSummary(orderLine.productId(), orderLine.orderQuantity()))

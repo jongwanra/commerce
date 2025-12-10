@@ -29,6 +29,7 @@ public class OrderPlacedProductRankingEventListener {
 	public void handle(OrderPlacedEvent event) {
 		try {
 			log.debug("[+OrderPlacedProductRankingEventListener] 진입: Thread={}", Thread.currentThread().getName());
+			
 			LocalDateTime now = event.occurredAt();
 			LocalDate today = now.toLocalDate();
 
