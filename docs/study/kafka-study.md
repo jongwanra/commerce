@@ -129,7 +129,7 @@ public class OrderPlacedNotificationEventListener {
 
 ### 4. 파티션 (Partition)
 
-토픽을 구성하는 물리적 분할 단위입니다.
+토픽을 구성하는 물리적 분할 단위이다.
 
 ```text
 topic: order.placed (3개 파티션)
@@ -147,18 +147,62 @@ Partition 2: [msg3] [msg6] [msg9] ...
 
 ### 5. 브로커 (Broker)
 
-Kafka 서버의 인스턴스입니다. 여러 브로커가 클러스터를 구성합니다.
+- Kafka 클러스터를 구성하는 물리적인 서버
+- 프로듀서에게 메시지를 받아 이를 저장하고 컨슈머로 전송하는 역할을 한다.
+- 카프카 클러스터 내에서 각 1개씩 존재하는 특별한 역할을 하는 브로커가 있다.
+- 특별한 역할을 하는 브로커(Controller, Coordinator)들은, 일반적인 브로커의 역할도 같이 수행한다.
+
+#### 1. Controller
+
+- 브로커들의 관리자
+- 브로커들의 상태를 모니터링
+- Leader 파티션 재분배
 
 ```text
-Kafka Cluster 
-├─ Broker 1 (Leader for Partition 0)
-├─ Broker 2 (Leader for Partition 1)
-└─ Broker 3 (Leader for Partition 2)
+[정상 상황]
+Broker1: Topic-A Partition-0 (Leader)
+Broker2: Topic-A Partition-0 (Follower)
+Broker3: Topic-A Partition-0 (Follower)
+
+[Broker1 장애 발생!]
+Controller가 감지
+↓
+Broker2: Topic-A Partition-0 (Leader로 승격!) ← Controller가 결정
+Broker3: Topic-A Partition-0 (Follower)
+```
+
+#### 2.Coordinator
+
+- 역할: 컨슈머 그룹의 관리자
+- 구체적으로 하는 일
+    - 컨슈머 그룹 모니터링
+        - 각 컨슈머 그룹 내의 컨슈머들이 정상적으로 동작하는지 체크
+        - 컨슈머가 주기적으로 heartbeat을 보내는데, 끊기면 장애로 판단
+    - 리밸런싱(Rebalance) 수행
+        - 컨슈머가 죽거나 새로 추가되면, 파티션 재분배
+
+```text
+[초기 상태]
+Consumer1 → Partition 0, 1
+Consumer2 → Partition 2, 3
+
+[Consumer1 장애 발생!]
+Coordinator가 감지
+↓
+Rebalance 시작
+↓
+Consumer2 → Partition 0, 1, 2, 3 (모두 담당)
+
+[새로운 Consumer3 추가]
+Rebalance 다시 발생
+↓
+Consumer2 → Partition 0, 1
+Consumer3 → Partition 2, 3
 ```
 
 ### 6. 오프셋 (Offset)
 
-파티션 내 메시지의 고유한 순차적 아이디이다.
+- 파티션 내 메시지의 고유한 순차적 아이디
 
 ```
 Partition 0
