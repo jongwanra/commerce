@@ -6,7 +6,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import kr.hhplus.be.commerce.domain.event.Event;
 import kr.hhplus.be.commerce.domain.global.annotation.InfrastructureOnly;
+import kr.hhplus.be.commerce.domain.order.event.OrderPlacedEvent;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
 import kr.hhplus.be.commerce.domain.order.model.input.OrderPlaceInput;
 import lombok.AccessLevel;
@@ -40,7 +42,7 @@ public record Order(
 			.build();
 	}
 
-	public Order place(OrderPlaceInput input) {
+	public PlaceResult place(OrderPlaceInput input) {
 		List<OrderLine> orderLines = input.orderLineInputs()
 			.stream()
 			.map((orderLineInput) -> OrderLine.place(orderLineInput.productId(), orderLineInput.productName(),
@@ -54,7 +56,7 @@ public record Order(
 		BigDecimal discountAmount = nonNull(input.discountAmountCalculable()) ?
 			input.discountAmountCalculable().calculateDiscountAmount(amount) : BigDecimal.valueOf(0, 2);
 
-		return Order.builder()
+		Order order = Order.builder()
 			.id(id)
 			.userId(input.userId())
 			.status(OrderStatus.CONFIRMED)
@@ -65,6 +67,8 @@ public record Order(
 			.confirmedAt(input.now())
 			.idempotencyKey(input.idempotencyKey())
 			.build();
+
+		return new PlaceResult(order, List.of(OrderPlacedEvent.of(order, input.now())));
 	}
 
 	@InfrastructureOnly
@@ -84,4 +88,10 @@ public record Order(
 			.build();
 	}
 
+	public record PlaceResult(
+		Order order,
+		List<Event> events
+	) {
+
+	}
 }

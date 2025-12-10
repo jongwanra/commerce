@@ -83,10 +83,12 @@ sourceSets["main"].java.srcDir(querydslSrcDir)
 tasks.withType<Test> {
     useJUnitPlatform()
     systemProperty("user.timezone", "UTC")
+    systemProperty("file.encoding", "UTF-8") // Warning:(55, 39) Non-ASCII characters
 }
 
 tasks.withType<JavaCompile> {
     options.generatedSourceOutputDirectory = file(querydslSrcDir)
+    options.encoding = "UTF-8" // Warning:(55, 39) Non-ASCII characters
 }
 
 tasks.named("clean") {

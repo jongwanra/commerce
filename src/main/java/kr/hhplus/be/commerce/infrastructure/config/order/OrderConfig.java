@@ -5,16 +5,16 @@ import org.springframework.context.annotation.Configuration;
 
 import jakarta.persistence.EntityManager;
 import kr.hhplus.be.commerce.application.order.OrderPlaceProcessor;
-import kr.hhplus.be.commerce.application.order.OrderPlaceWithDatabaseLockProcessor;
+import kr.hhplus.be.commerce.application.order.OrderPlaceWithEventProcessor;
 import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
 import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
 import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
-import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
 import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
 import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
 import kr.hhplus.be.commerce.global.time.TimeProvider;
+import kr.hhplus.be.commerce.infrastructure.event.SpringEventPublisher;
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderLineJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderRepositoryImpl;
@@ -42,21 +42,20 @@ public class OrderConfig {
 		UserCouponRepository userCouponRepository,
 		CashRepository cashRepository,
 		CashHistoryRepository cashHistoryRepository,
-		MessageRepository messageRepository,
 		UserRepository userRepository,
+		SpringEventPublisher springEventPublisher,
 		TimeProvider timeProvider
 	) {
-		return new OrderPlaceWithDatabaseLockProcessor(
+		return new OrderPlaceWithEventProcessor(
 			orderRepository,
 			paymentRepository,
 			productRepository,
 			userCouponRepository,
 			cashRepository,
 			cashHistoryRepository,
-			messageRepository,
+			springEventPublisher,
 			userRepository,
 			timeProvider
-
 		);
 	}
 

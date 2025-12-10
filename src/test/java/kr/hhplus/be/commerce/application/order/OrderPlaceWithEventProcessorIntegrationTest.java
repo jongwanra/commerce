@@ -2,50 +2,45 @@ package kr.hhplus.be.commerce.application.order;
 
 import static kr.hhplus.be.commerce.application.order.OrderPlaceWithDatabaseLockProcessor.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DynamicTest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import kr.hhplus.be.commerce.application.cash.CashChargeProcessor;
+import kr.hhplus.be.commerce.application.event.OrderPlacedNotificationEventListener;
+import kr.hhplus.be.commerce.application.event.OrderPlacedProductRankingEventListener;
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
 import kr.hhplus.be.commerce.domain.cash.model.enums.CashHistoryAction;
 import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
-import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
-import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
-import kr.hhplus.be.commerce.domain.message.enums.MessageStatus;
-import kr.hhplus.be.commerce.domain.message.enums.MessageTargetType;
-import kr.hhplus.be.commerce.domain.message.enums.MessageType;
-import kr.hhplus.be.commerce.domain.message.repository.MessageRepository;
 import kr.hhplus.be.commerce.domain.order.model.Order;
 import kr.hhplus.be.commerce.domain.order.model.OrderLine;
 import kr.hhplus.be.commerce.domain.order.model.enums.OrderStatus;
-import kr.hhplus.be.commerce.domain.order.repository.OrderRepository;
-import kr.hhplus.be.commerce.domain.payment.repository.PaymentRepository;
 import kr.hhplus.be.commerce.domain.product.model.Product;
-import kr.hhplus.be.commerce.domain.product.repository.ProductRepository;
-import kr.hhplus.be.commerce.domain.user.repository.UserRepository;
+import kr.hhplus.be.commerce.domain.product_ranking.model.ProductRankingView;
+import kr.hhplus.be.commerce.domain.product_ranking.store.ProductRankingStore;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.ScenarioIntegrationTest;
-import kr.hhplus.be.commerce.global.time.FixedTimeProvider;
-import kr.hhplus.be.commerce.global.time.TimeProvider;
+import kr.hhplus.be.commerce.infrastructure.config.TestAsyncConfig;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
-import kr.hhplus.be.commerce.infrastructure.persistence.message.entity.MessageEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.product.entity.ProductEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.UserEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
 
-class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport {
+@Import(TestAsyncConfig.class)
+class OrderPlaceWithEventProcessorIntegrationTest extends AbstractIntegrationTestSupport {
 	@Autowired
 	private CashChargeProcessor cashChargeProcessor;
-
+	@Autowired
 	private OrderPlaceProcessor orderPlaceProcessor;
 
 	@Autowired
@@ -55,41 +50,13 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 	private TransactionTemplate transactionTemplate;
 
 	@Autowired
-	private MessageRepository messageRepository;
+	private ProductRankingStore productRankingStore;
 
-	@Autowired
-	private UserRepository userRepository;
+	@MockitoSpyBean
+	private OrderPlacedNotificationEventListener orderPlacedNotificationEventListener;
 
-	@Autowired
-	private OrderRepository orderRepository;
-
-	@Autowired
-	private PaymentRepository paymentRepository;
-	@Autowired
-	private ProductRepository productRepository;
-	@Autowired
-	private UserCouponRepository userCouponRepository;
-
-	@Autowired
-	private CashRepository cashRepository;
-
-	private TimeProvider timeProvider;
-
-	@BeforeEach
-	void setUp() {
-		timeProvider = FixedTimeProvider.of(LocalDateTime.of(2025, 12, 2, 0, 0, 0));
-		orderPlaceProcessor = new OrderPlaceWithDistributedLockProcessor(
-			orderRepository,
-			paymentRepository,
-			productRepository,
-			userCouponRepository,
-			cashRepository,
-			cashHistoryRepository,
-			messageRepository,
-			userRepository,
-			timeProvider
-		);
-	}
+	@MockitoSpyBean
+	private OrderPlacedProductRankingEventListener orderPlacedProductRankingEventListener;
 
 	/**
 	 * 작성 이유: 상품을 주문하고 결제를 하는 전체 흐름이 정상 동작하는지 검증하기 위해 작성했습니다.
@@ -99,7 +66,8 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 	 * - 2-2. 재고를 차감한다.
 	 * - 2-3. 잔액을 차감한다.
 	 * - 2-4. 주문을 저장한다.
-	 * - 2-5. 외부 전송을 위한 Message를 저장한다.
+	 * - 2-5. 주문 확정 슬랙 메세지를 보낸다(비동기 처리)
+	 * - 2-6. Redis의 상품 판매량을 증가시킨다(비동기 처리)
 	 */
 	@ScenarioIntegrationTest
 	Stream<DynamicTest> 잔액을_충전하고_주문을_할_수_있다() {
@@ -194,14 +162,22 @@ class OrderPlaceProcessorIntegrationTest extends AbstractIntegrationTestSupport 
 				assertThat(cash.balance().compareTo(BigDecimal.valueOf(3_300))).isZero()
 					.as("기존 잔액 10,000원에서 주문 가격 6,700원을 뺀 잔액입니다.");
 
-				// (Message) 외부 전송을 위한 Message 저장 결과 확인
-				List<MessageEntity> messageEntities = messageJpaRepository.findAll();
-				assertThat(messageEntities).hasSize(1);
-				MessageEntity messageEntity = messageEntities.get(0);
-				assertThat(messageEntity.getStatus()).isEqualTo(MessageStatus.PENDING);
-				assertThat(messageEntity.getTargetId()).isEqualTo(order.id());
-				assertThat(messageEntity.getTargetType()).isEqualTo(MessageTargetType.ORDER);
-				assertThat(messageEntity.getType()).isEqualTo(MessageType.ORDER_CONFIRMED);
+				/**
+				 * 동기적으로 처리된 커밋 이후 이벤트들에 대해서 확인합니다.
+				 * @see OrderPlacedProductRankingEventListener
+				 * @see OrderPlacedNotificationEventListener
+				 */
+
+				verify(orderPlacedNotificationEventListener, times(1)).handle(any());
+				verify(orderPlacedProductRankingEventListener, times(1)).handle(any());
+				List<ProductRankingView> productRankings = productRankingStore.readProductIdsDailyTopSelling(
+					now.toLocalDate());
+
+				assertThat(productRankings).hasSize(1);
+				assertThat(productRankings.get(0).productId()).isEqualTo(product.id());
+				assertThat(productRankings.get(0).rankingDate()).isEqualTo(now.toLocalDate());
+				assertThat(productRankings.get(0).salesCount()).isEqualTo(1);
+
 			})
 		);
 	}

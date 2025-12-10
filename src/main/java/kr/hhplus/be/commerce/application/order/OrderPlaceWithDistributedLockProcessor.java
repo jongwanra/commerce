@@ -8,8 +8,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
@@ -83,13 +83,13 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 		command.validate();
 		LocalDateTime now = timeProvider.now();
 		LocalDate today = timeProvider.today();
-		userRepository.findByIdForUpdate(command.userId())
-			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER));
 
-		Optional<Order> alreadyPlacedOrderOpt = orderRepository.findByIdempotencyKey(command.idempotencyKey());
-		if (alreadyPlacedOrderOpt.isPresent()) {
+		if (isAlreadyPlacedOrder(command.idempotencyKey())) {
 			return Output.empty();
 		}
+
+		userRepository.findById(command.userId())
+			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER));
 
 		// 상품의 비관적 잠금을 획득한 상태로 조회 및 재고를 감소시킵니다.
 		List<Product> productsWithDecreasedStock = decreaseStock(command, fetchProductsForUpdate(command));
@@ -99,8 +99,15 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 
 		// 주문 및 잔액을 차감합니다.
 		// 주문 식별자를 미리 받기 위해서 save method를 호출합니다.
-		Order order = orderRepository.save(Order.ofPending(command.userId()))
-			.place(toOrderPlaceInput(command, productsWithDecreasedStock, command.idempotencyKey()));
+		Order order;
+		try {
+			order = orderRepository.save(Order.ofPending(command.userId()));
+		} catch (DataIntegrityViolationException e) {
+			log.warn("중복 결제 건이 있어서 반환합니다. idempotencyKey={}", command.idempotencyKey());
+			return Output.empty();
+		}
+		Order placedOrder = order.place(
+			buildOrderPlaceInput(command, productsWithDecreasedStock, command.idempotencyKey())).order();
 
 		messageRepository.save(Message.ofPending(
 			order.id(),
@@ -108,9 +115,15 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 			OrderConfirmedMessagePayload.from(order.id(), today, now)
 		));
 
+		return processPayment(command, placedOrder, cash, productsWithDecreasedStock, now);
+	}
+
+	private Output processPayment(Command command, Order placedOrder, Cash cash,
+		List<Product> productsWithDecreasedStock,
+		LocalDateTime now) {
 		return isNull(command.userCouponId()) ?
-			executeWithoutCoupon(command, order, cash, productsWithDecreasedStock, now) :
-			executeWithCoupon(command, order, cash, productsWithDecreasedStock, now);
+			processPaymentWithoutCoupon(command, placedOrder, cash, productsWithDecreasedStock, now) :
+			processPaymentWithCoupon(command, placedOrder, cash, productsWithDecreasedStock, now);
 	}
 
 	@Recover
@@ -124,6 +137,10 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 			throw new CommerceException(CommerceCode.EXCEEDED_RETRY_COUNT_FOR_LOCK);
 		}
 		throw e;
+	}
+
+	private boolean isAlreadyPlacedOrder(String idempotencyKey) {
+		return orderRepository.findByIdempotencyKey(idempotencyKey).isPresent();
 	}
 
 	private List<Product> fetchProductsForUpdate(Command command) {
@@ -150,7 +167,7 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 			.toList();
 	}
 
-	private Output executeWithoutCoupon(Command command, Order order, Cash cash, List<Product> products,
+	private Output processPaymentWithoutCoupon(Command command, Order order, Cash cash, List<Product> products,
 		LocalDateTime now) {
 		validatePaymentAmountIsMatched(command.paymentAmount(), order);
 
@@ -160,11 +177,8 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 		Payment payment = Payment.fromOrder(command.userId(), order.id(), command.paymentAmount())
 			.succeed(now);
 
-		cashHistoryRepository.save(
-			CashHistory.recordOfPurchase(command.userId(), usedCash.balance(), originalBalance));
-
 		return new Output(
-			cashRepository.save(usedCash),
+			saveCashWithHistory(command, usedCash, originalBalance),
 			null,
 			productRepository.saveAll(products),
 			paymentRepository.save(payment),
@@ -172,7 +186,7 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 		);
 	}
 
-	private Output executeWithCoupon(Command command, Order order, Cash cash, List<Product> products,
+	private Output processPaymentWithCoupon(Command command, Order order, Cash cash, List<Product> products,
 		LocalDateTime now) {
 		UserCoupon userCoupon = userCouponRepository.findById(command.userCouponId())
 			.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_USER_COUPON));
@@ -187,16 +201,20 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 				command.paymentAmount())
 			.succeed(now);
 
-		cashHistoryRepository.save(
-			CashHistory.recordOfPurchase(command.userId(), usedCash.balance(), originalBalance));
-
 		return new Output(
-			cashRepository.save(cash),
+			saveCashWithHistory(command, usedCash, originalBalance),
 			userCouponRepository.save(userCoupon),
 			productRepository.saveAll(products),
 			paymentRepository.save(payment),
 			orderRepository.save(order)
 		);
+	}
+
+	private Cash saveCashWithHistory(Command command, Cash cash, BigDecimal originalBalance) {
+		cashHistoryRepository.save(
+			CashHistory.recordOfPurchase(command.userId(), cash.balance(), originalBalance));
+
+		return cashRepository.save(cash);
 	}
 
 	private void validatePaymentAmountIsMatched(BigDecimal paymentAmount, UserCoupon userCoupon,
@@ -214,7 +232,7 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 		}
 	}
 
-	private OrderPlaceInput toOrderPlaceInput(Command command, List<Product> products, String idempotencyKey) {
+	private OrderPlaceInput buildOrderPlaceInput(Command command, List<Product> products, String idempotencyKey) {
 		Map<Long, Product> productIdToProductMap = products
 			.stream()
 			.collect(toMap(Product::id, product -> product));
@@ -222,6 +240,7 @@ public class OrderPlaceWithDistributedLockProcessor implements OrderPlaceProcess
 		return OrderPlaceInput.builder()
 			.idempotencyKey(idempotencyKey)
 			.userId(command.userId())
+			.now(timeProvider.now())
 			.orderLineInputs(command.orderLineCommands()
 				.stream()
 				.map(orderLineCommand -> {

@@ -12,8 +12,8 @@ public class UserRepositoryImpl implements UserRepository {
 	private final UserJpaRepository userJpaRepository;
 
 	@Override
-	public Optional<User> findByIdForUpdate(Long id) {
-		return userJpaRepository.findByIdForUpdate(id)
+	public Optional<User> findById(Long id) {
+		return userJpaRepository.findById(id)
 			.map(UserEntity::toDomain);
 	}
 }
