@@ -28,6 +28,9 @@ public class KafkaEventPublisher implements ExternalEventPublisher {
 		} catch (JsonProcessingException e) {
 			log.error("[KafkaEventPublisher] Event 객체를 JSON 문자열로 직렬화하는데 에러가 발생했습니다.", e);
 			throw new CommerceException(e.getMessage());
+		} catch (Exception e) {
+			log.error("[KafkaEventPublisher] 이벤트를 발행하는데 예상하지 못한 에러가 발생했습니다.", e);
+			throw new CommerceException(e.getMessage());
 		}
 	}
 }
