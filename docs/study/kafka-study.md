@@ -44,7 +44,7 @@
 
 ### 1. 프로듀서 (Producer)
 
-Kafka에 이벤트를 생성하여 발행하는 서비스이다.
+- Kafka에 이벤트를 생성하여 발행하는 서비스
 
 ```java
 
@@ -80,7 +80,7 @@ public class KafkaEventPublisher implements ExternalEventPublisher {
 
 ### 2. 컨슈머 (Consumer)
 
-Kafka로부터 이벤트를 읽어서 처리하는 애플리케이션입니다.
+- Kafka로부터 이벤트를 읽어서 처리하는 서비스
 
 ```java
 
