@@ -32,6 +32,7 @@ import kr.hhplus.be.commerce.domain.product_ranking.store.ProductRankingStore;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.ScenarioIntegrationTest;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
+import kr.hhplus.be.commerce.infrastructure.persistence.processed_message.entity.ProcessedMessageEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.product.entity.ProductEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.UserEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
@@ -172,6 +173,16 @@ class OrderPlaceWithEventProcessorIntegrationTest extends AbstractIntegrationTes
 						assertThat(productRankings.get(0).rankingDate()).isEqualTo(now.toLocalDate());
 						assertThat(productRankings.get(0).salesCount()).isEqualTo(1);
 					});
+
+				// 3. 멱등성 보장을 위한 ProcessedMessage가 잘 저장되었는지 확인합니다.
+				List<ProcessedMessageEntity> processedMessages = processedMessageJpaRepository.findAll();
+
+				assertThat(processedMessages.size()).isOne();
+				ProcessedMessageEntity processedMessage = processedMessages.get(0);
+
+				assertThat(processedMessage.getMessageId()).isEqualTo(
+					"order.placed:product_ranking_consumer_group:" + order.id());
+				assertThat(processedMessage.getProcessedAt()).isEqualToIgnoringNanos(now);
 			})
 		);
 	}

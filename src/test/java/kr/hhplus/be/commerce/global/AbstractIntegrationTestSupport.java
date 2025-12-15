@@ -18,6 +18,7 @@ import kr.hhplus.be.commerce.infrastructure.persistence.cash.CashJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.message.MessageJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.order.OrderJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.payment.PaymentJpaRepository;
+import kr.hhplus.be.commerce.infrastructure.persistence.processed_message.ProcessedMessageJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.product.ProductJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.product_ranking.ProductRankingJpaRepository;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.UserJpaRepository;
@@ -45,6 +46,9 @@ public abstract class AbstractIntegrationTestSupport {
 
 	@Autowired
 	protected ProductRankingJpaRepository productRankingJpaRepository;
+
+	@Autowired
+	protected ProcessedMessageJpaRepository processedMessageJpaRepository;
 
 	@Autowired
 	protected RedisTemplate<String, String> redisTemplate;

@@ -38,15 +38,14 @@ spring:
       acks: all
       retries: 3
     consumer:
+
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-
-      # 처음 Kafka를 실행할 때 (offset 정보가 없을 경우) 어디서부터 읽을지 결정
-      # 현재 설정은 맨 처음부터 모든 메시지를 읽음
-      # latest -> 현재 시점 이후의 새로운 메시지만 읽음
-      # none -> offset 정보가 없으면 에러 발생, 명시적으로 offset을 관리하고 싶을 때 사용
-      auto-offset-reset: earliest
-      enable-auto-commit: true
+      auto-offset-reset: earliest # 처음 Kafka를 실행할 때, 처음 메시지 부터 읽음
+      enable-auto-commit: false # 수동 commit
+    listener:
+      ack-mode: manual # 명시적으로 제어
+      concurrency: 3 # 병렬 처리 Consumer 수
 
 
 ---

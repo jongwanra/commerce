@@ -9,3 +9,4 @@ TRUNCATE TABLE cash;
 TRUNCATE TABLE cash_history;
 TRUNCATE TABLE message;
 TRUNCATE TABLE product_ranking;
+TRUNCATE TABLE processed_message;
