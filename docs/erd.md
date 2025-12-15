@@ -1,8 +1,8 @@
 # Entity Relational Diagram (ERD)
 
-updatedAt: 2025.11.25
+updatedAt: 2025.12.16
 
-![erd](media/erd_251125.png)
+![erd](media/erd_251216.png)
 
 ## Script
 
@@ -170,6 +170,12 @@ create index idx_message_status_created_at
     on hhplus.message (status, created_at);
 
 
+# Kafka에서 중복 메시지에 대한 멱등성을 보장하기 위해 설계했습니다. 
+create table hhplus.processed_message
+(
+    id           varchar(255)                        not null comment '고유 식별자' primary key,
+    processed_at timestamp default CURRENT_TIMESTAMP not null comment '처리된 일시'
+);
 
 
 
