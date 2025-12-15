@@ -20,18 +20,18 @@ import lombok.NoArgsConstructor;
 @Builder(access = AccessLevel.PRIVATE)
 public class ProcessedMessageEntity {
 	@Id
-	private String messageId;
+	private String id;
 
 	private LocalDateTime processedAt;
 
 	public static ProcessedMessageEntity fromDomain(ProcessedMessage processedMessage) {
 		return ProcessedMessageEntity.builder()
-			.messageId(processedMessage.messageId())
+			.id(processedMessage.id())
 			.processedAt(processedMessage.processedAt())
 			.build();
 	}
 
 	public ProcessedMessage toDomain() {
-		return ProcessedMessage.restore(this.messageId, this.processedAt);
+		return ProcessedMessage.restore(this.id, this.processedAt);
 	}
 }

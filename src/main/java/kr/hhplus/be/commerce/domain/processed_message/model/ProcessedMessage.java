@@ -8,26 +8,26 @@ import lombok.Builder;
 
 @Builder(access = AccessLevel.PRIVATE)
 public record ProcessedMessage(
-	String messageId,
+	String id,
 	LocalDateTime processedAt
 ) {
-	private static final String MESSAGE_ID_DELIMITER = ":";
+	private static final String ID_DELIMITER = ":";
 
 	public static ProcessedMessage of(String key, String topic, String consumerGroupId, LocalDateTime processedAt) {
 		return ProcessedMessage.builder()
-			.messageId(generateMessageId(key, topic, consumerGroupId))
+			.id(generateId(key, topic, consumerGroupId))
 			.processedAt(processedAt)
 			.build();
 	}
 
-	private static String generateMessageId(String key, String topic, String consumerGroupId) {
-		return topic + MESSAGE_ID_DELIMITER + consumerGroupId + MESSAGE_ID_DELIMITER + key;
+	private static String generateId(String key, String topic, String consumerGroupId) {
+		return topic + ID_DELIMITER + consumerGroupId + ID_DELIMITER + key;
 	}
 
 	@InfrastructureOnly
-	public static ProcessedMessage restore(String messageId, LocalDateTime processedAt) {
+	public static ProcessedMessage restore(String id, LocalDateTime processedAt) {
 		return ProcessedMessage.builder()
-			.messageId(messageId)
+			.id(id)
 			.processedAt(processedAt)
 			.build();
 	}

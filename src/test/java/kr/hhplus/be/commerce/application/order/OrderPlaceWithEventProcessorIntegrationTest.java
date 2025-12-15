@@ -180,7 +180,7 @@ class OrderPlaceWithEventProcessorIntegrationTest extends AbstractIntegrationTes
 				assertThat(processedMessages.size()).isOne();
 				ProcessedMessageEntity processedMessage = processedMessages.get(0);
 
-				assertThat(processedMessage.getMessageId()).isEqualTo(
+				assertThat(processedMessage.getId()).isEqualTo(
 					"order.placed:product_ranking_consumer_group:" + order.id());
 				assertThat(processedMessage.getProcessedAt()).isEqualToIgnoringNanos(now);
 			})

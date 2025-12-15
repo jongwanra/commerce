@@ -159,10 +159,9 @@ create index idx_product_ranking_ranking_date
 
 create table processed_message
 (
-    message_id   varchar(255)                        not null comment '메시지 고유 식별자' primary key,
+    id           varchar(255)                        not null comment '메시지 고유 식별자' primary key,
     processed_at timestamp default CURRENT_TIMESTAMP not null comment '처리된 일시'
 );
-
 
 
 
