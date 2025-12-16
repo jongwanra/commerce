@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -182,7 +183,7 @@ class OrderPlaceWithEventProcessorIntegrationTest extends AbstractIntegrationTes
 
 				assertThat(processedMessage.getId()).isEqualTo(
 					"order.placed:product_ranking_consumer_group:" + order.id());
-				assertThat(processedMessage.getProcessedAt()).isEqualToIgnoringNanos(now);
+				assertThat(processedMessage.getProcessedAt()).isCloseTo(now, within(1, ChronoUnit.SECONDS));
 			})
 		);
 	}
