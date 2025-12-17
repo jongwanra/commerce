@@ -101,3 +101,8 @@ tasks.named("clean") {
         file(querydslSrcDir).deleteRecursively()
     }
 }
+
+tasks.bootJar {
+    archiveFileName = "app.jar"
+    destinationDirectory = file("./docker/app")
+}

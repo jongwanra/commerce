@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: hhplus
+  datasource:
+    url: jdbc:mysql://mysql:3306/hhplus?characterEncoding=UTF-8&serverTimezone=UTC
+    username: application
+    password: application
+    name: HangHaePlusDataSource
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      maximum-pool-size: 3
+      connection-timeout: 10000
+      max-lifetime: 60000
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    open-in-view: false
+    generate-ddl: false
+    hibernate:
+      ddl-auto: none
+
+    properties:
+      hibernate.timezone.default_storage: NORMALIZE_UTC
+      hibernate.jdbc.time_zone: UTC
+      hibernate:
+        show_sql: false
+        format_sql: false
+        default_batch_fetch_size: 1000
+  data:
+    redis:
+      host: redis
+      port: 6379
+    cache:
+      type: redis
+  kafka:
+    bootstrap-servers: broker1:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest # 처음 Kafka를 실행할 때, 처음 메시지 부터 읽음
+      enable-auto-commit: false # 수동 commit
+    listener:
+      ack-mode: manual # 명시적으로 제어
+      concurrency: 3 # 병렬 처리 Consumer 수
+
+
+
+
