@@ -42,6 +42,8 @@ dependencies {
 
     // Redisson
     implementation("org.redisson:redisson-spring-boot-starter:3.35.0")
+    // Redis Connection Pool
+    implementation("org.apache.commons:commons-pool2")
 
     // Kafka
     implementation("org.springframework.kafka:spring-kafka")

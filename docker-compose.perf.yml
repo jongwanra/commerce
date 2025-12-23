@@ -19,11 +19,6 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
     hostname: zookeeper
@@ -103,13 +98,12 @@ services:
       - mysql
       - redis
       - broker1
-    #    command: java -Xms512m -Xmx768m -Dspring.profiles.active=perf -jar app.jar
-    command: java  -Dspring.profiles.active=perf -jar app.jar
-#    deploy:
-#      resources:
-#        limits:
-#          cpus: '2.0'
-#          memory: '1GB'
+    command: java -Xms1g -Xmx1536m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+ParallelRefProcEnabled -Dspring.profiles.active=perf -jar app.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: '2GB'
 
 volumes:
   redis_data:

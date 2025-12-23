@@ -8,8 +8,9 @@ spring:
     name: HangHaePlusDataSource
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
-      maximum-pool-size: 3
-      connection-timeout: 10000
+      maximum-pool-size: 50
+      minimum-idle: 47
+      connection-timeout: 30000
       max-lifetime: 60000
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
@@ -46,7 +47,17 @@ spring:
     listener:
       ack-mode: manual # 명시적으로 제어
       concurrency: 3 # 병렬 처리 Consumer 수
+  task:
+    execution:
+      pool:
+        core-size: 50
+        max-size: 100
+        # 2,000명이 몰려도 다 받을 수 있도록 넉넉히 설정
+        queue-capacity: 2000
 
-
-
-
+server:
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 20 # 항상 대기하는 스레드 수
+    accept-count: 3000 # (기본 100) -> 대기열 큐를 3,000까지 늘려서 튕겨나가지 않게 함
