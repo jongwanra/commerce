@@ -94,7 +94,7 @@ public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 		// - 쿠폰 사용
 
 		// 2. 이벤트 발행
-		eventPublisher.publishEvent(new OrderPlacedEvent(order.id()));
+		internalEventPublisher.publishEvent(new OrderPlacedEvent(order.id()));
 
 		return output;
 	}

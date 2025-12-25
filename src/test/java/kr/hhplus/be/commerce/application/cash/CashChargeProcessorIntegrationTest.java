@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.*;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
@@ -22,6 +21,7 @@ import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.UserEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
 
 public class CashChargeProcessorIntegrationTest extends AbstractIntegrationTestSupport {
+	@Autowired
 	private CashChargeProcessor cashChargeProcessor;
 
 	@Autowired
@@ -32,11 +32,6 @@ public class CashChargeProcessorIntegrationTest extends AbstractIntegrationTestS
 
 	@Autowired
 	private CashHistoryRepository cashHistoryRepository;
-
-	@BeforeEach
-	void setUp() {
-		cashChargeProcessor = new CashChargeProcessor(cashRepository, cashHistoryRepository);
-	}
 
 	// 작성 이유: CashChargeProcessor의 정상 충전 여부를 확인하기 위해 작성했습니다.
 	@IntegrationTest

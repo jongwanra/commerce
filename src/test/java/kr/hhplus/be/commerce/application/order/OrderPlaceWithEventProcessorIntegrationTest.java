@@ -2,20 +2,22 @@ package kr.hhplus.be.commerce.application.order;
 
 import static kr.hhplus.be.commerce.application.order.OrderPlaceWithDatabaseLockProcessor.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.awaitility.Awaitility.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DynamicTest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import kr.hhplus.be.commerce.application.cash.CashChargeProcessor;
+import kr.hhplus.be.commerce.application.event.OrderPlacedEventListener;
 import kr.hhplus.be.commerce.application.event.OrderPlacedNotificationEventListener;
 import kr.hhplus.be.commerce.application.event.OrderPlacedProductRankingEventListener;
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
@@ -30,13 +32,12 @@ import kr.hhplus.be.commerce.domain.product_ranking.model.ProductRankingView;
 import kr.hhplus.be.commerce.domain.product_ranking.store.ProductRankingStore;
 import kr.hhplus.be.commerce.global.AbstractIntegrationTestSupport;
 import kr.hhplus.be.commerce.global.annotation.ScenarioIntegrationTest;
-import kr.hhplus.be.commerce.infrastructure.config.TestAsyncConfig;
 import kr.hhplus.be.commerce.infrastructure.persistence.cash.entity.CashEntity;
+import kr.hhplus.be.commerce.infrastructure.persistence.processed_message.entity.ProcessedMessageEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.product.entity.ProductEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.UserEntity;
 import kr.hhplus.be.commerce.infrastructure.persistence.user.entity.enums.UserStatus;
 
-@Import(TestAsyncConfig.class)
 class OrderPlaceWithEventProcessorIntegrationTest extends AbstractIntegrationTestSupport {
 	@Autowired
 	private CashChargeProcessor cashChargeProcessor;
@@ -52,12 +53,6 @@ class OrderPlaceWithEventProcessorIntegrationTest extends AbstractIntegrationTes
 	@Autowired
 	private ProductRankingStore productRankingStore;
 
-	@MockitoSpyBean
-	private OrderPlacedNotificationEventListener orderPlacedNotificationEventListener;
-
-	@MockitoSpyBean
-	private OrderPlacedProductRankingEventListener orderPlacedProductRankingEventListener;
-
 	/**
 	 * 작성 이유: 상품을 주문하고 결제를 하는 전체 흐름이 정상 동작하는지 검증하기 위해 작성했습니다.
 	 * 1. 잔액이 정상적으로 충전된다.
@@ -66,8 +61,8 @@ class OrderPlaceWithEventProcessorIntegrationTest extends AbstractIntegrationTes
 	 * - 2-2. 재고를 차감한다.
 	 * - 2-3. 잔액을 차감한다.
 	 * - 2-4. 주문을 저장한다.
-	 * - 2-5. 주문 확정 슬랙 메세지를 보낸다(비동기 처리)
-	 * - 2-6. Redis의 상품 판매량을 증가시킨다(비동기 처리)
+	 * - 2-5. 주문 확정 슬랙 메세지를 보낸다(카프카를 통한 비동기 처리)
+	 * - 2-6. Redis의 상품 판매량을 증가시킨다(카프카를 통한 비동기 처리)
 	 */
 	@ScenarioIntegrationTest
 	Stream<DynamicTest> 잔액을_충전하고_주문을_할_수_있다() {
@@ -117,23 +112,17 @@ class OrderPlaceWithEventProcessorIntegrationTest extends AbstractIntegrationTes
 				final BigDecimal expectedPaymentAmount = BigDecimal.valueOf(6_700);
 				final LocalDateTime now = LocalDateTime.now();
 
-				// mock
-
 				// when
-				Output output = transactionTemplate.execute(
-					(status) -> {
-						Command command = new Command(
-							idempotencyKey,
-							userId,
-							null,
-							expectedPaymentAmount,
-							List.of(
-								new OrderLineCommand(product.id(), 1)
-							)
-						);
-
-						return orderPlaceProcessor.execute(command);
-					});
+				Command command = new Command(
+					idempotencyKey,
+					userId,
+					null,
+					expectedPaymentAmount,
+					List.of(
+						new OrderLineCommand(product.id(), 1)
+					)
+				);
+				Output output = orderPlaceProcessor.execute(command);
 
 				// then
 
@@ -163,22 +152,40 @@ class OrderPlaceWithEventProcessorIntegrationTest extends AbstractIntegrationTes
 					.as("기존 잔액 10,000원에서 주문 가격 6,700원을 뺀 잔액입니다.");
 
 				/**
-				 * 동기적으로 처리된 커밋 이후 이벤트들에 대해서 확인합니다.
+				 * {@link OrderPlacedEventListener}에서 카프카로 메세지를 발행하면 아래의 이벤트 리스너들이 메세지를 읽습니다.
 				 * @see OrderPlacedProductRankingEventListener
 				 * @see OrderPlacedNotificationEventListener
 				 */
 
-				verify(orderPlacedNotificationEventListener, times(1)).handle(any());
-				verify(orderPlacedProductRankingEventListener, times(1)).handle(any());
-				List<ProductRankingView> productRankings = productRankingStore.readProductIdsDailyTopSelling(
-					now.toLocalDate());
+				// 1. 슬랙 알림 이벤트 리스너가 호출되었는지 검증
+				await()
+					.atMost(Duration.ofSeconds(5))
+					.untilAsserted(() -> verify(slackSendMessageClient, times(1)).send(anyString()));
 
-				assertThat(productRankings).hasSize(1);
-				assertThat(productRankings.get(0).productId()).isEqualTo(product.id());
-				assertThat(productRankings.get(0).rankingDate()).isEqualTo(now.toLocalDate());
-				assertThat(productRankings.get(0).salesCount()).isEqualTo(1);
+				// 2. 상품 랭킹 업데이트 이벤트 리스너가 호출되었는지 검증
+				await()
+					.atMost(Duration.ofSeconds(5))
+					.untilAsserted(() -> {
+						List<ProductRankingView> productRankings = productRankingStore.readProductIdsDailyTopSelling(
+							now.toLocalDate());
 
+						assertThat(productRankings).hasSize(1);
+						assertThat(productRankings.get(0).productId()).isEqualTo(product.id());
+						assertThat(productRankings.get(0).rankingDate()).isEqualTo(now.toLocalDate());
+						assertThat(productRankings.get(0).salesCount()).isEqualTo(1);
+					});
+
+				// 3. 멱등성 보장을 위한 ProcessedMessage가 잘 저장되었는지 확인합니다.
+				List<ProcessedMessageEntity> processedMessages = processedMessageJpaRepository.findAll();
+
+				assertThat(processedMessages.size()).isOne();
+				ProcessedMessageEntity processedMessage = processedMessages.get(0);
+
+				assertThat(processedMessage.getId()).isEqualTo(
+					"order.placed:product_ranking_consumer_group:" + order.id());
+				assertThat(processedMessage.getProcessedAt()).isCloseTo(now, within(1, ChronoUnit.SECONDS));
 			})
 		);
 	}
+
 }

@@ -16,15 +16,14 @@ import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.hhplus.be.commerce.application.event.OrderPlacedNotificationEventListener;
-import kr.hhplus.be.commerce.application.event.OrderPlacedProductRankingEventListener;
+import kr.hhplus.be.commerce.application.event.OrderPlacedEventListener;
 import kr.hhplus.be.commerce.domain.cash.model.Cash;
 import kr.hhplus.be.commerce.domain.cash.model.CashHistory;
 import kr.hhplus.be.commerce.domain.cash.repository.CashHistoryRepository;
 import kr.hhplus.be.commerce.domain.cash.repository.CashRepository;
 import kr.hhplus.be.commerce.domain.coupon.model.UserCoupon;
 import kr.hhplus.be.commerce.domain.coupon.repository.UserCouponRepository;
-import kr.hhplus.be.commerce.domain.event.EventPublisher;
+import kr.hhplus.be.commerce.domain.event.InternalEventPublisher;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceCode;
 import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.domain.order.model.Order;
@@ -42,8 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * 주문 확정 이후, 후처리 로직입니다.
- * @see OrderPlacedNotificationEventListener
- * @see OrderPlacedProductRankingEventListener
+ * @see OrderPlacedEventListener
  */
 
 @Slf4j
@@ -55,7 +53,7 @@ public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 	private final UserCouponRepository userCouponRepository;
 	private final CashRepository cashRepository;
 	private final CashHistoryRepository cashHistoryRepository;
-	private final EventPublisher eventPublisher;
+	private final InternalEventPublisher internalEventPublisher;
 	private final UserRepository userRepository;
 	private final TimeProvider timeProvider;
 
@@ -103,7 +101,7 @@ public class OrderPlaceWithEventProcessor implements OrderPlaceProcessor {
 		Order.PlaceResult result = order.place(
 			buildOrderPlaceInput(command, productsWithDecreasedStock, command.idempotencyKey()));
 
-		eventPublisher.publish(result.events());
+		internalEventPublisher.publish(result.events());
 
 		return processPayment(command, result.order(), cash, productsWithDecreasedStock, now);
 	}

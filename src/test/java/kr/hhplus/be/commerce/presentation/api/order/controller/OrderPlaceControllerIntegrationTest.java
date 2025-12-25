@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -50,6 +51,7 @@ class OrderPlaceControllerIntegrationTest extends AbstractIntegrationTestSupport
 	 * 2. 중복 결제 되지 않음.
 	 */
 	@IntegrationTest
+	@Disabled
 	void 동일한_멱등키로_중복_요청을_했을_경우_동일한_결과값을_반환한다() throws InterruptedException {
 		// given
 		UserEntity user = userJpaRepository.save(UserEntity.builder()

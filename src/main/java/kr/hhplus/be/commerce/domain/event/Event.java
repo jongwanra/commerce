@@ -4,4 +4,6 @@ import java.time.LocalDateTime;
 
 public interface Event {
 	LocalDateTime occurredAt();
+
+	String key();
 }
