@@ -81,7 +81,7 @@ public class OrderPlacedProductRankingEventListener {
 			.forEach(
 				(orderLine) -> productRankingStore.increment(orderLine.productId(), orderLine.orderQuantity(),
 					today, now));
-		
+
 	}
 
 	/**

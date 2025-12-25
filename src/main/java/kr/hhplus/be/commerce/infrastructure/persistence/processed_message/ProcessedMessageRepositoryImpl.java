@@ -14,7 +14,7 @@ public class ProcessedMessageRepositoryImpl implements ProcessedMessageRepositor
 
 	@Override
 	public boolean existsByMessageId(String messageId) {
-		return existsByMessageId(messageId);
+		return processedMessageJpaRepository.existsById(messageId);
 	}
 
 	@Override
