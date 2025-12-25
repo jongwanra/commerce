@@ -12,7 +12,7 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,6 +35,7 @@ public class OrderPlacedProductRankingEventListener {
 	private final ProductRankingStore productRankingStore;
 	private final ObjectMapper mapper;
 	private final ProcessedMessageRepository processedMessageRepository;
+	private final TransactionTemplate transactionTemplate;
 
 	/**
 	 * {@link OrderPlaceProcessor}의 후처리 로직입니다.
@@ -46,25 +47,10 @@ public class OrderPlacedProductRankingEventListener {
 		exclude = {JsonProcessingException.class} // JsonProcessingException을 제외하고는 재시도를 진행합니다.
 	)
 	@KafkaListener(topics = TOPIC, groupId = CONSUMER_GROUP_ID)
-	@Transactional
 	public void handle(String message, Acknowledgment ack) throws JsonProcessingException {
 		try {
 			OrderPlacedEvent event = mapper.readValue(message, OrderPlacedEvent.class);
-			LocalDateTime now = event.occurredAt();
-			LocalDate today = now.toLocalDate();
-
-			// [중복 처리 방지] Database level에서 이미 처리된 메시지인지 여부를 확인합니다.
-			ProcessedMessage processedMessage = ProcessedMessage.of(event.key(), TOPIC, CONSUMER_GROUP_ID,
-				event.occurredAt());
-
-			processedMessageRepository.saveAndFlush(
-				processedMessage);
-
-			event.orderLines()
-				.forEach(
-					(orderLine) -> productRankingStore.increment(orderLine.productId(), orderLine.orderQuantity(),
-						today, now));
-
+			transactionTemplate.executeWithoutResult((status) -> processMessage(event));
 			ack.acknowledge();
 		} catch (DataIntegrityViolationException e) {
 			log.warn("[Idempotency Skip] 중복 메시지입니다. Ack 처리: message={}", message);
@@ -77,6 +63,25 @@ public class OrderPlacedProductRankingEventListener {
 			log.error("[알수 없는 에러 발생] 주문 확정 이후, 판매량을 증가시키는데 에러가 발생헀습니다.", e);
 			throw e;
 		}
+	}
+
+	private void processMessage(OrderPlacedEvent event) {
+		LocalDateTime now = event.occurredAt();
+		LocalDate today = now.toLocalDate();
+
+		ProcessedMessage processedMessage = ProcessedMessage.of(event.key(), TOPIC, CONSUMER_GROUP_ID,
+			event.occurredAt());
+		if (processedMessageRepository.existsByMessageId(processedMessage.id())) {
+			return;
+		}
+
+		processedMessageRepository.save(processedMessage);
+
+		event.orderLines()
+			.forEach(
+				(orderLine) -> productRankingStore.increment(orderLine.productId(), orderLine.orderQuantity(),
+					today, now));
+		
 	}
 
 	/**

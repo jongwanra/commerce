@@ -13,13 +13,12 @@ public class ProcessedMessageRepositoryImpl implements ProcessedMessageRepositor
 	private final ProcessedMessageJpaRepository processedMessageJpaRepository;
 
 	@Override
-	public ProcessedMessage saveAndFlush(ProcessedMessage processedMessage) {
-		return processedMessageJpaRepository.saveAndFlush(ProcessedMessageEntity.fromDomain(processedMessage))
-			.toDomain();
+	public boolean existsByMessageId(String messageId) {
+		return existsByMessageId(messageId);
 	}
 
 	@Override
-	public boolean existsByMessageId(String messageId) {
-		return existsByMessageId(messageId);
+	public ProcessedMessage save(ProcessedMessage processedMessage) {
+		return processedMessageJpaRepository.save(ProcessedMessageEntity.fromDomain(processedMessage)).toDomain();
 	}
 }
