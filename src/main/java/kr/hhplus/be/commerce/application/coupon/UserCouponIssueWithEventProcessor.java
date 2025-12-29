@@ -2,6 +2,7 @@ package kr.hhplus.be.commerce.application.coupon;
 
 import java.time.LocalDateTime;
 
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,9 +15,11 @@ import kr.hhplus.be.commerce.domain.global.exception.CommerceException;
 import kr.hhplus.be.commerce.global.time.TimeProvider;
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.result.CouponIssueResult;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserCouponIssueWithEventProcessor {
 	private final InternalEventPublisher internalEventPublisher;
 	private final TimeProvider timeProvider;
@@ -37,16 +40,22 @@ public class UserCouponIssueWithEventProcessor {
 	@Transactional(propagation = Propagation.NOT_SUPPORTED)
 	public void execute(Command command) {
 		final LocalDateTime now = timeProvider.now();
-		final CouponIssueResult result = couponStore.issue(command.couponId, command.userId);
+		try {
+			final CouponIssueResult result = couponStore.issue(command.couponId, command.userId);
 
-		if (result == CouponIssueResult.DUPLICATE) {
-			throw new CommerceException(CommerceCode.ALREADY_ISSUED_COUPON);
-		}
-		if (result == CouponIssueResult.SOLD_OUT) {
-			throw new CommerceException(CommerceCode.OUT_OF_STOCK_COUPON);
-		}
+			if (result == CouponIssueResult.DUPLICATE) {
+				throw new CommerceException(CommerceCode.ALREADY_ISSUED_COUPON);
+			}
+			if (result == CouponIssueResult.SOLD_OUT) {
+				throw new CommerceException(CommerceCode.OUT_OF_STOCK_COUPON);
+			}
 
-		internalEventPublisher.publish(CouponIssuedEvent.of(command.couponId(), command.userId(), now));
+			internalEventPublisher.publish(CouponIssuedEvent.of(command.couponId(), command.userId(), now));
+		} catch (RedisConnectionFailureException e) {
+			log.error("Redis connection failed. couponId: {}, userId: {}", command.couponId(), command.userId(), e);
+			throw new CommerceException(CommerceCode.SERVICE_TEMPORARILY_UNAVAILABLE);
+
+		}
 
 	}
 
