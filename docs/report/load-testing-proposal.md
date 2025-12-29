@@ -4,7 +4,7 @@
 
 ### 1.1. 테스트 대상
 
-- 대상 API: `POST /api/v1/me/coupons/{couponId}/issue`
+- 대상 API: `POST /api/v2/me/coupons/{couponId}/issue`
 
 ### 1.2. 왜 이 부분을 테스트해야 하는가?
 
@@ -51,7 +51,7 @@
 
 - App Container: `CPU: 4.0`, `Memory: 2GB` (Resource Limit 설정)
 - DB Container: MySQL 8.0
-- Redis Container: 분삭락 처리를 위한 캐시 서버
+- Redis Container: 선착순 쿠폰 발급을 위한 캐시 서버
 
 ### 3.2. 일정 계획(총 2일)
 
