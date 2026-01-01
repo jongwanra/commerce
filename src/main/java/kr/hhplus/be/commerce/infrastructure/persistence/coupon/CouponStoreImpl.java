@@ -7,12 +7,11 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import kr.hhplus.be.commerce.domain.coupon.repository.CouponStore;
 import kr.hhplus.be.commerce.infrastructure.persistence.coupon.result.CouponIssueResult;
+import kr.hhplus.be.commerce.infrastructure.redis.RedisKeyPatterns;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class CouponStoreImpl implements CouponStore {
-	private static final String ISSUE_COUPON_KEY = "issue:coupon:%s";
-	private static final String COUPON_STOCK_KEY = "coupon:%s:stock";
 	private static final DefaultRedisScript<String> ISSUE_COUPON_SCRIPT = new DefaultRedisScript<>(
 		getIssueCouponScript(),
 		String.class);
@@ -21,12 +20,11 @@ public class CouponStoreImpl implements CouponStore {
 
 	@Override
 	public CouponIssueResult issue(long couponId, long userId) {
-		final String issueCouponKey = String.format(ISSUE_COUPON_KEY, couponId);
-		final String stockCouponKey = String.format(COUPON_STOCK_KEY, couponId);
 
 		return CouponIssueResult.from(redisTemplate.execute(
 			ISSUE_COUPON_SCRIPT,
-			List.of(issueCouponKey, stockCouponKey), // KEYS[1], KEYS[2]
+			List.of(RedisKeyPatterns.couponIssueKey(couponId), RedisKeyPatterns.couponStockKey(couponId)),
+			// KEYS[1], KEYS[2]
 			String.valueOf(userId) // ARGV[1]
 		));
 
