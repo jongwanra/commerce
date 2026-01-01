@@ -34,6 +34,7 @@ public class CouponStoreImpl implements CouponStore {
 
 	private static String getIssueCouponScript() {
 		return "local limit = tonumber(redis.call('GET', KEYS[2])) "
+			+ "if not limit then return 'NOT_INITIALIZED' end "
 			+ "local current_count = redis.call('SCARD', KEYS[1]) "
 			+ "if current_count >= limit then return 'SOLD_OUT' end "
 			+ "if redis.call('SISMEMBER', KEYS[1], ARGV[1]) == 1 then return 'DUPLICATE' end "

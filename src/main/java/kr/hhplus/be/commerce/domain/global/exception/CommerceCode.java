@@ -44,6 +44,7 @@ public enum CommerceCode {
 	OUT_OF_STOCK_COUPON(400, "CP-0003", "재고가 소진된 쿠폰입니다."),
 
 	ALREADY_ISSUED_COUPON(400, "CP-0004", "이미 발급 받은 쿠폰입니다."),
+	COUPON_STOCK_IS_NOT_INITIALIZED(400, "CP-0005", "쿠폰 재고 준비가 되지 않았습니다."),
 
 	// UserCoupon(UC-0001 ~)
 	UNAVAILABLE_USER_COUPON(400, "UC-0001", "이용 불가능한 쿠폰입니다."),

@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum CouponIssueResult {
-	SOLD_OUT, DUPLICATE, SUCCESS;
+	SOLD_OUT, DUPLICATE, SUCCESS, NOT_INITIALIZED;
 
 	public static CouponIssueResult from(String text) {
 		if (isNull(text) || text.isBlank()) {

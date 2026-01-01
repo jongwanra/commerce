@@ -43,6 +43,11 @@ public class UserCouponIssueWithEventProcessor {
 		try {
 			final CouponIssueResult result = couponStore.issue(command.couponId, command.userId);
 
+			if (result == CouponIssueResult.NOT_INITIALIZED) {
+				log.error("Coupon stock not initialized. couponId: {}", command.couponId());
+				throw new CommerceException(CommerceCode.COUPON_STOCK_IS_NOT_INITIALIZED);
+			}
+
 			if (result == CouponIssueResult.DUPLICATE) {
 				throw new CommerceException(CommerceCode.ALREADY_ISSUED_COUPON);
 			}
