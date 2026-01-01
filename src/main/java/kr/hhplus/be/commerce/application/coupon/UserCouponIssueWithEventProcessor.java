@@ -32,7 +32,7 @@ public class UserCouponIssueWithEventProcessor {
 	 * 선착순 이벤트 쿠폰의 경우에는 사전에 이벤트 진행 10분 전에,
 	 * Redis의 키값 추가가 필요합니다.
 	 *
-	 * SET coupon:1:stock 1000
+	 * SET coupon:stock:1 1000
 	 * @see kr.hhplus.be.commerce.application.event.CouponIssuedEventListener
 	 *
 	 */
