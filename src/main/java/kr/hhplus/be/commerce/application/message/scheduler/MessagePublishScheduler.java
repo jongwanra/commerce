@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"local"})
+@Profile({"local", "prod"})
 public class MessagePublishScheduler {
 	private static final int BATCH_SIZE = 20;
 	private static final int FIVE_SECONDS = 5 * 1000;

@@ -134,6 +134,8 @@ cat docs/api-spec.json | head -n 5
 ## 8. Report
 
 - [동시성 이슈 분석 및 MySQL 잠금을 활용한 해결 보고서](/docs/report/concurrency_issue_analysis_mysql_solution.md)
+- [선착순 쿠폰 발금 시스템 부하 테스트 계획서](/docs/report/load-testing-proposal.md)
+- [선착순 쿠폰 발급 시스템 스파이크 테스트 보고서](/docs/report/load-testing-report.md)
 
 ## 9. Troubleshooting
 

@@ -15,6 +15,7 @@ public enum CommerceCode {
 		"처리 중 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주시고, 문제가 지속되면 고객센터로 문의해주세요."),
 	FAILED_FOR_ACQUIRING_DISTRIBUTED_LOCK(400, "CM-0005",
 		"처리 중 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주시고, 문제가 지속되면 고객센터로 문의해주세요."),
+	SERVICE_TEMPORARILY_UNAVAILABLE(503, "CM-0006", "서비스를 일시적으로 이용이 불가능합니다. 문제가 지속되면 고객센터로 문의해주세요."),
 
 	// Auth(AU-0001 ~)
 	UNAUTHENTICATED_USER(401, "AU-0001", "인증되지 않은 사용자입니다."),
@@ -43,6 +44,7 @@ public enum CommerceCode {
 	OUT_OF_STOCK_COUPON(400, "CP-0003", "재고가 소진된 쿠폰입니다."),
 
 	ALREADY_ISSUED_COUPON(400, "CP-0004", "이미 발급 받은 쿠폰입니다."),
+	COUPON_STOCK_IS_NOT_INITIALIZED(400, "CP-0005", "쿠폰 재고 준비가 되지 않았습니다."),
 
 	// UserCoupon(UC-0001 ~)
 	UNAVAILABLE_USER_COUPON(400, "UC-0001", "이용 불가능한 쿠폰입니다."),

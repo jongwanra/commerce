@@ -82,7 +82,7 @@ public class ProductRankingStoreImpl implements ProductRankingStore {
 
 	private void setTtlIfAbsent(String key, LocalDate rankingDate, LocalDateTime now) {
 		final Long currentTtl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
-		if (isNull(currentTtl) || currentTtl == 0) {
+		if (isNull(currentTtl) || currentTtl == -1) {
 			final long newTtl = calculateSecondsUntilOneAm(rankingDate, now);
 			log.debug("Ttl을 설정합니다. key={}, ttl={}", key, newTtl);
 			redisTemplate.expire(key, newTtl, TimeUnit.SECONDS);

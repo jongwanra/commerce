@@ -58,6 +58,21 @@ public record Message(
 			.build();
 	}
 
+	public static Message ofDeadLetter(Long targetId, MessageTargetType targetType, MessagePayload payload,
+		LocalDateTime now, String failedReason) {
+		return Message.builder()
+			.targetId(targetId)
+			.targetType(targetType)
+			.type(payload.type())
+			.status(MessageStatus.DEAD_LETTER)
+			.payload(payload)
+			.publishedAt(now)
+			.failedAt(now)
+			.failedReason(failedReason)
+			.failedCount(FAILED_COUNT_THRESHOLD)
+			.build();
+	}
+
 	public Message failed(String failedReason, LocalDateTime failedAt) {
 		final int newFailedCount = failedCount + 1;
 		// 3번 실패했을 경우 DEAD_LETTER 상태로 변경

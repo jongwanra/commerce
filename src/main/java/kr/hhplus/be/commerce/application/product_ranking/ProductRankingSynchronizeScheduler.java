@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"local"})
+@Profile({"local", "prod"})
 public class ProductRankingSynchronizeScheduler {
 	private static final int FIVE_MINUTES = 5 * 60 * 1000;
 
