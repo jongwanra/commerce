@@ -98,12 +98,13 @@ services:
       - mysql
       - redis
       - broker1
-    command: java -Xms1g -Xmx1536m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+ParallelRefProcEnabled -Dspring.profiles.active=perf -jar app.jar
+    # Container Memory의 70% 정도를 Heap으로 할당하는 것이 안전합니다.
+    command: java -Xms1500m -Xmx2g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+ParallelRefProcEnabled -XX:MaxMetaspaceSize=256m -Dspring.profiles.active=perf -jar app.jar
     deploy:
       resources:
         limits:
           cpus: '4.0'
-          memory: '2GB'
+          memory: '3GB'
 
 volumes:
   redis_data:

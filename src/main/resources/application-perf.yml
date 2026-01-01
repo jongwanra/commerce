@@ -10,8 +10,9 @@ spring:
     hikari:
       maximum-pool-size: 50
       minimum-idle: 47
-      connection-timeout: 30000
-      max-lifetime: 60000
+      connection-timeout: 3000 # 30초 대기는 장애 상황입니다. 30 -> 3초로 변경
+      max-lifetime: 1800000 # 30분
+      leak-detection-threshold: 60000
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     open-in-view: false
@@ -60,4 +61,5 @@ server:
     threads:
       max: 200
       min-spare: 20 # 항상 대기하는 스레드 수
-    accept-count: 3000 # (기본 100) -> 대기열 큐를 3,000까지 늘려서 튕겨나가지 않게 함
+    accept-count: 500 # 대기열 큐는 Thread Pool의 2-3배 정도가 적절합니다.
+    connection-timeout: 5000 # 5초 동안 처리하지 못할 경우 빠르게 503을 응답하는 것이 시스템 보호에 유리합니다.
