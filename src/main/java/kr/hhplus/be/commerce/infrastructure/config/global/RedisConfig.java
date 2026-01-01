@@ -45,7 +45,7 @@ public class RedisConfig {
 		poolConfig.setMaxWait(Duration.ofSeconds(3));
 
 		LettuceClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
-			.commandTimeout(Duration.ofSeconds(10))
+			.commandTimeout(Duration.ofSeconds(3))
 			.poolConfig(poolConfig)
 			.build();
 
