@@ -36,10 +36,14 @@ public class CouponIssuedEventListener {
 	@Async
 	@EventListener
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	@Retryable(retryFor = {
+	@Retryable(noRetryFor = {DataIntegrityViolationException.class}, retryFor = {
 		DataAccessException.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
 	public void handle(CouponIssuedEvent event) {
 		try {
+			if (userCouponRepository.existsByUserIdAndCouponId(event.userId(), event.couponId())) {
+				return;
+			}
+			
 			Coupon issuedCoupon = couponRepository.findByIdForUpdate(event.couponId())
 				.orElseThrow(() -> new CommerceException(CommerceCode.NOT_FOUND_COUPON))
 				.issue(event.occurredAt());
@@ -48,6 +52,7 @@ public class CouponIssuedEventListener {
 			couponRepository.save(issuedCoupon);
 		} catch (DataIntegrityViolationException e) {
 			log.warn("쿠폰 중복 발급 요청이 발생했습니다. userId={}, couponId={}", event.userId(), event.couponId());
+			throw e;
 		} catch (Exception e) {
 			log.error("쿠폰 발급 이벤트 처리 중 알 수 없는 에러가 발생했습니다. userId={}, couponId={}", event.userId(), event.couponId(), e);
 			throw e; // 재시도
